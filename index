@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MehmetEndustriyelTakip - OG Hücre İmalat Takip</title>
+    <!-- CSS dosyaları -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/login.css"> 
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase App (core Firebase SDK) -->
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<script src="js/database.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js"></script>
+    
+    <!-- Firebase Yapılandırması -->
+    <script type="module">
+        // Import the functions you need from the SDKs you need
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics.js";
+        
+        // Your web app's Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyAFQdnF6RGFuQmrtjB3rCo_fkoQNk0QPJ4",
+            authDomain: "mehmentendustriyeltakip.firebaseapp.com",
+            projectId: "mehmentendustriyeltakip",
+            storageBucket: "mehmentendustriyeltakip.firebasestorage.app",
+            messagingSenderId: "100391457932",
+            appId: "1:100391457932:web:0fe2f9aab2835220a56466",
+            measurementId: "G-L4TMML2WR2"
+        };
+        
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const analytics = getAnalytics(app);
+        
+        // Global erişim için window nesnesine atama
+        window.auth = auth;
+        window.db = db;
+        window.firebase = {
+            signInWithEmailAndPassword: signInWithEmailAndPassword,
+            createUserWithEmailAndPassword: createUserWithEmailAndPassword,
+            sendPasswordResetEmail: sendPasswordResetEmail,
+            signOut: signOut,
+            collection: collection,
+            doc: doc,
+            setDoc: setDoc,
+            getDoc: getDoc,
+            getDocs: getDocs,
+            query: query,
+            where: where
+        };
+    </script>
+</head>
+<body>
+    <!-- Giriş Sayfası -->
+    <div id="login-page" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="login-logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="login-logo-text">ElektroTrack</div>
+                </div>
+                <h1 class="login-title">Giriş Yap</h1>
+                <p class="login-subtitle">Orta Gerilim Hücre İmalat Takip Sistemi</p>
+            </div>
+            <div class="login-body">
+                <div class="login-form-group">
+                    <label class="login-label" for="username">Kullanıcı Adı / E-posta</label>
+                    <input type="text" id="username" class="login-input" placeholder="Kullanıcı adınızı veya e-postanızı girin">
+                </div>
+                <div class="login-form-group">
+                    <label class="login-label" for="password">Şifre</label>
+                    <input type="password" id="password" class="login-input" placeholder="Şifrenizi girin">
+                </div>
+                <div class="login-options">
+                    <div class="login-remember">
+                        <input type="checkbox" id="remember">
+                        <label for="remember">Beni hatırla</label>
+                    </div>
+                    <a href="#" class="login-forgot" onclick="showForgotPassword()">Şifremi unuttum</a>
+                </div>
+                <button class="login-button" onclick="login()">Giriş Yap</button>
+                
+                <div class="login-footer">
+                    Hesabınız yok mu? <a href="#" onclick="showRegister()">Kayıt Ol</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Kayıt Ol Formu -->
+    <div id="register-page" class="login-container" style="display: none;">
+        <div class="login-form">
+            <div class="login-header">
+                <h1 class="login-title">Kayıt Ol</h1>
+                <p class="login-subtitle">MehmetEndustriyelTakip'e hoş geldiniz</p>
+            </div>
+            
+            <div class="login-input form-group">
+                <div class="form-label">Ad Soyad</div>
+                <input type="text" class="form-control" id="register-name" placeholder="Adınızı ve soyadınızı girin">
+            </div>
+            
+            <div class="login-input form-group">
+                <div class="form-label">E-posta</div>
+                <input type="email" class="form-control" id="register-email" placeholder="E-posta adresinizi girin">
+            </div>
+            
+            <div class="login-input form-group">
+                <div class="form-label">Kullanıcı Adı</div>
+                <input type="text" class="form-control" id="register-username" placeholder="Kullanıcı adınızı girin">
+            </div>
+            
+            <div class="login-input form-group">
+                <div class="form-label">Departman</div>
+                <select class="form-control" id="register-department">
+                    <option value="">Departman Seçin</option>
+                    <option value="sales">Satış</option>
+                    <option value="production">Üretim</option>
+                    <option value="purchasing">Satın Alma</option>
+                    <option value="quality">Kalite</option>
+                    <option value="management">Yönetim</option>
+                </select>
+            </div>
+            
+            <div class="login-input form-group">
+                <div class="form-label">Şifre</div>
+                <input type="password" class="form-control" id="register-password" placeholder="Şifre oluşturun">
+            </div>
+            
+            <div class="login-input form-group">
+                <div class="form-label">Şifre Tekrar</div>
+                <input type="password" class="form-control" id="register-password-confirm" placeholder="Şifreyi tekrar girin">
+            </div>
+            
+            <button class="btn btn-primary" style="width: 100%;" onclick="register()">Kayıt Ol</button>
+            
+            <div class="login-footer">
+                Zaten hesabınız var mı? <a href="#" onclick="showLogin()">Giriş Yap</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Şifremi Unuttum Formu -->
+    <div id="forgot-password-page" class="login-container" style="display: none;">
+        <div class="login-form">
+            <div class="login-header">
+                <h1 class="login-title">Şifremi Unuttum</h1>
+                <p class="login-subtitle">Şifre sıfırlama bağlantısı için e-posta adresinizi girin</p>
+            </div>
+            
+            <div class="login-input form-group">
+                <div class="form-label">E-posta</div>
+                <input type="email" class="form-control" id="forgot-email" placeholder="E-posta adresinizi girin">
+            </div>
+            
+            <button class="btn btn-primary" style="width: 100%;" onclick="resetPassword()">Şifre Sıfırlama Bağlantısı Gönder</button>
+            
+            <div class="login-footer">
+                <a href="#" onclick="showLogin()">Giriş sayfasına dön</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ana Uygulama -->
+    <div id="main-app" style="display: none;">
+        <!-- Navbar -->
+        <div class="navbar">
+            <div class="navbar-brand" onclick="showPage('dashboard')">MehmetEndustriyelTakip</div>
+            <div class="navbar-menu">
+                <div class="navbar-item active" onclick="showPage('dashboard')">Kontrol Paneli</div>
+                <div class="navbar-item" onclick="showPage('sales')">Satış</div>
+                <div class="navbar-item" onclick="showPage('projects')">Projeler</div>
+                <div class="navbar-item" onclick="showPage('production')">Üretim</div>
+                <div class="navbar-item" onclick="showPage('stock')">Stok</div>
+                <div class="navbar-item" onclick="showPage('purchasing')">Satın Alma</div>
+                <div class="navbar-item" onclick="showPage('quality')">Kalite</div>
+                <div class="navbar-item" onclick="showPage('reports')">Raporlar</div>
+                <div class="navbar-item" onclick="showPage('notes')">Notlar</div>
+                <div class="navbar-item" onclick="showPage('ai')">Yapay Zeka</div>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar" onclick="toggleUserMenu()">M</div>
+                <div id="user-dropdown" class="user-dropdown">
+                    <div class="user-dropdown-item">
+                        <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
+                        <span>Profilim</span>
+                    </div>
+                    <div class="user-dropdown-item">
+                        <i class="fas fa-cog" style="margin-right: 0.5rem;"></i>
+                        <span>Ayarlar</span>
+                    </div>
+                    <div class="user-dropdown-divider"></div>
+                    <div class="user-dropdown-item" onclick="logout()">
+                        <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
+                        <span>Çıkış Yap</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ana içerik sayfaları -->
+        <div class="container">
+            <!-- Kontrol Paneli -->
+            <div id="dashboard-page" class="page active">
+                <div class="page-header">
+                    <h1 class="page-title">Kontrol Paneli</h1>
+                    <div>
+                        <button class="btn btn-outline" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Yenile</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="showCreateOrderModal()">
+                            <i class="fas fa-plus"></i>
+                            <span>Yeni Sipariş</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body" style="padding: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="width: 50px; height: 50px; border-radius: 10px; background-color: rgba(30, 136, 229, 0.1); display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-clipboard-list" style="font-size: 1.5rem; color: var(--primary);"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.875rem; color: var(--secondary);">Aktif Siparişler</div>
+                                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--primary);">24</div>
+                                        <div style="font-size: 0.75rem; color: var(--success);">
+                                            <i class="fas fa-arrow-up"></i> %8 geçen aya göre
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body" style="padding: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="width: 50px; height: 50px; border-radius: 10px; background-color: rgba(255, 152, 0, 0.1); display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-exclamation-triangle" style="font-size: 1.5rem; color: var(--warning);"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.875rem; color: var(--secondary);">Eksik Malzemeler</div>
+                                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--warning);">8</div>
+                                        <div style="font-size: 0.75rem; color: var(--danger);">
+                                            <i class="fas fa-arrow-up"></i> %12 geçen aya göre
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body" style="padding: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="width: 50px; height: 50px; border-radius: 10px; background-color: rgba(239, 67, 68, 0.1); display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-clock" style="font-size: 1.5rem; color: var(--danger);"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.875rem; color: var(--secondary);">Geciken İşler</div>
+                                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--danger);">3</div>
+                                        <div style="font-size: 0.75rem; color: var(--success);">
+                                            <i class="fas fa-arrow-down"></i> %5 geçen aya göre
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-body" style="padding: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <div style="width: 50px; height: 50px; border-radius: 10px; background-color: rgba(16, 185, 129, 0.1); display: flex; align-items: center; justify-content: center;">
+                                        <i class="fas fa-truck" style="font-size: 1.5rem; color: var(--success);"></i>
+                                    </div>
+                                    <div>
+                                        <div style="font-size: 0.875rem; color: var(--secondary);">Bu Ay Teslim</div>
+                                        <div style="font-size: 1.5rem; font-weight: 600; color: var(--success);">12</div>
+                                        <div style="font-size: 0.75rem; color: var(--success);">
+                                            <i class="fas fa-arrow-up"></i> %15 geçen aya göre
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="filters">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Sipariş no, müşteri, hücre tipi ara..." onkeyup="filterOrders()">
+                    </div>
+                    <div class="filter-item">
+                        <select class="form-control" onchange="filterOrders()">
+                            <option value="">Tüm Durumlar</option>
+                            <option value="planning">Planlama</option>
+                            <option value="production">Üretimde</option>
+                            <option value="waiting">Malzeme Bekleniyor</option>
+                            <option value="ready">Malzeme Hazır</option>
+                            <option value="testing">Test</option>
+                            <option value="completed">Tamamlandı</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <select class="form-control" onchange="filterOrders()">
+                            <option value="">Tüm Müşteriler</option>
+                            <option value="AYEDAŞ">AYEDAŞ</option>
+                            <option value="ENERJİSA">ENERJİSA</option>
+                            <option value="BAŞKENT EDAŞ">BAŞKENT EDAŞ</option>
+                            <option value="TOROSLAR EDAŞ">TOROSLAR EDAŞ</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Aktif Siparişler</div>
+                        <div>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-sort"></i>
+                                <span>Teslim Tarihine Göre Sırala</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Sipariş No</th>
+                                        <th>Müşteri</th>
+                                        <th>Eksik Malzeme Sayısı</th>
+                                        <th>Teslim Tarihi</th>
+                                        <th>Eklenme Tarihi</th>
+                                        <th>Öncelik</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>04-24-1252</td>
+                                        <td>BAŞKENT EDAŞ</td>
+                                        <td>3</td>
+                                        <td>15/11/2024</td>
+                                        <td>25/09/2024</td>
+                                        <td><span class="badge badge-danger">Yüksek</span></td>
+                                        <td>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>04-24-1233</td>
+                                        <td>AYEDAŞ</td>
+                                        <td>1</td>
+                                        <td>08/11/2024</td>
+                                        <td>20/09/2024</td>
+                                        <td><span class="badge badge-warning">Orta</span></td>
+                                        <td>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>04-24-1280</td>
+                                        <td>TOROSLAR EDAŞ</td>
+                                        <td>2</td>
+                                        <td>25/11/2024</td>
+                                        <td>05/10/2024</td>
+                                        <td><span class="badge badge-info">Normal</span></td>
+                                        <td>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Diğer sayfalar buraya eklenecek -->
+            <div id="sales-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Satış</h1>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Satış İstatistikleri</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- İçerik burada olacak -->
+                        <p>Satış sayfası içeriği burada olacak.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="projects-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Projeler</h1>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Proje Listesi</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- İçerik burada olacak -->
+                        <p>Projeler sayfası içeriği burada olacak.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="production-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Üretim</h1>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Üretim Durumu</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- İçerik burada olacak -->
+                        <p>Üretim sayfası içeriği burada olacak.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="stock-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Stok</h1>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Stok Durumu</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- İçerik burada olacak -->
+                        <p>Stok sayfası içeriği burada olacak.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="quality-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Kalite</h1>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Kalite Kontrol</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- İçerik burada olacak -->
+                        <p>Kalite sayfası içeriği burada olacak.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="reports-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Raporlar</h1>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Rapor Listesi</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- İçerik burada olacak -->
+                        <p>Raporlar sayfası içeriği burada olacak.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="notes-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Notlar</h1>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Not Listesi</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- İçerik burada olacak -->
+                        <p>Notlar sayfası içeriği burada olacak.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="ai-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Yapay Zeka</h1>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Yapay Zeka Analiz ve Önerileri</div>
+                    </div>
+                    <div class="card-body">
+                        <!-- İçerik burada olacak -->
+                        <p>Yapay Zeka sayfası içeriği burada olacak.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sipariş Detay Modalı -->
+    <div id="order-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Sipariş Detayı: <span id="order-detail-id"></span></h2>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="tabs">
+                    <div class="tab active" data-tab="order-info">Sipariş Bilgileri</div>
+                    <div class="tab" data-tab="materials">Malzeme Listesi</div>
+                    <div class="tab" data-tab="production">Üretim Planı</div>
+                    <div class="tab" data-tab="documents">Dökümanlar</div>
+                    <div class="tab" data-tab="notes">Notlar</div>
+                </div>
+                
+                <div class="tab-content active" id="order-info-content">
+                    <div class="info-group">
+                        <div class="info-label">Müşteri:</div>
+                        <div class="info-value" id="order-customer">AYEDAŞ</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Hücre Tipi:</div>
+                        <div class="info-value" id="order-type">RM 36 LB</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Sipariş Tarihi:</div>
+                        <div class="info-value" id="order-date">13/09/2024</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Teslim Tarihi:</div>
+                        <div class="info-value" id="order-delivery">08/11/2024</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Durum:</div>
+                        <div class="info-value" id="order-status">
+                            <span class="badge badge-info">Üretimde</span>
+                        </div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Hücre Sayısı:</div>
+                        <div class="info-value" id="order-quantity">3</div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Proje Yöneticisi:</div>
+                        <div class="info-value" id="order-manager">Ahmet Yılmaz</div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="materials-content">
+                    <div class="materials-header">
+                        <div>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-print"></i>
+                                <span>Malzeme Listesi Yazdır</span>
+                            </button>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-file-excel"></i>
+                                <span>Excel'e Aktar</span>
+                            </button>
+                        </div>
+                        <div class="search-box small">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" placeholder="Malzeme ara...">
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Malzeme Kodu</th>
+                                    <th>Malzeme Adı</th>
+                                    <th>Miktar</th>
+                                    <th>Birim</th>
+                                    <th>Durum</th>
+                                    <th>Tedarik Tarihi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>M1001</td>
+                                    <td>Şalter Gövdesi</td>
+                                    <td>3</td>
+                                    <td>Adet</td>
+                                    <td><span class="badge badge-success">Stokta</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>M1025</td>
+                                    <td>Kablo Başlıkları</td>
+                                    <td>12</td>
+                                    <td>Adet</td>
+                                    <td><span class="badge badge-success">Stokta</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>M1050</td>
+                                    <td>Gerilim Gösterge</td>
+                                    <td>3</td>
+                                    <td>Adet</td>
+                                    <td><span class="badge badge-warning">Siparişte</span></td>
+                                    <td>01/03/2025</td>
+                                </tr>
+                                <tr>
+                                    <td>M1102</td>
+                                    <td>Pano Kasası</td>
+                                    <td>3</td>
+                                    <td>Adet</td>
+                                    <td><span class="badge badge-success">Stokta</span></td>
+                                    <td>-</td>
+                                </tr>
+                                <tr>
+                                    <td>M1150</td>
+                                    <td>Koruma Rölesi</td>
+                                    <td>3</td>
+                                    <td>Adet</td>
+                                    <td><span class="badge badge-success">Stokta</span></td>
+                                    <td>-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="production-content">
+                    <div class="progress-container">
+                        <div class="progress-step completed">
+                            <div class="progress-icon">
+                                <i class="fas fa-clipboard-check"></i>
+                            </div>
+                            <div class="progress-text">Planlama</div>
+                            <div class="progress-date">15/09/2024</div>
+                        </div>
+                        <div class="progress-line completed"></div>
+                        <div class="progress-step completed">
+                            <div class="progress-icon">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <div class="progress-text">Malzeme Hazırlık</div>
+                            <div class="progress-date">20/09/2024</div>
+                        </div>
+                        <div class="progress-line active"></div>
+                        <div class="progress-step active">
+                            <div class="progress-icon">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <div class="progress-text">Montaj</div>
+                            <div class="progress-date">Devam Ediyor</div>
+                        </div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step">
+                            <div class="progress-icon">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <div class="progress-text">Ölçüm ve Test</div>
+                            <div class="progress-date">Bekleniyor</div>
+                        </div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step">
+                            <div class="progress-icon">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <div class="progress-text">Kalite Kontrol</div>
+                            <div class="progress-date">Bekleniyor</div>
+                        </div>
+                        <div class="progress-line"></div>
+                        <div class="progress-step">
+                            <div class="progress-icon">
+                                <i class="fas fa-truck-loading"></i>
+                            </div>
+                            <div class="progress-text">Sevkiyat</div>
+                            <div class="progress-date">Bekleniyor</div>
+                        </div>
+                    </div>
+                    
+                    <div class="info-box">
+                        <div class="info-box-title">Üretim Notu</div>
+                        <div class="info-box-content">
+                            Montaj aşaması 05/10/2024 tarihinde tamamlanacak şekilde planlanmıştır. 
+                            Test ve ölçüm aşaması için gerekli ekipmanlar hazırlanmıştır.
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="documents-content">
+                    <div class="documents-container">
+                        <div class="document-item">
+                            <div class="document-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="document-info">
+                                <div class="document-title">Teknik Şartname</div>
+                                <div class="document-meta">PDF, 2.3 MB - 15/09/2024</div>
+                            </div>
+                            <div class="document-actions">
+                                <button class="btn btn-outline btn-sm">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">
+                                <i class="fas fa-file-excel"></i>
+                            </div>
+                            <div class="document-info">
+                                <div class="document-title">Malzeme Listesi</div>
+                                <div class="document-meta">Excel, 520 KB - 18/09/2024</div>
+                            </div>
+                            <div class="document-actions">
+                                <button class="btn btn-outline btn-sm">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="document-item">
+                            <div class="document-icon">
+                                <i class="fas fa-file-image"></i>
+                            </div>
+                            <div class="document-info">
+                                <div class="document-title">Teknik Çizimler</div>
+                                <div class="document-meta">ZIP, 15.7 MB - 20/09/2024</div>
+                            </div>
+                            <div class="document-actions">
+                                <button class="btn btn-outline btn-sm">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="notes-content">
+                    <div class="notes-container">
+                        <div class="note-item">
+                            <div class="note-header">
+                                <div class="note-author">Mehmet Öztürk</div>
+                                <div class="note-date">22/09/2024 10:15</div>
+                            </div>
+                            <div class="note-content">
+                                Müşteri ile yapılan görüşmede, teslimat tarihinin çok kritik olduğu tekrar vurgulandı. 
+                                Herhangi bir gecikme durumunda önceden bilgilendirme yapılması gerekiyor.
+                            </div>
+                        </div>
+                        <div class="note-item">
+                            <div class="note-header">
+                                <div class="note-author">Ahmet Yılmaz</div>
+                                <div class="note-date">25/09/2024 14:30</div>
+                            </div>
+                            <div class="note-content">
+                                Gerilim gösterge malzemesinin tedarikinde yaşanan gecikme üretim planını etkileyebilir. 
+                                Alternatif tedarikçi araştırması başlatıldı.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="add-note">
+                        <textarea class="form-control" placeholder="Not ekleyin..."></textarea>
+                        <button class="btn btn-primary">Ekle</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal()">Kapat</button>
+                <button class="btn btn-primary">Güncelle</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Firebase Initialize Script -->
+    <script>
+        // Firebase kullanımı için gerekli fonksiyonlar
+        async function login() {
+            const email = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                // Firebase Authentication ile giriş işlemi
+                const userCredential = await window.firebase.signInWithEmailAndPassword(window.auth, email, password);
+                const user = userCredential.user;
+                console.log("Giriş başarılı:", user.uid);
+                
+                // Kullanıcı bilgilerini Firestore'dan al
+                const userDoc = await window.firebase.getDoc(window.firebase.doc(window.db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+                    console.log("Kullanıcı verileri:", userData);
+                    
+                    // Avatar için kullanıcı adının ilk harfini ayarla
+                    document.querySelector('.user-avatar').textContent = userData.name.charAt(0).toUpperCase();
+                }
+                
+                // Ana uygulamayı göster
+                showMainApp();
+                
+                // Aktif siparişleri getir
+                fetchActiveOrders();
+            } catch (error) {
+                console.error("Giriş hatası:", error);
+                alert("Giriş hatası: " + error.message);
+            }
+        }
+        
+        async function register() {
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-password-confirm').value;
+            const name = document.getElementById('register-name').value;
+            const username = document.getElementById('register-username').value;
+            const department = document.getElementById('register-department').value;
+            
+            // Doğrulama kontrolleri
+            if (!email || !password || !name || !username || !department) {
+                alert("Lütfen tüm alanları doldurun!");
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                alert("Şifreler eşleşmiyor!");
+                return;
+            }
+            
+            try {
+                // Firebase Authentication ile kayıt işlemi
+                const userCredential = await window.firebase.createUserWithEmailAndPassword(window.auth, email, password);
+                const user = userCredential.user;
+                
+                // Firestore'a kullanıcı bilgilerini kaydet
+                await window.firebase.setDoc(window.firebase.doc(window.db, "users", user.uid), {
+                    name: name,
+                    email: email,
+                    username: username,
+                    department: department,
+                    createdAt: new Date(),
+                    role: "user" // Varsayılan rol
+                });
+                
+                console.log("Kullanıcı başarıyla kaydedildi:", user.uid);
+                alert("Kayıt işlemi başarılı! Giriş yapabilirsiniz.");
+                showLogin();
+            } catch (error) {
+                console.error("Kayıt hatası:", error);
+                alert("Kayıt hatası: " + error.message);
+            }
+        }
+        
+        async function resetPassword() {
+            const email = document.getElementById('forgot-email').value;
+            
+            if (!email) {
+                alert("Lütfen e-posta adresinizi girin!");
+                return;
+            }
+            
+            try {
+                await window.firebase.sendPasswordResetEmail(window.auth, email);
+                alert("Şifre sıfırlama bağlantısı e-posta adresinize gönderildi!");
+                showLogin();
+            } catch (error) {
+                console.error("Şifre sıfırlama hatası:", error);
+                alert("Hata: " + error.message);
+            }
+        }
+        
+        async function logout() {
+            try {
+                await window.firebase.signOut(window.auth);
+                console.log("Çıkış yapıldı");
+                showLogin();
+            } catch (error) {
+                console.error("Çıkış hatası:", error);
+                alert("Çıkış yapılırken bir hata oluştu: " + error.message);
+            }
+        }
+        
+        // Firebase veri işlemleri
+        async function fetchActiveOrders() {
+            try {
+                const ordersCollection = window.firebase.collection(window.db, "orders");
+                const q = window.firebase.query(ordersCollection, window.firebase.where("status", "!=", "completed"));
+                const querySnapshot = await window.firebase.getDocs(q);
+                
+                let ordersHTML = '';
+                querySnapshot.forEach((doc) => {
+                    const order = doc.data();
+                    const statusClass = getStatusClass(order.status);
+                    
+                    ordersHTML += `
+                    <tr onclick="showOrderDetail('${doc.id}')" class="${order.status === 'Malzeme Bekleniyor' ? 'warning' : ''}">
+                        <td>${doc.id}</td>
+                        <td>${order.customer}</td>
+                        <td>${order.cellType}</td>
+                        <td>${order.orderDate}</td>
+                        <td>${order.deliveryDate}</td>
+                        <td>${order.quantity}</td>
+                        <td><span class="badge badge-${statusClass}">${order.status}</span></td>
+                        <td>
+                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    `;
+                });
+                
+                // Eğer hiç sipariş yoksa
+                if (ordersHTML === '') {
+                    ordersHTML = '<tr><td colspan="8" class="text-center">Aktif sipariş bulunamadı</td></tr>';
+                }
+                
+                document.querySelector('#orders-table tbody').innerHTML = ordersHTML;
+                
+                // İstatistikleri güncelle
+                updateDashboardStats(querySnapshot.docs);
+                
+            } catch (error) {
+                console.error("Siparişleri getirme hatası:", error);
+                alert("Siparişler yüklenirken bir hata oluştu!");
+            }
+        }
+        
+        function getStatusClass(status) {
+            switch(status) {
+                case 'Planlama': return 'info';
+                case 'Üretimde': return 'primary';
+                case 'Malzeme Bekleniyor': return 'warning';
+                case 'Malzeme Hazır': return 'success';
+                case 'Test': return 'info';
+                case 'Tamamlandı': return 'success';
+                default: return 'secondary';
+            }
+        }
+        
+        function updateDashboardStats(orders) {
+            // Aktif sipariş sayısı
+            const activeOrders = orders.length;
+            document.querySelector('.card-body:nth-child(1) .font-weight-600').textContent = activeOrders;
+            
+            // Eksik malzeme sayısı
+            const missingMaterials = orders.filter(doc => doc.data().status === 'Malzeme Bekleniyor').length;
+            document.querySelector('.card-body:nth-child(2) .font-weight-600').textContent = missingMaterials;
+            
+            // Geciken işler
+            const today = new Date();
+            const delayedOrders = orders.filter(doc => {
+                const data = doc.data();
+                const deliveryDate = new Date(data.deliveryDate.split('/').reverse().join('-'));
+                return deliveryDate < today && data.status !== 'Tamamlandı';
+            }).length;
+            document.querySelector('.card-body:nth-child(3) .font-weight-600').textContent = delayedOrders;
+            
+            // Bu ay teslim
+            const currentMonth = today.getMonth();
+            const currentYear = today.getFullYear();
+            const thisMonthDelivery = orders.filter(doc => {
+                const data = doc.data();
+                const deliveryDateParts = data.deliveryDate.split('/');
+                const deliveryMonth = parseInt(deliveryDateParts[1]) - 1; // Ay 0-11 arası
+                const deliveryYear = parseInt(deliveryDateParts[2]);
+                return deliveryMonth === currentMonth && deliveryYear === currentYear;
+            }).length;
+            document.querySelector('.card-body:nth-child(4) .font-weight-600').textContent = thisMonthDelivery;
+        }
+        
+        // Oturum durumunu kontrol et
+        document.addEventListener('DOMContentLoaded', function() {
+            // Firebase yüklendikten sonra oturum durumunu kontrol et
+            window.auth.onAuthStateChanged(function(user) {
+                if (user) {
+                    // Kullanıcı oturum açmış
+                    console.log("Kullanıcı oturum açmış:", user.uid);
+                    showMainApp();
+                    fetchActiveOrders();
+                } else {
+                    // Kullanıcı oturum açmamış
+                    console.log("Kullanıcı oturum açmamış");
+                    showLogin();
+                }
+            });
+        });
+        
+        // UI fonksiyonları
+        function showLogin() {
+            document.getElementById('login-page').style.display = 'flex';
+            document.getElementById('register-page').style.display = 'none';
+            document.getElementById('forgot-password-page').style.display = 'none';
+            document.getElementById('main-app').style.display = 'none';
+        }
+        
+        function showRegister() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('register-page').style.display = 'flex';
+            document.getElementById('forgot-password-page').style.display = 'none';
+            document.getElementById('main-app').style.display = 'none';
+        }
+        
+        function showForgotPassword() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('register-page').style.display = 'none';
+            document.getElementById('forgot-password-page').style.display = 'flex';
+            document.getElementById('main-app').style.display = 'none';
+        }
+        
+        function showMainApp() {
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('register-page').style.display = 'none';
+            document.getElementById('forgot-password-page').style.display = 'none';
+            document.getElementById('main-app').style.display = 'block';
+        }
+        
+        function showPage(pageName) {
+            const pages = document.querySelectorAll('.page');
+            pages.forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            document.getElementById(pageName + '-page').classList.add('active');
+            
+            const menuItems = document.querySelectorAll('.navbar-item');
+            menuItems.forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            event.currentTarget.classList.add('active');
+        }
+        
+        function toggleUserMenu() {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+        }
+        
+        function showOrderDetail(orderId) {
+            document.getElementById('order-detail-id').textContent = orderId;
+            
+            // Burada sipariş detayları Firebase'den çekilebilir
+            // firebase.firestore().collection('orders').doc(orderId).get()
+            //     .then((doc) => {
+            //         if (doc.exists) {
+            //             const data = doc.data();
+            //             document.getElementById('order-customer').textContent = data.customer;
+            //             document.getElementById('order-type').textContent = data.cellType;
+            //             document.getElementById('order-date').textContent = data.orderDate;
+            //             document.getElementById('order-delivery').textContent = data.deliveryDate;
+            //             document.getElementById('order-status').innerHTML = `<span class="badge badge-${getStatusClass(data.status)}">${data.status}</span>`;
+            //             document.getElementById('order-quantity').textContent = data.quantity;
+            //             document.getElementById('order-manager').textContent = data.projectManager;
+            //         }
+            //     })
+            //     .catch((error) => {
+            //         console.error("Sipariş detayları alınamadı:", error);
+            //     });
+            
+            // Modalı göster
+            document.getElementById('order-detail-modal').style.display = 'block';
+            
+            // Tab içeriklerini kontrol et
+            const tabs = document.querySelectorAll('.tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Aktif tabı değiştir
+                    document.querySelector('.tab.active').classList.remove('active');
+                    this.classList.add('active');
+                    
+                    // Tab içeriğini göster
+                    const tabId = this.getAttribute('data-tab');
+                    document.querySelector('.tab-content.active').classList.remove('active');
+                    document.getElementById(tabId + '-content').classList.add('active');
+                });
+            });
+        }
+        
+        function closeModal() {
+            document.getElementById('order-detail-modal').style.display = 'none';
+        }
+        
+        function refreshData() {
+            // Firebase'den verileri yeniden çek
+            // Bu örnek için sadece bir bildirim göster
+            alert("Veriler yenileniyor...");
+        }
+        
+        function filterOrders() {
+            // Arama ve filtreleme işlemleri burada yapılacak
+            console.log("Siparişler filtreleniyor...");
+        }
+        
+        function showCreateOrderModal() {
+            // Yeni sipariş oluşturma modalını göster
+            alert("Yeni sipariş oluşturma formu gösterilecek");
+        }
+        
+        // Sayfa dışına tıklandığında user dropdown menüsünü kapat
+        window.onclick = function(event) {
+            if (!event.target.matches('.user-avatar')) {
+                const dropdown = document.getElementById('user-dropdown');
+                if (dropdown.style.display === 'block') {
+                    dropdown.style.display = 'none';
+                }
+            }
+            
+            // Modal dışına tıklandığında modalı kapat
+            if (event.target === document.getElementById('order-detail-modal')) {
+                closeModal();
+            }
+        }
+        
+        // Escape tuşu ile modalı kapat
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                if (document.getElementById('order-detail-modal').style.display === 'block') {
+                    closeModal();
+                }
+            }
+        });
+    </script>
+</body>
+</html>-container">
+                            <table class="table" id="orders-table">
+                                <thead>
+                                    <tr>
+                                        <th>Sipariş No</th>
+                                        <th>Müşteri</th>
+                                        <th>Hücre Tipi</th>
+                                        <th>Sipariş Tarihi</th>
+                                        <th>Teslim Tarihi</th>
+                                        <th>Hücre Sayısı</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr onclick="showOrderDetail('04-24-1233')" class="warning">
+                                        <td>04-24-1233</td>
+                                        <td>AYEDAŞ</td>
+                                        <td>RM 36 LB</td>
+                                        <td>13/09/2024</td>
+                                        <td>08/11/2024</td>
+                                        <td>3</td>
+                                        <td><span class="badge badge-info">Üretimde</span></td>
+                                        <td>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr onclick="showOrderDetail('04-24-1252')" class="danger">
+                                        <td>04-24-1252</td>
+                                        <td>BAŞKENT EDAŞ</td>
+                                        <td>RM 36 FL</td>
+                                        <td>20/09/2024</td>
+                                        <td>15/11/2024</td>
+                                        <td>5</td>
+                                        <td><span class="badge badge-warning">Malzeme Bekleniyor</span></td>
+                                        <td>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr onclick="showOrderDetail('04-24-1260')">
+                                        <td>04-24-1260</td>
+                                        <td>ENERJİSA</td>
+                                        <td>RM 36 CB</td>
+                                        <td>25/09/2024</td>
+                                        <td>20/11/2024</td>
+                                        <td>4</td>
+                                        <td><span class="badge badge-success">Malzeme Hazır</span></td>
+                                        <td>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr onclick="showOrderDetail('04-24-1280')">
+                                        <td>04-24-1280</td>
+                                        <td>TOROSLAR EDAŞ</td>
+                                        <td>RM 36 LB</td>
+                                        <td>01/10/2024</td>
+                                        <td>25/11/2024</td>
+                                        <td>8</td>
+                                        <td><span class="badge badge-info">Planlama</span></td>
+                                        <td>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr onclick="showOrderDetail('04-24-1300')">
+                                        <td>04-24-1300</td>
+                                        <td>AYEDAŞ</td>
+                                        <td>RM 36 CB</td>
+                                        <td>05/10/2024</td>
+                                        <td>30/11/2024</td>
+                                        <td>6</td>
+                                        <td><span class="badge badge-info">Planlama</span></td>
+                                        <td>
+                                            <button class="btn btn-outline" style="padding: 0.25rem 0.5rem;">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Yaklaşan Teslimler</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-container">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Sipariş No</th>
+                                                <th>Müşteri</th>
+                                                <th>Teslim Tarihi</th>
+                                                <th>Kalan Gün</th>
+                                                <th>Durum</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr onclick="showOrderDetail('04-24-1233')">
+                                                <td>04-24-1233</td>
+                                                <td>AYEDAŞ</td>
+                                                <td>08/11/2024</td>
+                                                <td>15</td>
+                                                <td><span class="badge badge-info">Üretimde</span></td>
+                                            </tr>
+                                            <tr onclick="showOrderDetail('04-24-1252')">
+                                                <td>04-24-1252</td>
+                                                <td>BAŞKENT EDAŞ</td>
+                                                <td>15/11/2024</td>
+                                                <td>22</td>
+                                                <td><span class="badge badge-warning">Malzeme Bekleniyor</span></td>
+                                            </tr>
+                                            <tr onclick="showOrderDetail('04-24-1260')">
+                                                <td>04-24-1260</td>
+                                                <td>ENERJİSA</td>
+                                                <td>20/11/2024</td>
+                                                <td>27</td>
+                                                <td><span class="badge badge-success">Malzeme Hazır</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Eksik Malzemeler</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-container">
+                                    <table class="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Sipariş No</th>
+                                                <th>Malzeme</th>
+                                                <th>Tedarik Durumu</th>
+                                                <th>Tedarik Tarihi</th>
+                                                <th>Gecikme</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>04-24-1252</td>
+                                                <td>Kablo Başlıkları</td>
+                                                <td><span class="badge badge-warning">Siparişte</span></td>
+                                                <td>05/03/2025</td>
+                                                <td><span class="badge badge-danger">Kritik</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>04-24-1233</td>
+                                                <td>Gerilim Gösterge</td>
+                                                <td><span class="badge badge-warning">Siparişte</span></td>
+                                                <td>01/03/2025</td>
+                                                <td><span class="badge badge-warning">Uyarı</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>04-24-1280</td>
+                                                <td>Koruma Rölesi</td>
+                                                <td><span class="badge badge-info">Beklemede</span></td>
+                                                <td>-</td>
+                                                <td><span class="badge badge-info">Normal</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Yapay Zeka Analizleri</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-box warning">
+                            <div class="info-box-title">Tedarik Zinciri Riski</div>
+                            <div class="info-box-content">
+                                <p>BAŞKENT EDAŞ siparişindeki (04-24-1252) kablo başlıkları tedarikinde gecikme riski yüksek. 
+                                Tedarikçiden gelen bilgilere göre, planlanan teslimat 05/03/2025 tarihinde, ancak üretim planında 
+                                malzemelerin 01/02/2025 tarihinde fabrikada olması gerekiyor.</p>
+                                <p><strong>Öneri:</strong> Alternatif tedarikçilerle iletişime geçin veya üretim planını revize edin.</p>
+                            </div>
+                        </div>
+                        <div class="info-box">
+                            <div class="info-box-title">Üretim Optimizasyonu</div>
+                            <div class="info-box-content">
+                                <p>Kasım ayında teslim edilecek 3 farklı sipariş için benzer tip hücreler üretilecek. 
+                                Ortak malzeme kullanımı ve üretim adımlarını birleştirerek %15 verimlilik artışı sağlanabilir.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Satın Alma Sayfası -->
+            <div id="purchasing-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Satın Alma</h1>
+                    <div>
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Yeni Tedarik Talebi</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Bekleyen Tedarik Talepleri</div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table
