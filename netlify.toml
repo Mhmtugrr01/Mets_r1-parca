@@ -8,7 +8,7 @@
   to = "/index.html"
   status = 200
 
-# Özel başlıklar
+# Özel başlıklar - Content Security Policy değiştirildi
 [[headers]]
   for = "/*"
   [headers.values]
@@ -16,7 +16,8 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer-when-downgrade"
-    Content-Security-Policy = "default-src 'self' https://*.firebaseio.com https://*.googleapis.com; script-src 'self' 'unsafe-inline' https://*.firebaseio.com https://*.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com;"
+    # CSP yumuşatıldı, Netlify ortamında çalışması için
+    Content-Security-Policy = "default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseio.com https://*.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com; font-src 'self' https://cdnjs.cloudflare.com;"
 
 # Gzip ve Brotli sıkıştırma aktif
 [build.processing]
