@@ -3,27 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MehmetEndustriyelTakip - OG Hücre İmalat Takip</title>
-    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Mehmet Endüstriyel Takip yazılımı">
-    
+    <title>ElektroTrack - OG Hücre İmalat Takip</title>
+    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Endüstriyel Takip yazılımı">
+
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="img/favicon.png">
     <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-    
+
     <!-- PWA manifest -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e40af">
-    
+
     <!-- CSS dosyaları -->
     <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/login.css"> 
+    <link rel="stylesheet" href="css/login.css">
     <link rel="stylesheet" href="css/dashboard.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/responsive.css">
-    
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -64,16 +64,23 @@
                 <div class="login-footer">
                     Hesabınız yok mu? <a href="#" onclick="showRegister()">Kayıt Ol</a>
                 </div>
+
+                <!-- Demo Giriş Butonu (Kod-1'den Alındı) -->
+                <div style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                    <button type="button" class="btn btn-outline" style="width: 100%;" onclick="demoLogin()">
+                        <i class="fas fa-user-check"></i> Demo Hesabı ile Giriş
+                    </button>
+                </div>
             </div>
         </div>
     </div>
-    
+
     <!-- Kayıt Ol Formu -->
     <div id="register-page" class="login-container" style="display: none;">
         <div class="login-form">
             <div class="login-header">
                 <h1 class="login-title">Kayıt Ol</h1>
-                <p class="login-subtitle">MehmetEndustriyelTakip'e hoş geldiniz</p>
+                <p class="login-subtitle">ElektroTrack'e hoş geldiniz</p>
             </div>
             
             <form id="register-form">
@@ -122,7 +129,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Şifremi Unuttum Formu -->
     <div id="forgot-password-page" class="login-container" style="display: none;">
         <div class="login-form">
@@ -145,12 +152,12 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Ana Uygulama -->
     <div id="main-app" style="display: none;">
         <!-- Navbar -->
         <div class="navbar">
-            <div class="navbar-brand" onclick="showPage('dashboard')">MehmetEndustriyelTakip</div>
+            <div class="navbar-brand" onclick="showPage('dashboard')">ElektroTrack</div>
             <div class="navbar-menu">
                 <div class="navbar-item active" onclick="showPage('dashboard')">Kontrol Paneli</div>
                 <div class="navbar-item" onclick="showPage('sales')">Satış</div>
@@ -183,7 +190,7 @@
             </div>
         </div>
         
-        <!-- Ana içerik sayfaları -->
+        <!-- Ana içerik alanı -->
         <div class="container">
             <!-- Kontrol Paneli -->
             <div id="dashboard-page" class="page active">
@@ -200,7 +207,6 @@
                         </button>
                     </div>
                 </div>
-                
                 <!-- İstatistik Kartları -->
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -343,7 +349,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- İki Sütunlu Alan: Yaklaşan Teslimler ve Eksik Malzemeler -->
                 <div class="row">
                     <div class="col">
@@ -401,7 +407,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <!-- Yapay Zeka Önerileri -->
                 <div class="card">
                     <div class="card-header">
@@ -421,8 +427,8 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Diğer sayfalar --> 
+
+            <!-- Satış Sayfası -->
             <div id="sales-page" class="page">
                 <div class="page-header">
                     <h1 class="page-title">Satış</h1>
@@ -432,12 +438,12 @@
                         <div class="card-title">Satış İstatistikleri</div>
                     </div>
                     <div class="card-body">
-                        <!-- İçerik burada olacak -->
                         <p>Satış sayfası içeriği burada olacak.</p>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Projeler Sayfası -->
             <div id="projects-page" class="page">
                 <div class="page-header">
                     <h1 class="page-title">Projeler</h1>
@@ -447,12 +453,12 @@
                         <div class="card-title">Proje Listesi</div>
                     </div>
                     <div class="card-body">
-                        <!-- İçerik burada olacak -->
                         <p>Projeler sayfası içeriği burada olacak.</p>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Üretim Sayfası -->
             <div id="production-page" class="page">
                 <div class="page-header">
                     <h1 class="page-title">Üretim</h1>
@@ -462,12 +468,12 @@
                         <div class="card-title">Üretim Durumu</div>
                     </div>
                     <div class="card-body">
-                        <!-- İçerik burada olacak -->
                         <p>Üretim sayfası içeriği burada olacak.</p>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Stok Sayfası -->
             <div id="stock-page" class="page">
                 <div class="page-header">
                     <h1 class="page-title">Stok</h1>
@@ -477,12 +483,27 @@
                         <div class="card-title">Stok Durumu</div>
                     </div>
                     <div class="card-body">
-                        <!-- İçerik burada olacak -->
                         <p>Stok sayfası içeriği burada olacak.</p>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Satın Alma Sayfası -->
+            <div id="purchasing-page" class="page">
+                <div class="page-header">
+                    <h1 class="page-title">Satın Alma</h1>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Bekleyen Tedarik Talepleri</div>
+                    </div>
+                    <div class="card-body">
+                        <p>Satın Alma sayfası içeriği burada olacak.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kalite Sayfası -->
             <div id="quality-page" class="page">
                 <div class="page-header">
                     <h1 class="page-title">Kalite</h1>
@@ -492,12 +513,12 @@
                         <div class="card-title">Kalite Kontrol</div>
                     </div>
                     <div class="card-body">
-                        <!-- İçerik burada olacak -->
                         <p>Kalite sayfası içeriği burada olacak.</p>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Raporlar Sayfası -->
             <div id="reports-page" class="page">
                 <div class="page-header">
                     <h1 class="page-title">Raporlar</h1>
@@ -507,12 +528,12 @@
                         <div class="card-title">Rapor Listesi</div>
                     </div>
                     <div class="card-body">
-                        <!-- İçerik burada olacak -->
                         <p>Raporlar sayfası içeriği burada olacak.</p>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Notlar Sayfası -->
             <div id="notes-page" class="page">
                 <div class="page-header">
                     <h1 class="page-title">Notlar</h1>
@@ -522,12 +543,12 @@
                         <div class="card-title">Not Listesi</div>
                     </div>
                     <div class="card-body">
-                        <!-- İçerik burada olacak -->
                         <p>Notlar sayfası içeriği burada olacak.</p>
                     </div>
                 </div>
             </div>
-            
+
+            <!-- Yapay Zeka Sayfası -->
             <div id="ai-page" class="page">
                 <div class="page-header">
                     <h1 class="page-title">Yapay Zeka</h1>
@@ -537,12 +558,11 @@
                         <div class="card-title">Yapay Zeka Analiz ve Önerileri</div>
                     </div>
                     <div class="card-body">
-                        <!-- İçerik burada olacak -->
                         <p>Yapay Zeka sayfası içeriği burada olacak.</p>
                     </div>
                 </div>
             </div>
-            
+
             <!-- Profil Sayfası -->
             <div id="profile-page" class="page">
                 <div class="page-header">
@@ -621,7 +641,7 @@
                     </div>
                 </div>
             </div>
-            
+
             <!-- Ayarlar Sayfası -->
             <div id="settings-page" class="page">
                 <div class="page-header">
@@ -663,7 +683,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Chatbot (Yardım Asistanı) -->
         <div class="chatbot-trigger" onclick="toggleChatbot()">
             <i class="fas fa-comments"></i>
@@ -692,13 +712,13 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Sipariş Detay Modalı -->
     <div id="order-detail-modal" class="modal">
         <div class="modal-dialog">
             <div class="modal-header">
                 <h2 class="modal-title">Sipariş Detayı: <span id="order-detail-id"></span></h2>
-                <button class="modal-close">&times;</button>
+                <button class="modal-close" onclick="closeModal('order-detail-modal')">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="tabs">
@@ -782,229 +802,4 @@
                             <div class="workflow-icon">
                                 <i class="fas fa-clipboard-check"></i>
                             </div>
-                            <div class="workflow-label">Planlama</div>
-                        </div>
-                        <div class="workflow-step completed">
-                            <div class="workflow-icon">
-                                <i class="fas fa-boxes"></i>
-                            </div>
-                            <div class="workflow-label">Malzeme</div>
-                        </div>
-                        <div class="workflow-step active">
-                            <div class="workflow-icon">
-                                <i class="fas fa-cogs"></i>
-                            </div>
-                            <div class="workflow-label">Üretim</div>
-                        </div>
-                        <div class="workflow-step">
-                            <div class="workflow-icon">
-                                <i class="fas fa-tasks"></i>
-                            </div>
-                            <div class="workflow-label">Test</div>
-                        </div>
-                        <div class="workflow-step">
-                            <div class="workflow-icon">
-                                <i class="fas fa-truck-loading"></i>
-                            </div>
-                            <div class="workflow-label">Teslimat</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="materials-content">
-                    <div class="materials-header">
-                        <div>
-                            <button class="btn btn-outline">
-                                <i class="fas fa-print"></i>
-                                <span>Malzeme Listesi Yazdır</span>
-                            </button>
-                            <button class="btn btn-outline">
-                                <i class="fas fa-file-excel"></i>
-                                <span>Excel'e Aktar</span>
-                            </button>
-                        </div>
-                        <div class="search-box small">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" class="search-input" placeholder="Malzeme ara...">
-                        </div>
-                    </div>
-                    
-                    <div class="table-container">
-                        <table class="table" id="materials-table">
-                            <thead>
-                                <tr>
-                                    <th>Malzeme Kodu</th>
-                                    <th>Malzeme Adı</th>
-                                    <th>Miktar</th>
-                                    <th>Birim</th>
-                                    <th>Durum</th>
-                                    <th>Tedarik Tarihi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td colspan="6" class="text-center">Yükleniyor...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <div class="form-group">
-                        <button class="btn btn-primary">
-                            <i class="fas fa-plus"></i>
-                            <span>Malzeme Ekle</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="tab-content" id="production-content">
-                    <!-- Üretim planlama içeriği buraya gelecek -->
-                </div>
-                
-                <div class="tab-content" id="documents-content">
-                    <!-- Dokümanlar içeriği buraya gelecek -->
-                </div>
-                
-                <div class="tab-content" id="notes-content">
-                    <div class="notes-container">
-                        <!-- Notlar buraya dinamik olarak eklenecek -->
-                    </div>
-                    
-                    <div class="add-note">
-                        <textarea class="form-control" placeholder="Not ekleyin..."></textarea>
-                        <button class="btn btn-primary">Ekle</button>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" data-dismiss="modal">Kapat</button>
-                <button class="btn btn-primary">Kaydet</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Yeni Sipariş Modalı -->
-    <div id="create-order-modal" class="modal">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <h2 class="modal-title">Yeni Sipariş Oluştur</h2>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <form id="create-order-form">
-                    <div class="row">
-                        <div class="col">
-                            <div class="form-group">
-                                <label class="form-label">Müşteri</label>
-                                <select class="form-control" name="customer" required>
-                                    <option value="">Müşteri Seçin</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="form-group">
-                                <label class="form-label">Hücre Tipi</label>
-                                <select class="form-control" name="cellType" required>
-                                    <option value="">Hücre Tipi Seçin</option>
-                                    <option value="RM 36 LB">RM 36 LB</option>
-                                    <option value="RM 36 CB">RM 36 CB</option>
-                                    <option value="RM 36 FL">RM 36 FL</option>
-                                    <option value="RM 36 BC">RM 36 BC</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <div class="form-group">
-                                <label class="form-label">Hücre Sayısı</label>
-                                <input type="number" class="form-control" name="cellCount" min="1" required>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="form-group">
-                                <label class="form-label">Öncelik</label>
-                                <select class="form-control" name="priority">
-                                    <option value="normal">Normal</option>
-                                    <option value="medium">Orta</option>
-                                    <option value="high">Yüksek</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col">
-                            <div class="form-group">
-                                <label class="form-label">Sipariş Tarihi</label>
-                                <input type="date" class="form-control" name="orderDate" required>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="form-group">
-                                <label class="form-label">Teslim Tarihi</label>
-                                <input type="date" class="form-control" name="deliveryDate" required>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Açıklama</label>
-                        <textarea class="form-control" name="description" rows="3"></textarea>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" data-dismiss="modal">İptal</button>
-                <button class="btn btn-primary" type="submit" form="create-order-form">Sipariş Oluştur</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Demo Modu Bildirimi -->
-    <div id="demo-mode-notification" class="info-box warning" style="position: fixed; bottom: 10px; left: 10px; width: auto; z-index: 1000; display: none;">
-        <div class="info-box-title">Demo Modu</div>
-        <div class="info-box-content">
-            <p>Uygulama şu anda demo modunda çalışıyor. Firebase kimlik doğrulaması atlanıyor.</p>
-            <button class="btn btn-sm btn-warning" onclick="document.getElementById('demo-mode-notification').style.display = 'none';">
-                <i class="fas fa-times"></i> Kapat
-            </button>
-        </div>
-    </div>
-
-    <!-- Firebase (Güncel modül versiyonlarını kullanın) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
-    
-    <!-- Demo modu için Mock Firebase (Netlify'da gerçek Firebase'e erişilemiyorsa) -->
-    <script src="js/mock-firebase.js"></script>
-    
-    <!-- Uygulama JavaScript -->
-    <script src="js/firebase-config.js"></script>
-    <script src="js/compat-check.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/orders.js"></script>
-    <script src="js/purchasing.js"></script>
-    <script src="js/production.js"></script>
-    <script src="js/chatbot.js"></script>
-    <script src="js/ai-analytics.js"></script>
-    
-    <!-- Service Worker -->
-    <script>
-        // Service worker kaydı
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(function(registration) {
-                        console.log('ServiceWorker başarıyla kaydedildi:', registration.scope);
-                    })
-                    .catch(function(error) {
-                        console.log('ServiceWorker kaydı başarısız:', error);
-                    });
-            });
-        }
-    </script>
-</body>
-</html>
+                            <div class="workflow-label">
