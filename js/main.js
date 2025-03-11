@@ -668,4 +668,32 @@ function toggleLoading(show, containerId = null) {
             loadingOverlay.style.backgroundColor = 'rgba(255, 255, 255, 0.7)';
             loadingOverlay.style.display = 'flex';
             loadingOverlay.style.alignItems = 'center';
-            loadingOverlay.style.justifyContent = 'center
+            loadingOverlay.style.justifyContent = 'center';
+            loadingOverlay.style.zIndex = '9999';
+            
+            // Spinner elementi
+            const spinner = document.createElement('div');
+            spinner.className = 'loading-spinner';
+            spinner.innerHTML = '<i class="fas fa-spinner fa-spin fa-3x"></i>';
+            loadingOverlay.appendChild(spinner);
+            
+            // Container'a ekle
+            if (containerId) {
+                const container = document.getElementById(containerId);
+                if (container) {
+                    container.style.position = 'relative';
+                    container.appendChild(loadingOverlay);
+                } else {
+                    document.body.appendChild(loadingOverlay);
+                }
+            } else {
+                document.body.appendChild(loadingOverlay);
+            }
+        }
+    } else {
+        // Loading overlay'i kaldır
+        if (loadingOverlay) {
+            loadingOverlay.remove();
+        }
+    }
+}
