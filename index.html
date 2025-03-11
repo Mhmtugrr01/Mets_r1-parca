@@ -1,4 +1,288 @@
-<div class="filters">
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MehmetEndustriyelTakip - OG Hücre İmalat Takip</title>
+    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Mehmet Endüstriyel Takip yazılımı">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e40af">
+    
+    <!-- CSS dosyaları -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/login.css"> 
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Giriş Sayfası -->
+    <div id="login-page" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="login-logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="login-logo-text">ElektroTrack</div>
+                </div>
+                <h1 class="login-title">Giriş Yap</h1>
+                <p class="login-subtitle">Orta Gerilim Hücre İmalat Takip Sistemi</p>
+            </div>
+            <div class="login-body">
+                <form id="login-form">
+                    <div class="login-form-group">
+                        <label class="login-label" for="username">Kullanıcı Adı / E-posta</label>
+                        <input type="text" id="username" class="login-input" placeholder="Kullanıcı adınızı veya e-postanızı girin" required>
+                    </div>
+                    <div class="login-form-group">
+                        <label class="login-label" for="password">Şifre</label>
+                        <input type="password" id="password" class="login-input" placeholder="Şifrenizi girin" required>
+                    </div>
+                    <div class="login-options">
+                        <div class="login-remember">
+                            <input type="checkbox" id="remember">
+                            <label for="remember">Beni hatırla</label>
+                        </div>
+                        <a href="#" class="login-forgot" onclick="showForgotPassword()">Şifremi unuttum</a>
+                    </div>
+                    <button type="submit" class="login-button">Giriş Yap</button>
+                </form>
+                
+                <div class="login-footer">
+                    Hesabınız yok mu? <a href="#" onclick="showRegister()">Kayıt Ol</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Kayıt Ol Formu -->
+    <div id="register-page" class="login-container" style="display: none;">
+        <div class="login-form">
+            <div class="login-header">
+                <h1 class="login-title">Kayıt Ol</h1>
+                <p class="login-subtitle">MehmetEndustriyelTakip'e hoş geldiniz</p>
+            </div>
+            
+            <form id="register-form">
+                <div class="form-group">
+                    <label class="form-label" for="register-name">Ad Soyad</label>
+                    <input type="text" class="form-control" id="register-name" placeholder="Adınızı ve soyadınızı girin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-email">E-posta</label>
+                    <input type="email" class="form-control" id="register-email" placeholder="E-posta adresinizi girin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-username">Kullanıcı Adı</label>
+                    <input type="text" class="form-control" id="register-username" placeholder="Kullanıcı adınızı girin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-department">Departman</label>
+                    <select class="form-control" id="register-department" required>
+                        <option value="">Departman Seçin</option>
+                        <option value="sales">Satış</option>
+                        <option value="production">Üretim</option>
+                        <option value="purchasing">Satın Alma</option>
+                        <option value="quality">Kalite</option>
+                        <option value="management">Yönetim</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-password">Şifre</label>
+                    <input type="password" class="form-control" id="register-password" placeholder="Şifre oluşturun" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-password-confirm">Şifre Tekrar</label>
+                    <input type="password" class="form-control" id="register-password-confirm" placeholder="Şifreyi tekrar girin" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Kayıt Ol</button>
+            </form>
+            
+            <div class="login-footer">
+                Zaten hesabınız var mı? <a href="#" onclick="showLogin()">Giriş Yap</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Şifremi Unuttum Formu -->
+    <div id="forgot-password-page" class="login-container" style="display: none;">
+        <div class="login-form">
+            <div class="login-header">
+                <h1 class="login-title">Şifremi Unuttum</h1>
+                <p class="login-subtitle">Şifre sıfırlama bağlantısı için e-posta adresinizi girin</p>
+            </div>
+            
+            <form id="forgot-password-form">
+                <div class="form-group">
+                    <label class="form-label" for="forgot-email">E-posta</label>
+                    <input type="email" class="form-control" id="forgot-email" placeholder="E-posta adresinizi girin" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Şifre Sıfırlama Bağlantısı Gönder</button>
+            </form>
+            
+            <div class="login-footer">
+                <a href="#" onclick="showLogin()">Giriş sayfasına dön</a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Ana Uygulama -->
+    <div id="main-app" style="display: none;">
+        <!-- Navbar -->
+        <div class="navbar">
+            <div class="navbar-brand" onclick="showPage('dashboard')">MehmetEndustriyelTakip</div>
+            <div class="navbar-menu">
+                <div class="navbar-item active" onclick="showPage('dashboard')">Kontrol Paneli</div>
+                <div class="navbar-item" onclick="showPage('sales')">Satış</div>
+                <div class="navbar-item" onclick="showPage('projects')">Projeler</div>
+                <div class="navbar-item" onclick="showPage('production')">Üretim</div>
+                <div class="navbar-item" onclick="showPage('stock')">Stok</div>
+                <div class="navbar-item" onclick="showPage('purchasing')">Satın Alma</div>
+                <div class="navbar-item" onclick="showPage('quality')">Kalite</div>
+                <div class="navbar-item" onclick="showPage('reports')">Raporlar</div>
+                <div class="navbar-item" onclick="showPage('notes')">Notlar</div>
+                <div class="navbar-item" onclick="showPage('ai')">Yapay Zeka</div>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar" onclick="toggleUserMenu()">M</div>
+                <div id="user-dropdown" class="user-dropdown">
+                    <div class="user-dropdown-item" onclick="showPage('profile')">
+                        <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
+                        <span>Profilim</span>
+                    </div>
+                    <div class="user-dropdown-item" onclick="showPage('settings')">
+                        <i class="fas fa-cog" style="margin-right: 0.5rem;"></i>
+                        <span>Ayarlar</span>
+                    </div>
+                    <div class="user-dropdown-divider"></div>
+                    <div class="user-dropdown-item" onclick="logout()">
+                        <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
+                        <span>Çıkış Yap</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Ana içerik sayfaları -->
+        <div class="container">
+            <!-- Kontrol Paneli -->
+            <div id="dashboard-page" class="page active">
+                <div class="page-header">
+                    <h1 class="page-title">Kontrol Paneli</h1>
+                    <div>
+                        <button class="btn btn-outline" onclick="refreshData()">
+                            <i class="fas fa-sync-alt"></i>
+                            <span>Yenile</span>
+                        </button>
+                        <button class="btn btn-primary" onclick="showCreateOrderModal()">
+                            <i class="fas fa-plus"></i>
+                            <span>Yeni Sipariş</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- İstatistik Kartları -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-primary">
+                            <i class="fas fa-clipboard-list"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Aktif Siparişler</div>
+                            <div class="stat-value">24</div>
+                            <div class="stat-change stat-change-positive">
+                                <i class="fas fa-arrow-up"></i> %8 geçen aya göre
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-warning">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Eksik Malzemeler</div>
+                            <div class="stat-value">8</div>
+                            <div class="stat-change stat-change-negative">
+                                <i class="fas fa-arrow-up"></i> %12 geçen aya göre
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-danger">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Geciken İşler</div>
+                            <div class="stat-value">3</div>
+                            <div class="stat-change stat-change-positive">
+                                <i class="fas fa-arrow-down"></i> %5 geçen aya göre
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon stat-icon-success">
+                            <i class="fas fa-truck"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Bu Ay Teslim</div>
+                            <div class="stat-value">12</div>
+                            <div class="stat-change stat-change-positive">
+                                <i class="fas fa-arrow-up"></i> %15 geçen aya göre
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Grafikler Satırı -->
+                <div class="row">
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Aylık Sipariş ve Teslimat</div>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 300px;">
+                                    <canvas id="orderChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="card">
+                            <div class="card-header">
+                                <div class="card-title">Müşteri Dağılımı</div>
+                            </div>
+                            <div class="card-body">
+                                <div style="height: 300px;">
+                                    <canvas id="customerChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sipariş Filtresi -->
+                <div class="filters">
                     <div class="search-box">
                         <i class="fas fa-search search-icon"></i>
                         <input type="text" class="search-input" placeholder="Sipariş no, müşteri, hücre tipi ara..." onkeyup="filterOrders()">
@@ -138,7 +422,7 @@
                 </div>
             </div>
             
-            <!-- Diğer sayfalar buraya eklenecek -->
+            <!-- Diğer sayfalar --> 
             <div id="sales-page" class="page">
                 <div class="page-header">
                     <h1 class="page-title">Satış</h1>
@@ -574,141 +858,16 @@
                 </div>
                 
                 <div class="tab-content" id="production-content">
-                    <div class="progress-container">
-                        <div class="progress-step completed">
-                            <div class="progress-icon">
-                                <i class="fas fa-clipboard-check"></i>
-                            </div>
-                            <div class="progress-text">Planlama</div>
-                            <div class="progress-date">15/09/2024</div>
-                        </div>
-                        <div class="progress-line completed"></div>
-                        <div class="progress-step completed">
-                            <div class="progress-icon">
-                                <i class="fas fa-boxes"></i>
-                            </div>
-                            <div class="progress-text">Malzeme Hazırlık</div>
-                            <div class="progress-date">20/09/2024</div>
-                        </div>
-                        <div class="progress-line active"></div>
-                        <div class="progress-step active">
-                            <div class="progress-icon">
-                                <i class="fas fa-cogs"></i>
-                            </div>
-                            <div class="progress-text">Montaj</div>
-                            <div class="progress-date">Devam Ediyor</div>
-                        </div>
-                        <div class="progress-line"></div>
-                        <div class="progress-step">
-                            <div class="progress-icon">
-                                <i class="fas fa-tools"></i>
-                            </div>
-                            <div class="progress-text">Ölçüm ve Test</div>
-                            <div class="progress-date">Bekleniyor</div>
-                        </div>
-                        <div class="progress-line"></div>
-                        <div class="progress-step">
-                            <div class="progress-icon">
-                                <i class="fas fa-check-double"></i>
-                            </div>
-                            <div class="progress-text">Kalite Kontrol</div>
-                            <div class="progress-date">Bekleniyor</div>
-                        </div>
-                        <div class="progress-line"></div>
-                        <div class="progress-step">
-                            <div class="progress-icon">
-                                <i class="fas fa-truck-loading"></i>
-                            </div>
-                            <div class="progress-text">Sevkiyat</div>
-                            <div class="progress-date">Bekleniyor</div>
-                        </div>
-                    </div>
-                    
-                    <div class="info-box">
-                        <div class="info-box-title">Üretim Notu</div>
-                        <div class="info-box-content">
-                            Montaj aşaması 05/10/2024 tarihinde tamamlanacak şekilde planlanmıştır. 
-                            Test ve ölçüm aşaması için gerekli ekipmanlar hazırlanmıştır.
-                        </div>
-                    </div>
+                    <!-- Üretim planlama içeriği buraya gelecek -->
                 </div>
                 
                 <div class="tab-content" id="documents-content">
-                    <div class="documents-container">
-                        <div class="document-item">
-                            <div class="document-icon">
-                                <i class="fas fa-file-pdf"></i>
-                            </div>
-                            <div class="document-info">
-                                <div class="document-title">Teknik Şartname</div>
-                                <div class="document-meta">PDF, 2.3 MB - 15/09/2024</div>
-                            </div>
-                            <div class="document-actions">
-                                <button class="btn btn-outline btn-sm">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="document-item">
-                            <div class="document-icon">
-                                <i class="fas fa-file-excel"></i>
-                            </div>
-                            <div class="document-info">
-                                <div class="document-title">Malzeme Listesi</div>
-                                <div class="document-meta">Excel, 520 KB - 18/09/2024</div>
-                            </div>
-                            <div class="document-actions">
-                                <button class="btn btn-outline btn-sm">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="document-item">
-                            <div class="document-icon">
-                                <i class="fas fa-file-image"></i>
-                            </div>
-                            <div class="document-info">
-                                <div class="document-title">Teknik Çizimler</div>
-                                <div class="document-meta">ZIP, 15.7 MB - 20/09/2024</div>
-                            </div>
-                            <div class="document-actions">
-                                <button class="btn btn-outline btn-sm">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <button class="btn btn-primary">
-                            <i class="fas fa-file-upload"></i>
-                            <span>Dosya Yükle</span>
-                        </button>
-                    </div>
+                    <!-- Dokümanlar içeriği buraya gelecek -->
                 </div>
                 
                 <div class="tab-content" id="notes-content">
                     <div class="notes-container">
-                        <div class="note-item">
-                            <div class="note-header">
-                                <div class="note-author">Mehmet Öztürk</div>
-                                <div class="note-date">22/09/2024 10:15</div>
-                            </div>
-                            <div class="note-content">
-                                Müşteri ile yapılan görüşmede, teslimat tarihinin çok kritik olduğu tekrar vurgulandı. 
-                                Herhangi bir gecikme durumunda önceden bilgilendirme yapılması gerekiyor.
-                            </div>
-                        </div>
-                        <div class="note-item">
-                            <div class="note-header">
-                                <div class="note-author">Ahmet Yılmaz</div>
-                                <div class="note-date">25/09/2024 14:30</div>
-                            </div>
-                            <div class="note-content">
-                                Gerilim gösterge malzemesinin tedarikinde yaşanan gecikme üretim planını etkileyebilir. 
-                                Alternatif tedarikçi araştırması başlatıldı.
-                            </div>
-                        </div>
+                        <!-- Notlar buraya dinamik olarak eklenecek -->
                     </div>
                     
                     <div class="add-note">
@@ -800,14 +959,29 @@
         </div>
     </div>
     
-    <!-- Firebase -->
+    <!-- Demo Modu Bildirimi -->
+    <div id="demo-mode-notification" class="info-box warning" style="position: fixed; bottom: 10px; left: 10px; width: auto; z-index: 1000; display: none;">
+        <div class="info-box-title">Demo Modu</div>
+        <div class="info-box-content">
+            <p>Uygulama şu anda demo modunda çalışıyor. Firebase kimlik doğrulaması atlanıyor.</p>
+            <button class="btn btn-sm btn-warning" onclick="document.getElementById('demo-mode-notification').style.display = 'none';">
+                <i class="fas fa-times"></i> Kapat
+            </button>
+        </div>
+    </div>
+
+    <!-- Firebase (Güncel modül versiyonlarını kullanın) -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
     
+    <!-- Demo modu için Mock Firebase (Netlify'da gerçek Firebase'e erişilemiyorsa) -->
+    <script src="js/mock-firebase.js"></script>
+    
     <!-- Uygulama JavaScript -->
     <script src="js/firebase-config.js"></script>
+    <script src="js/compat-check.js"></script>
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/dashboard.js"></script>
@@ -833,304 +1007,4 @@
         }
     </script>
 </body>
-</html><!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MehmetEndustriyelTakip - OG Hücre İmalat Takip</title>
-    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Mehmet Endüstriyel Takip yazılımı">
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="img/favicon.png">
-    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-    
-    <!-- PWA manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e40af">
-    
-    <!-- CSS dosyaları -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/login.css"> 
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/responsive.css">
-    
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body>
-    <!-- Giriş Sayfası -->
-    <div id="login-page" class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-logo">
-                    <div class="login-logo-icon">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <div class="login-logo-text">ElektroTrack</div>
-                </div>
-                <h1 class="login-title">Giriş Yap</h1>
-                <p class="login-subtitle">Orta Gerilim Hücre İmalat Takip Sistemi</p>
-            </div>
-            <div class="login-body">
-                <form id="login-form">
-                    <div class="login-form-group">
-                        <label class="login-label" for="username">Kullanıcı Adı / E-posta</label>
-                        <input type="text" id="username" class="login-input" placeholder="Kullanıcı adınızı veya e-postanızı girin" required>
-                    </div>
-                    <div class="login-form-group">
-                        <label class="login-label" for="password">Şifre</label>
-                        <input type="password" id="password" class="login-input" placeholder="Şifrenizi girin" required>
-                    </div>
-                    <div class="login-options">
-                        <div class="login-remember">
-                            <input type="checkbox" id="remember">
-                            <label for="remember">Beni hatırla</label>
-                        </div>
-                        <a href="#" class="login-forgot" onclick="showForgotPassword()">Şifremi unuttum</a>
-                    </div>
-                    <button type="submit" class="login-button">Giriş Yap</button>
-                </form>
-                
-                <div class="login-footer">
-                    Hesabınız yok mu? <a href="#" onclick="showRegister()">Kayıt Ol</a>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Kayıt Ol Formu -->
-    <div id="register-page" class="login-container" style="display: none;">
-        <div class="login-form">
-            <div class="login-header">
-                <h1 class="login-title">Kayıt Ol</h1>
-                <p class="login-subtitle">MehmetEndustriyelTakip'e hoş geldiniz</p>
-            </div>
-            
-            <form id="register-form">
-                <div class="form-group">
-                    <label class="form-label" for="register-name">Ad Soyad</label>
-                    <input type="text" class="form-control" id="register-name" placeholder="Adınızı ve soyadınızı girin" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-email">E-posta</label>
-                    <input type="email" class="form-control" id="register-email" placeholder="E-posta adresinizi girin" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-username">Kullanıcı Adı</label>
-                    <input type="text" class="form-control" id="register-username" placeholder="Kullanıcı adınızı girin" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-department">Departman</label>
-                    <select class="form-control" id="register-department" required>
-                        <option value="">Departman Seçin</option>
-                        <option value="sales">Satış</option>
-                        <option value="production">Üretim</option>
-                        <option value="purchasing">Satın Alma</option>
-                        <option value="quality">Kalite</option>
-                        <option value="management">Yönetim</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-password">Şifre</label>
-                    <input type="password" class="form-control" id="register-password" placeholder="Şifre oluşturun" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-password-confirm">Şifre Tekrar</label>
-                    <input type="password" class="form-control" id="register-password-confirm" placeholder="Şifreyi tekrar girin" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Kayıt Ol</button>
-            </form>
-            
-            <div class="login-footer">
-                Zaten hesabınız var mı? <a href="#" onclick="showLogin()">Giriş Yap</a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Şifremi Unuttum Formu -->
-    <div id="forgot-password-page" class="login-container" style="display: none;">
-        <div class="login-form">
-            <div class="login-header">
-                <h1 class="login-title">Şifremi Unuttum</h1>
-                <p class="login-subtitle">Şifre sıfırlama bağlantısı için e-posta adresinizi girin</p>
-            </div>
-            
-            <form id="forgot-password-form">
-                <div class="form-group">
-                    <label class="form-label" for="forgot-email">E-posta</label>
-                    <input type="email" class="form-control" id="forgot-email" placeholder="E-posta adresinizi girin" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Şifre Sıfırlama Bağlantısı Gönder</button>
-            </form>
-            
-            <div class="login-footer">
-                <a href="#" onclick="showLogin()">Giriş sayfasına dön</a>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Ana Uygulama -->
-    <div id="main-app" style="display: none;">
-        <!-- Navbar -->
-        <div class="navbar">
-            <div class="navbar-brand" onclick="showPage('dashboard')">MehmetEndustriyelTakip</div>
-            <div class="navbar-menu">
-                <div class="navbar-item active" onclick="showPage('dashboard')">Kontrol Paneli</div>
-                <div class="navbar-item" onclick="showPage('sales')">Satış</div>
-                <div class="navbar-item" onclick="showPage('projects')">Projeler</div>
-                <div class="navbar-item" onclick="showPage('production')">Üretim</div>
-                <div class="navbar-item" onclick="showPage('stock')">Stok</div>
-                <div class="navbar-item" onclick="showPage('purchasing')">Satın Alma</div>
-                <div class="navbar-item" onclick="showPage('quality')">Kalite</div>
-                <div class="navbar-item" onclick="showPage('reports')">Raporlar</div>
-                <div class="navbar-item" onclick="showPage('notes')">Notlar</div>
-                <div class="navbar-item" onclick="showPage('ai')">Yapay Zeka</div>
-            </div>
-            <div class="user-menu">
-                <div class="user-avatar" onclick="toggleUserMenu()">M</div>
-                <div id="user-dropdown" class="user-dropdown">
-                    <div class="user-dropdown-item" onclick="showPage('profile')">
-                        <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
-                        <span>Profilim</span>
-                    </div>
-                    <div class="user-dropdown-item" onclick="showPage('settings')">
-                        <i class="fas fa-cog" style="margin-right: 0.5rem;"></i>
-                        <span>Ayarlar</span>
-                    </div>
-                    <div class="user-dropdown-divider"></div>
-                    <div class="user-dropdown-item" onclick="logout()">
-                        <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
-                        <span>Çıkış Yap</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Ana içerik sayfaları -->
-        <div class="container">
-            <!-- Kontrol Paneli -->
-            <div id="dashboard-page" class="page active">
-                <div class="page-header">
-                    <h1 class="page-title">Kontrol Paneli</h1>
-                    <div>
-                        <button class="btn btn-outline" onclick="refreshData()">
-                            <i class="fas fa-sync-alt"></i>
-                            <span>Yenile</span>
-                        </button>
-                        <button class="btn btn-primary" onclick="showCreateOrderModal()">
-                            <i class="fas fa-plus"></i>
-                            <span>Yeni Sipariş</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- İstatistik Kartları -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-primary">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Aktif Siparişler</div>
-                            <div class="stat-value">24</div>
-                            <div class="stat-change stat-change-positive">
-                                <i class="fas fa-arrow-up"></i> %8 geçen aya göre
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Eksik Malzemeler</div>
-                            <div class="stat-value">8</div>
-                            <div class="stat-change stat-change-negative">
-                                <i class="fas fa-arrow-up"></i> %12 geçen aya göre
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-danger">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Geciken İşler</div>
-                            <div class="stat-value">3</div>
-                            <div class="stat-change stat-change-positive">
-                                <i class="fas fa-arrow-down"></i> %5 geçen aya göre
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-success">
-                            <i class="fas fa-truck"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Bu Ay Teslim</div>
-                            <div class="stat-value">12</div>
-                            <div class="stat-change stat-change-positive">
-                                <i class="fas fa-arrow-up"></i> %15 geçen aya göre
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Grafikler Satırı -->
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Aylık Sipariş ve Teslimat</div>
-                            </div>
-                            <div class="card-body">
-                                <div style="height: 300px;">
-                                    <canvas id="orderChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Müşteri Dağılımı</div>
-                            </div>
-                            <div class="card-body">
-                                <div style="height: 300px;">
-                                    <canvas id="customerChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Üretim Durumu Grafiği -->
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Üretim Durumu</div>
-                            </div>
-                            <div class="card-body">
-                                <div style="height: 250px;">
-                                    <canvas id="productionStatusChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Sipariş Filtresi -->
-                <div class="filters">
+</html>
