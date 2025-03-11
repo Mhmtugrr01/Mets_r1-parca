@@ -327,4 +327,240 @@ function createDelayRiskMap(containerId) {
         { id: '24-03-B002', name: 'BAŞKENT EDAŞ', complexity: 85, materialsReadiness: 65, riskScore: 80 },
         { id: '24-03-C003', name: 'ENERJİSA', complexity: 70, materialsReadiness: 85, riskScore: 40 },
         { id: '24-04-D004', name: 'TOROSLAR EDAŞ', complexity: 90, materialsReadiness: 75, riskScore: 70 },
-        { id: '24-04-E005', name: 'AYEDAŞ', complexity
+        { id: '24-04-E005', name: 'AYEDAŞ', complexity: 50, materialsReadiness: 95, riskScore: 15 },
+        { id: '24-04-F006', name: 'ENERJİSA', complexity: 75, materialsReadiness: 60, riskScore: 65 }
+    ];
+    
+    // Bubble chart için veri hazırla
+    const bubbleData = {
+        datasets: [{
+            label: 'Gecikme Riski',
+            data: orders.map(order => ({
+                x: order.complexity,
+                y: order.materialsReadiness,
+                r: order.riskScore / 4, // Risk skorunu kabarcık boyutuna dönüştür
+                id: order.id,
+                name: order.name,
+                riskScore: order.riskScore
+            })),
+            backgroundColor: orders.map(order => {
+                // Risk skoruna göre renk belirle (yeşil-sarı-kırmızı)
+                if (order.riskScore < 30) return 'rgba(46, 204, 113, 0.7)'; // Düşük risk
+                else if (order.riskScore < 70) return 'rgba(241, 196, 15, 0.7)'; // Orta risk
+                else return 'rgba(231, 76, 60, 0.7)'; // Yüksek risk
+            }),
+            borderColor: orders.map(order => {
+                if (order.riskScore < 30) return 'rgba(46, 204, 113, 1)';
+                else if (order.riskScore < 70) return 'rgba(241, 196, 15, 1)';
+                else return 'rgba(231, 76, 60, 1)';
+            }),
+            borderWidth: 1
+        }]
+    };
+    
+    // Chart.js grafiği oluştur
+    new Chart(canvas, {
+        type: 'bubble',
+        data: bubbleData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    min: 40,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Üretim Karmaşıklığı'
+                    }
+                },
+                y: {
+                    min: 50,
+                    max: 100,
+                    title: {
+                        display: true,
+                        text: 'Malzeme Hazırlık Durumu (%)'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Sipariş Gecikme Risk Haritası',
+                    font: {
+                        size: 16
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const data = context.raw;
+                            return [
+                                `Sipariş: ${data.id} (${data.name})`,
+                                `Üretim Karmaşıklığı: ${data.x}%`,
+                                `Malzeme Hazırlık: ${data.y}%`,
+                                `Risk Skoru: ${data.riskScore}/100`
+                            ];
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Maliyet ve Verimlilik Analizi
+function createCostEfficiencyChart(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    // Canvas elementi oluştur
+    const canvas = document.createElement('canvas');
+    canvas.id = 'cost-efficiency-chart';
+    container.appendChild(canvas);
+    
+    // Chart verileri
+    const barData = {
+        labels: ['Maliyet', 'Malzeme', 'İşçilik', 'Nakliye', 'Diğer'],
+        datasets: [
+            {
+                label: 'Planlanan (₺)',
+                data: [350000, 150000, 110000, 40000, 50000],
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            },
+            {
+                label: 'Gerçekleşen (₺)',
+                data: [330000, 160000, 100000, 35000, 35000],
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                borderColor: 'rgba(255, 99, 132, 1)',
+                borderWidth: 1
+            }
+        ]
+    };
+    
+    // Chart.js grafiği oluştur
+    new Chart(canvas, {
+        type: 'bar',
+        data: barData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Tutar (₺)'
+                    }
+                }
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: 'Maliyet Analizi',
+                    font: {
+                        size: 16
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Veri görselleştirme Dashboard'a ekle
+function addVisualizationsToDashboard() {
+    // İki sütunlu container oluştur
+    const dashboardPage = document.getElementById('dashboard-page');
+    if (!dashboardPage) return;
+    
+    // Görselleştirmeler için div ekle
+    const visualizationsContainer = document.createElement('div');
+    visualizationsContainer.className = 'visualizations-container';
+    visualizationsContainer.innerHTML = `
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">İleri Analizler</div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col">
+                        <div id="production-efficiency-container" style="height: 300px;"></div>
+                    </div>
+                    <div class="col">
+                        <div id="material-consumption-container" style="height: 300px;"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col">
+                        <div id="delay-risk-container" style="height: 300px;"></div>
+                    </div>
+                    <div class="col">
+                        <div id="cost-efficiency-container" style="height: 300px;"></div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 20px;">
+                    <div class="col">
+                        <div id="production-timeline-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Container'ı sayfaya ekle - AI önerilerinden sonra
+    const aiRecommendationsCard = dashboardPage.querySelector('.card:last-child');
+    if (aiRecommendationsCard) {
+        dashboardPage.insertBefore(visualizationsContainer, null);
+    } else {
+        dashboardPage.appendChild(visualizationsContainer);
+    }
+    
+    // Grafikleri oluştur
+    setTimeout(() => {
+        createProductionEfficiencyChart('production-efficiency-container');
+        createMaterialConsumptionChart('material-consumption-container');
+        createDelayRiskMap('delay-risk-container');
+        createCostEfficiencyChart('cost-efficiency-container');
+        createProductionTimeline('production-timeline-container');
+    }, 500);
+}
+
+// Sayfa yüklendiğinde çalışacak
+document.addEventListener('DOMContentLoaded', function() {
+    // Dashboard sayfası açıksa görselleştirmeleri ekle
+    const dashboardPage = document.getElementById('dashboard-page');
+    if (dashboardPage && dashboardPage.classList.contains('active')) {
+        setTimeout(addVisualizationsToDashboard, 1000);
+    }
+    
+    // Sayfa değişikliğini dinle
+    document.addEventListener('pageChanged', function(e) {
+        if (e.detail && e.detail.page === 'dashboard') {
+            setTimeout(addVisualizationsToDashboard, 1000);
+        }
+    });
+});
+
+// Sayfa değişikliği için özel olay oluştur
+function dispatchPageChangeEvent(page) {
+    const event = new CustomEvent('pageChanged', {
+        detail: {
+            page: page
+        }
+    });
+    document.dispatchEvent(event);
+}
+
+// Orijinal showPage fonksiyonunu geçersiz kıl
+const originalShowPage = window.showPage;
+window.showPage = function(pageName) {
+    // Orijinal fonksiyonu çağır
+    if (typeof originalShowPage === 'function') {
+        originalShowPage(pageName);
+    }
+    
+    // Özel olayı tetikle
+    dispatchPageChangeEvent(pageName);
+};
