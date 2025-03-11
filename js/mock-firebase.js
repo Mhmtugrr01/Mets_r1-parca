@@ -287,4 +287,361 @@ class MockDocumentReference {
     
     async set(data, options) {
         if (!this.firestore.data[this.collectionName]) {
-            this.firestore.data[this.coll
+            this.firestore.data[this.collectionName] = [];
+        }
+        
+        const now = new Date();
+        const newData = {
+            ...data,
+            id: this.id || ('mock-' + Math.random().toString(36).substr(2, 9)),
+            updatedAt: data.updatedAt || now
+        };
+        
+        if (!this.id) {
+            this.id = newData.id;
+            newData.createdAt = data.createdAt || now;
+            this.firestore.data[this.collectionName].push(newData);
+        } else {
+            const index = this.firestore.data[this.collectionName].findIndex(item => item.id === this.id);
+            if (index !== -1) {
+                this.firestore.data[this.collectionName][index] = {
+                    ...this.firestore.data[this.collectionName][index],
+                    ...newData
+                };
+            } else {
+                newData.createdAt = data.createdAt || now;
+                this.firestore.data[this.collectionName].push(newData);
+            }
+        }
+        
+        return Promise.resolve();
+    }
+    
+    async update(data) {
+        if (!this.id) {
+            throw new Error('Document ID is required for update');
+        }
+        
+        if (!this.firestore.data[this.collectionName]) {
+            throw new Error(`Collection ${this.collectionName} does not exist`);
+        }
+        
+        const index = this.firestore.data[this.collectionName].findIndex(item => item.id === this.id);
+        if (index === -1) {
+            throw new Error(`Document with ID ${this.id} does not exist in ${this.collectionName}`);
+        }
+        
+        this.firestore.data[this.collectionName][index] = {
+            ...this.firestore.data[this.collectionName][index],
+            ...data,
+            updatedAt: data.updatedAt || new Date()
+        };
+        
+        return Promise.resolve();
+    }
+    
+    async delete() {
+        if (!this.id) {
+            throw new Error('Document ID is required for delete');
+        }
+        
+        if (!this.firestore.data[this.collectionName]) {
+            return Promise.resolve();
+        }
+        
+        const index = this.firestore.data[this.collectionName].findIndex(item => item.id === this.id);
+        if (index !== -1) {
+            this.firestore.data[this.collectionName].splice(index, 1);
+        }
+        
+        return Promise.resolve();
+    }
+}
+
+class MockQuery {
+    constructor(firestore, collectionName, filters = [], orderByParams = [], limitVal = null) {
+        this.firestore = firestore;
+        this.collectionName = collectionName;
+        this.filters = filters;
+        this.orderByParams = orderByParams;
+        this.limitVal = limitVal;
+    }
+    
+    where(field, op, value) {
+        return new MockQuery(
+            this.firestore,
+            this.collectionName,
+            [...this.filters, { field, op, value }],
+            this.orderByParams,
+            this.limitVal
+        );
+    }
+    
+    orderBy(field, dir = 'asc') {
+        return new MockQuery(
+            this.firestore,
+            this.collectionName,
+            this.filters,
+            [...this.orderByParams, { field, dir }],
+            this.limitVal
+        );
+    }
+    
+    limit(limitVal) {
+        return new MockQuery(
+            this.firestore,
+            this.collectionName,
+            this.filters,
+            this.orderByParams,
+            limitVal
+        );
+    }
+    
+    async get() {
+        let data = this.firestore.data[this.collectionName] || [];
+        
+        // Filtreleri uygula
+        this.filters.forEach(filter => {
+            const { field, op, value } = filter;
+            
+            data = data.filter(item => {
+                const fieldValue = this._getNestedValue(item, field);
+                
+                switch (op) {
+                    case '==':
+                        if (fieldValue instanceof Date && value instanceof Date) {
+                            return fieldValue.getTime() === value.getTime();
+                        }
+                        return fieldValue === value;
+                    case '!=':
+                        return fieldValue !== value;
+                    case '>':
+                        return fieldValue > value;
+                    case '>=':
+                        return fieldValue >= value;
+                    case '<':
+                        return fieldValue < value;
+                    case '<=':
+                        return fieldValue <= value;
+                    case 'in':
+                        return Array.isArray(value) && value.includes(fieldValue);
+                    case 'array-contains':
+                        return Array.isArray(fieldValue) && fieldValue.includes(value);
+                    case 'array-contains-any':
+                        return Array.isArray(fieldValue) && Array.isArray(value) && value.some(v => fieldValue.includes(v));
+                    default:
+                        return true;
+                }
+            });
+        });
+        
+        // Sıralama uygula
+        if (this.orderByParams.length > 0) {
+            data.sort((a, b) => {
+                for (const { field, dir } of this.orderByParams) {
+                    const aValue = this._getNestedValue(a, field);
+                    const bValue = this._getNestedValue(b, field);
+                    
+                    if (aValue === bValue) continue;
+                    
+                    // Tarih karşılaştırması
+                    if (aValue instanceof Date && bValue instanceof Date) {
+                        return dir === 'asc' 
+                            ? aValue.getTime() - bValue.getTime()
+                            : bValue.getTime() - aValue.getTime();
+                    }
+                    
+                    // Metin karşılaştırması
+                    if (typeof aValue === 'string' && typeof bValue === 'string') {
+                        const result = aValue.localeCompare(bValue);
+                        return dir === 'asc' ? result : -result;
+                    }
+                    
+                    // Sayı karşılaştırması
+                    return dir === 'asc' 
+                        ? (aValue > bValue ? 1 : -1)
+                        : (aValue > bValue ? -1 : 1);
+                }
+                return 0;
+            });
+        }
+        
+        // Limit uygula
+        if (this.limitVal !== null && this.limitVal > 0) {
+            data = data.slice(0, this.limitVal);
+        }
+        
+        // Sonuçları döndür
+        const docs = data.map(item => ({
+            id: item.id,
+            data: () => ({ ...item }),
+            exists: true
+        }));
+        
+        return {
+            empty: docs.length === 0,
+            size: docs.length,
+            docs: docs,
+            forEach: (callback) => docs.forEach(callback)
+        };
+    }
+    
+    _getNestedValue(obj, path) {
+        const parts = path.split('.');
+        let value = obj;
+        
+        for (const part of parts) {
+            if (value === null || value === undefined) return undefined;
+            value = value[part];
+        }
+        
+        return value;
+    }
+}
+
+class MockAuth {
+    constructor() {
+        this.currentUser = null;
+        this.listeners = [];
+        console.log('Mock Auth initialized in demo mode');
+    }
+    
+    async signInWithEmailAndPassword(email, password) {
+        // Demo için her zaman başarılı olsun
+        if (email === 'demo@elektrotrack.com' && password === 'demo123') {
+            this.currentUser = {
+                uid: 'demo-user-1',
+                email: 'demo@elektrotrack.com',
+                displayName: 'Demo Kullanıcı',
+                emailVerified: true
+            };
+        } else {
+            this.currentUser = {
+                uid: 'user-' + Math.random().toString(36).substr(2, 9),
+                email: email,
+                displayName: email.split('@')[0],
+                emailVerified: true
+            };
+        }
+        
+        // Otomatik otomatik oturum açılma bildirimini tetikle
+        this._notifyAuthStateChanged();
+        
+        // Demo mod bildirimini göster
+        const demoModeNotification = document.getElementById('demo-mode-notification');
+        if (demoModeNotification) {
+            demoModeNotification.style.display = 'block';
+        }
+        
+        return {
+            user: this.currentUser
+        };
+    }
+    
+    async createUserWithEmailAndPassword(email, password) {
+        this.currentUser = {
+            uid: 'user-' + Math.random().toString(36).substr(2, 9),
+            email: email,
+            displayName: null,
+            emailVerified: false
+        };
+        
+        this._notifyAuthStateChanged();
+        
+        return {
+            user: this.currentUser
+        };
+    }
+    
+    async sendPasswordResetEmail(email) {
+        console.log(`Mock: Şifre sıfırlama e-postası gönderildi: ${email}`);
+        return Promise.resolve();
+    }
+    
+    async signOut() {
+        this.currentUser = null;
+        this._notifyAuthStateChanged();
+        return Promise.resolve();
+    }
+    
+    onAuthStateChanged(callback) {
+        this.listeners.push(callback);
+        
+        // Hemen mevcut durumu bildir
+        if (callback) {
+            setTimeout(() => callback(this.currentUser), 0);
+        }
+        
+        // Temizleme fonksiyonu döndür
+        return () => {
+            this.listeners = this.listeners.filter(listener => listener !== callback);
+        };
+    }
+    
+    _notifyAuthStateChanged() {
+        this.listeners.forEach(callback => {
+            if (callback) {
+                setTimeout(() => callback(this.currentUser), 0);
+            }
+        });
+    }
+    
+    // Diğer Auth metotları
+    EmailAuthProvider = {
+        credential: (email, password) => ({ email, password })
+    };
+}
+
+// Firebase mock'u başlat
+function initMockFirebase() {
+    // Gerçek Firebase'in varlığını kontrol et
+    if (typeof firebase !== 'undefined') {
+        console.log('Gerçek Firebase bulundu, mock kullanılmayacak');
+        return false;
+    }
+    
+    // Global firebase objesi oluştur
+    window.firebase = {
+        initializeApp: (config) => {
+            console.log('Mock Firebase initialized with config', config);
+            return window.firebase;
+        },
+        app: () => window.firebase,
+        auth: () => window.firebase._authInstance || (window.firebase._authInstance = new MockAuth()),
+        firestore: () => window.firebase._firestoreInstance || (window.firebase._firestoreInstance = new MockFirestore()),
+        analytics: () => ({
+            logEvent: (name, params) => console.log(`Mock Analytics: ${name}`, params)
+        }),
+        
+        // Compat modüllerini de mockla
+        signInWithEmailAndPassword: (email, password) => window.firebase.auth().signInWithEmailAndPassword(email, password),
+        createUserWithEmailAndPassword: (email, password) => window.firebase.auth().createUserWithEmailAndPassword(email, password),
+        sendPasswordResetEmail: (email) => window.firebase.auth().sendPasswordResetEmail(email),
+        signOut: () => window.firebase.auth().signOut(),
+        collection: (path) => window.firebase.firestore().collection(path),
+        doc: (collection, docId) => docId ? window.firebase.firestore().collection(collection).doc(docId) : window.firebase.firestore().doc(collection),
+        setDoc: (docRef, data) => docRef.set(data),
+        getDoc: (docRef) => docRef.get(),
+        getDocs: (query) => query.get(),
+        query: (collRef) => collRef,
+        where: (field, op, value) => window.firebase.firestore().where(field, op, value),
+        serverTimestamp: () => window.firebase.firestore().FieldValue.serverTimestamp(),
+        arrayUnion: (...elements) => window.firebase.firestore().FieldValue.arrayUnion(...elements),
+        increment: (n) => window.firebase.firestore().FieldValue.increment(n)
+    };
+    
+    console.log('Mock Firebase başarıyla oluşturuldu');
+    return true;
+}
+
+// Sayfaya eklendiğinde mock Firebase'i başlat
+(function() {
+    // Sayfa yüklendiğinde initialize et
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setTimeout(initMockFirebase, 1000); // Gerçek Firebase'in yüklenmesi için bir saniye bekle
+    } else {
+        window.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initMockFirebase, 1000);
+        });
+    }
+})();
