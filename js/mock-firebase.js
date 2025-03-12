@@ -1,19 +1,10 @@
-/*
-    BU DOSYA, kod-1 ve kod-2'yi BİRLEŞTİRİR.
-    "Kapsam azaltma olmasın" talebine uygun biçimde
-    her iki koddaki TÜM içeriği korur.
+/**
+ * mock-firebase.js
+ * Demo modu için sahte Firebase implementasyonu
+ */
 
-    Olası çakışmaları önlemek için:
-    - Değişken, sınıf ve fonksiyon adlarına "KOD1" / "KOD2" ekledik.
-    - Tek bir dosya içinde iki ayrı "parça" gibi davranırlar.
-*/
-
-/******************************************
- * BÖLÜM A: kod-1 (mock-firebase-KOD1.js)
- ******************************************/
-
-// Mock veri (KOD1)
-const mockDataKOD1 = {
+// Mock veri
+const mockData = {
     users: [
         {
             id: 'demo-user-1',
@@ -177,223 +168,125 @@ const mockDataKOD1 = {
     ]
 };
 
-/*****************************************
-    Kod-1'de kullanılan class ve fonksiyonları
-    ayırmak için "KOD1" ekliyoruz.
-*****************************************/
+// Firebase Timestamp Simulasyonu
+class MockTimestamp {
+    constructor(seconds, nanoseconds = 0) {
+        this.seconds = seconds;
+        this.nanoseconds = nanoseconds;
+    }
 
-class MockFirestoreKOD1 {
+    toDate() {
+        return new Date(this.seconds * 1000);
+    }
+
+    static now() {
+        return new MockTimestamp(Math.floor(Date.now() / 1000));
+    }
+
+    static fromDate(date) {
+        return new MockTimestamp(Math.floor(date.getTime() / 1000));
+    }
+}
+
+// Mock Firebase Auth
+class MockAuth {
     constructor() {
-        this.data = JSON.parse(JSON.stringify(mockDataKOD1));
-        console.log('(KOD1) Mock Firestore initialized in demo mode');
+        this.currentUser = null;
+        this.listeners = [];
     }
 
-    collection(collectionName) {
-        return new MockCollectionKOD1(this, collectionName);
-    }
-
-    doc(path) {
-        if (path.includes('/')) {
-            const [collectionName, docId] = path.split('/');
-            return new MockDocumentReferenceKOD1(this, collectionName, docId);
-        }
-        return new MockDocumentReferenceKOD1(this, path);
-    }
-}
-
-class MockCollectionKOD1 {
-    constructor(firestore, collectionName) {
-        this.firestore = firestore;
-        this.collectionName = collectionName;
-    }
-
-    doc(docId) {
-        return new MockDocumentReferenceKOD1(this.firestore, this.collectionName, docId);
-    }
-
-    async get() {
-        const data = this.firestore.data[this.collectionName] || [];
-        const docs = data.map(item => ({
-            id: item.id,
-            data: () => ({ ...item }),
-            exists: true
-        }));
-
-        return {
-            empty: docs.length === 0,
-            size: docs.length,
-            docs: docs,
-            forEach: (callback) => docs.forEach(callback)
-        };
-    }
-}
-
-class MockDocumentReferenceKOD1 {
-    constructor(firestore, collectionName, docId) {
-        this.firestore = firestore;
-        this.collectionName = collectionName;
-        this.id = docId;
-    }
-
-    async get() {
-        if (!this.id) {
-            throw new Error('(KOD1) Document ID is required');
-        }
-        const collection = this.firestore.data[this.collectionName] || [];
-        const doc = collection.find(item => item.id === this.id);
-
-        if (!doc) {
-            return {
-                exists: false,
-                data: () => null,
-                id: this.id
-            };
-        }
-        return {
-            exists: true,
-            data: () => ({ ...doc }),
-            id: this.id
-        };
-    }
-}
-
-// (KOD1) initMockFirebase benzeri
-function initMockFirebaseKOD1() {
-    // Gerçek Firebase'in varlığını kontrol et
-    if (typeof firebase !== 'undefined' && firebase.firestore && !firebase._firestoreInstanceKOD1) {
-        console.log('(KOD1) Gerçek Firebase bulundu, mock kullanılmayacak');
-        return false;
-    }
-
-    // Global firebase objesi oluştur
-    window.firebaseKOD1 = {
-        _firestoreInstanceKOD1: new MockFirestoreKOD1()
-    };
-
-    console.log('(KOD1) Mock Firebase başarıyla oluşturuldu');
-    return true;
-}
-
-/**************************************
- * BÖLÜM B: kod-2 (mock-firebase-KOD2.js)
- **************************************/
-
-const mockDataKOD2 = {
-    users: [...mockDataKOD1.users],
-    orders: [...mockDataKOD1.orders],
-    materials: [...mockDataKOD1.materials],
-    customers: [...mockDataKOD1.customers],
-    notes: [...mockDataKOD1.notes]
-    // Yukarıdaki satır: Aynı verileri korumak adına
-};
-
-// KOD2 class'ları
-class MockFirestoreKOD2 {
-    constructor() {
-        this.data = JSON.parse(JSON.stringify(mockDataKOD2));
-        console.log('(KOD2) Mock Firestore initialized in demo mode');
-    }
-
-    collection(collectionName) {
-        return new MockCollectionKOD2(this, collectionName);
-    }
-
-    doc(path) {
-        if (path.includes('/')) {
-            const [collectionName, docId] = path.split('/');
-            return new MockDocumentReferenceKOD2(this, collectionName, docId);
-        }
-        return new MockDocumentReferenceKOD2(this, path);
-    }
-}
-
-class MockCollectionKOD2 {
-    constructor(firestore, collectionName) {
-        this.firestore = firestore;
-        this.collectionName = collectionName;
-    }
-
-    doc(docId) {
-        return new MockDocumentReferenceKOD2(this.firestore, this.collectionName, docId);
-    }
-
-    async get() {
-        const data = this.firestore.data[this.collectionName] || [];
-        const docs = data.map(item => ({
-            id: item.id,
-            data: () => ({ ...item }),
-            exists: true
-        }));
-        return {
-            empty: docs.length === 0,
-            size: docs.length,
-            docs: docs,
-            forEach: (callback) => docs.forEach(callback)
-        };
-    }
-}
-
-class MockDocumentReferenceKOD2 {
-    constructor(firestore, collectionName, docId) {
-        this.firestore = firestore;
-        this.collectionName = collectionName;
-        this.id = docId;
-    }
-
-    async get() {
-        if (!this.id) {
-            throw new Error('(KOD2) Document ID is required');
-        }
-        const collection = this.firestore.data[this.collectionName] || [];
-        const doc = collection.find(item => item.id === this.id);
-        if (!doc) {
-            return {
-                exists: false,
-                data: () => null,
-                id: this.id
-            };
-        }
-        return {
-            exists: true,
-            data: () => ({ ...doc }),
-            id: this.id
-        };
-    }
-}
-
-function initMockFirebaseKOD2() {
-    if (typeof firebase !== 'undefined' && firebase.firestore && !firebase._firestoreInstanceKOD2) {
-        console.log('(KOD2) Gerçek Firebase bulundu, mock kullanılmayacak');
-        return false;
-    }
-
-    window.firebaseKOD2 = {
-        _firestoreInstanceKOD2: new MockFirestoreKOD2()
-    };
-
-    console.log('(KOD2) Mock Firebase başarıyla oluşturuldu');
-    return true;
-}
-
-/**************************************
- * TEK DOSYA HALİNDE ÇALIŞTIRMA
- **************************************/
-
-(function() {
-    // Burada KOD1 ve KOD2'yi aynı anda init edebiliriz
-    // Ama her ikisinin de global namespace'leri farklı
-
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    onAuthStateChanged(listener) {
+        this.listeners.push(listener);
+        // Hemen mevcut durumu bildir
         setTimeout(() => {
-            initMockFirebaseKOD1();
-            initMockFirebaseKOD2();
-        }, 1000);
-    } else {
-        window.addEventListener('DOMContentLoaded', function() {
-            setTimeout(() => {
-                initMockFirebaseKOD1();
-                initMockFirebaseKOD2();
-            }, 1000);
-        });
+            listener(this.currentUser);
+        }, 0);
+        
+        // Temizleme fonksiyonu
+        return () => {
+            this.listeners = this.listeners.filter(l => l !== listener);
+        };
     }
-})();
+
+    async signInWithEmailAndPassword(email, password) {
+        // Demo hesap kontrolü
+        if (email === 'demo@elektrotrack.com' && password === 'demo123') {
+            this.currentUser = {
+                uid: 'demo-user-1',
+                email: 'demo@elektrotrack.com',
+                displayName: 'Demo Kullanıcı',
+                emailVerified: true
+            };
+            
+            // Dinleyicileri bilgilendir
+            this.listeners.forEach(listener => listener(this.currentUser));
+            
+            return { 
+                user: this.currentUser,
+                operationType: 'signIn'
+            };
+        }
+        
+        throw new Error('auth/user-not-found');
+    }
+
+    async signOut() {
+        this.currentUser = null;
+        
+        // Dinleyicileri bilgilendir
+        this.listeners.forEach(listener => listener(null));
+        
+        return true;
+    }
+}
+
+// Mock Firestore
+class MockFirestore {
+    constructor() {
+        this.data = JSON.parse(JSON.stringify(mockData));
+        
+        // Date nesnelerini geri çevir
+        this.convertDatesToObjects(this.data);
+        
+        console.log('Mock Firestore initialized in demo mode');
+        
+        // FieldValue simulasyonu
+        this.FieldValue = {
+            serverTimestamp: () => ({
+                _isServerTimestamp: true,
+                toDate: () => new Date()
+            }),
+            arrayUnion: (...elements) => ({
+                _isArrayUnion: true,
+                elements
+            }),
+            arrayRemove: (...elements) => ({
+                _isArrayRemove: true,
+                elements
+            }),
+            increment: (n) => ({
+                _isIncrement: true,
+                value: n
+            }),
+            delete: () => ({
+                _isDelete: true
+            })
+        };
+        
+        // Timestamp
+        this.Timestamp = MockTimestamp;
+    }
+
+    // Date stringlerini Date nesnelerine çevir
+    convertDatesToObjects(obj) {
+        if (!obj) return;
+        
+        for (let key in obj) {
+            if (obj[key] && typeof obj[key] === 'object') {
+                if (obj[key] instanceof Array) {
+                    obj[key].forEach(item => this.convertDatesToObjects(item));
+                } else {
+                    this.convertDatesToObjects(obj[key]);
+                }
+            }
+        }
