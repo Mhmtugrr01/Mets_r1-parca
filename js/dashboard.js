@@ -1,39 +1,74 @@
-/*
-    BIRLESTIRILMIS DASHBOARD KODU
-    Kullanıcının istediği gibi "kod-1" ve "kod-2" birleştirildi.
-    Kapsam azaltma YOK, TUM icerik KORUNDU.
-
-    Olası cakismalari onlemek icin:
-    - TUM FONKSIYON, DEGISKEN, vb. adlarina "KOD1" / "KOD2" ekledik.
-    - Kodlar iki bolumde: "BÖLÜM A: kod-1" ve "BÖLÜM B: kod-2".
-*/
-
-/**********************************************
- * BÖLÜM A: kod-1 (dashboard-KOD1.js)
- **********************************************/
-
 /**
- * dashboard-KOD1.js
- * İyileştirilmiş Kontrol Paneli İşlevleri (kod-1)
+ * dashboard.js
+ * Kontrol paneli işlevleri ve veri yönetimi
  */
 
-// Dashboard verilerini yükle (kod-1)
-async function loadDashboardDataKOD1() {
+// Dashboard durum değişkenleri
+const dashboardState = {
+    isLoading: false,
+    lastUpdate: null,
+    activeFilters: {},
+    charts: {},
+    lastError: null,
+    datasources: {}
+};
+
+// Yardımcı bileşen referansları
+const dashboardElements = {
+    statsGrid: null,
+    ordersTable: null,
+    upcomingDeliveriesTable: null,
+    missingMaterialsTable: null,
+    orderChart: null,
+    customerChart: null,
+    aiRecommendations: null
+};
+
+/**
+ * Dashboard verilerini yükle - Ana işlev
+ * @returns {Promise<Object>} Yüklenen veriler
+ */
+async function loadDashboardData() {
     try {
-        console.log("(KOD1) Dashboard verileri yükleniyor...");
+        console.log("Dashboard verileri yükleniyor...");
+        
+        // İşlem durumunu güncelle
+        dashboardState.isLoading = true;
+        
         // Loading göster
-        toggleLoading(true, 'dashboard-page');
+        showLoadingInPage('dashboard-page');
+        
+        // Dashboard elementlerini belirle
+        initDashboardElements();
+        
         // Paralel veri yükleme işlemleri
         const [stats, activeOrders, missingMaterials, upcomingDeliveries] = await Promise.all([
-            loadDashboardStatsKOD1(),
-            loadActiveOrdersKOD1(),
-            loadMissingMaterialsKOD1(),
-            loadUpcomingDeliveriesKOD1()
+            loadDashboardStats(),
+            loadActiveOrders(),
+            loadMissingMaterials(),
+            loadUpcomingDeliveries()
         ]);
+        
         // Grafikleri çizdir
-        drawChartsKOD1();
+        drawDashboardCharts();
+        
+        // Yapay zeka önerilerini yükle
+        if (typeof displayAIInsights === 'function') {
+            try {
+                await displayAIInsights('ai-recommendations');
+            } catch (error) {
+                console.warn("Yapay zeka önerileri yüklenirken hata oluştu:", error);
+            }
+        }
+        
+        // İşlem durumunu güncelle
+        dashboardState.isLoading = false;
+        dashboardState.lastUpdate = new Date();
+        
         // Loading gizle
-        toggleLoading(false, 'dashboard-page');
+        hideLoadingInPage('dashboard-page');
+        
+        // Sonuçları döndür
         return {
             stats,
             activeOrders,
@@ -41,304 +76,241 @@ async function loadDashboardDataKOD1() {
             upcomingDeliveries
         };
     } catch (error) {
-        console.error('(KOD1) Dashboard verileri yüklenirken hata:', error);
-        showToast('(KOD1) Dashboard verileri yüklenirken hata oluştu', 'error');
-        // Loading gizle
-        toggleLoading(false, 'dashboard-page');
-        // Demo verileri yükle
-        loadDashboardDemoKOD1();
+        console.error('Dashboard verileri yüklenirken hata:', error);
+        
+        // İşlem durumunu güncelle
+        dashboardState.isLoading = false;
+        dashboardState.lastError = error;
+        
+        // Hata mesajı göster
+        showErrorInPage('dashboard-page', 'Dashboard Verileri Yüklenemedi', error.message || 'Bir hata oluştu. Lütfen daha sonra tekrar deneyin.');
+        
+        // Yine de bazı verileri göster - demo verileri
+        loadDashboardDemo();
+        
+        // Hata nesnesi ile Promise reddet
+        throw error;
     }
 }
 
-// Demo dashboard verileri (kod-1)
-function loadDashboardDemoKOD1() {
-    console.log("(KOD1) Demo dashboard verileri yükleniyor...");
+/**
+ * Dashboard elementlerini belirle
+ */
+function initDashboardElements() {
+    // Ana bileşenlerin referanslarını al
+    dashboardElements.statsGrid = document.querySelector('.stats-grid');
+    dashboardElements.ordersTable = document.querySelector('#orders-table tbody');
+    dashboardElements.upcomingDeliveriesTable = document.querySelector('#upcoming-deliveries-table tbody');
+    dashboardElements.missingMaterialsTable = document.querySelector('#missing-materials-table tbody');
+    dashboardElements.aiRecommendations = document.getElementById('ai-recommendations');
+    
+    // Canvas elementlerini kontrol et
+    const orderChartCanvas = document.getElementById('orderChart');
+    const customerChartCanvas = document.getElementById('customerChart');
+    
+    if (orderChartCanvas && !dashboardElements.orderChart) {
+        dashboardElements.orderChart = orderChartCanvas.getContext('2d');
+    }
+    
+    if (customerChartCanvas && !dashboardElements.customerChart) {
+        dashboardElements.customerChart = customerChartCanvas.getContext('2d');
+    }
+}
+
+/**
+ * Demo dashboard verilerini yükle
+ */
+function loadDashboardDemo() {
+    console.log("Demo dashboard verileri yükleniyor...");
+    
+    // İstatistik verilerini güncelle
+    const statsData = {
+        activeOrders: 24,
+        missingMaterials: 8,
+        delayedOrders: 3,
+        thisMonthDelivery: 12
+    };
+    
+    updateStatCards(statsData);
+    
     // Grafikleri çizdir
-    drawChartsKOD1();
+    drawDashboardCharts();
+    
     // Aktif siparişleri yükle
-    const ordersTableBody = document.querySelector('#orders-table tbody');
-    if (ordersTableBody) {
-        const demoOrders = [
-            {
-                id: 'order-1',
-                orderNo: '24-03-A001',
-                customer: 'AYEDAŞ',
-                missingMaterials: 0,
-                deliveryDate: '20.05.2024',
-                orderDate: '15.02.2024',
-                status: 'production',
-                hasWarning: true
-            },
-            {
-                id: 'order-2',
-                orderNo: '24-03-B002',
-                customer: 'BAŞKENT EDAŞ',
-                missingMaterials: 2,
-                deliveryDate: '15.05.2024',
-                orderDate: '20.02.2024',
-                status: 'waiting',
-                hasMaterialIssue: true
-            },
-            {
-                id: 'order-3',
-                orderNo: '24-03-C003',
-                customer: 'ENERJİSA',
-                missingMaterials: 0,
-                deliveryDate: '10.06.2024',
-                orderDate: '25.02.2024',
-                status: 'ready'
-            },
-            {
-                id: 'order-4',
-                orderNo: '24-04-D004',
-                customer: 'TOROSLAR EDAŞ',
-                missingMaterials: 0,
-                deliveryDate: '25.06.2024',
-                orderDate: '01.03.2024',
-                status: 'planning'
-            },
-            {
-                id: 'order-5',
-                orderNo: '24-04-E005',
-                customer: 'AYEDAŞ',
-                missingMaterials: 0,
-                deliveryDate: '10.07.2024',
-                orderDate: '05.03.2024',
-                status: 'planning'
-            }
-        ];
-        let ordersHTML = '';
-        demoOrders.forEach(order => {
-            let statusClass = '';
-            switch (order.status) {
-                case 'waiting': statusClass = 'badge-warning'; break;
-                case 'production': statusClass = 'badge-info'; break;
-                case 'ready': statusClass = 'badge-success'; break;
-                case 'planning': statusClass = 'badge-secondary'; break;
-                default: statusClass = 'badge-info';
-            }
-            let statusText = '';
-            switch (order.status) {
-                case 'waiting': statusText = 'Malzeme Bekleniyor'; break;
-                case 'production': statusText = 'Üretimde'; break;
-                case 'ready': statusText = 'Malzeme Hazır'; break;
-                case 'planning': statusText = 'Planlama'; break;
-                default: statusText = 'Bilinmiyor';
-            }
-            let rowClass = '';
-            if (order.hasMaterialIssue) rowClass = 'danger';
-            else if (order.hasWarning) rowClass = 'warning';
-
-            ordersHTML += `
-                <tr onclick="showOrderDetail('${order.id}')" class="${rowClass}">
-                    <td>${order.orderNo}</td>
-                    <td>${order.customer}</td>
-                    <td>${order.missingMaterials}</td>
-                    <td>${order.deliveryDate}</td>
-                    <td>${order.orderDate}</td>
-                    <td><span class="badge ${statusClass}">${statusText}</span></td>
-                    <td>
-                        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); showOrderDetail('${order.id}')">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                        <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editOrder('${order.id}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
-        });
-        ordersTableBody.innerHTML = ordersHTML;
+    if (dashboardElements.ordersTable) {
+        const demoOrders = getDemoOrders();
+        let ordersHTML = generateOrdersTableHTML(demoOrders);
+        dashboardElements.ordersTable.innerHTML = ordersHTML;
     }
-
-    // Yaklaşan teslimler
-    const upcomingDeliveriesTableBody = document.querySelector('#upcoming-deliveries-table tbody');
-    if (upcomingDeliveriesTableBody) {
-        const demoDeliveries = [
-            {
-                orderNo: '24-03-B002',
-                customer: 'BAŞKENT EDAŞ',
-                deliveryDate: '15.05.2024',
-                remainingDays: 7,
-                status: 'waiting'
-            },
-            {
-                orderNo: '24-03-A001',
-                customer: 'AYEDAŞ',
-                deliveryDate: '20.05.2024',
-                remainingDays: 12,
-                status: 'production'
-            },
-            {
-                orderNo: '24-03-C003',
-                customer: 'ENERJİSA',
-                deliveryDate: '10.06.2024',
-                remainingDays: 33,
-                status: 'ready'
-            }
-        ];
-        let deliveriesHTML = '';
-        demoDeliveries.forEach(delivery => {
-            let statusClass = '';
-            switch (delivery.status) {
-                case 'waiting': statusClass = 'badge-warning'; break;
-                case 'production': statusClass = 'badge-info'; break;
-                case 'ready': statusClass = 'badge-success'; break;
-                case 'planning': statusClass = 'badge-secondary'; break;
-                default: statusClass = 'badge-info';
-            }
-            let statusText = '';
-            switch (delivery.status) {
-                case 'waiting': statusText = 'Malzeme Bekleniyor'; break;
-                case 'production': statusText = 'Üretimde'; break;
-                case 'ready': statusText = 'Malzeme Hazır'; break;
-                case 'planning': statusText = 'Planlama'; break;
-                default: statusText = 'Bilinmiyor';
-            }
-            deliveriesHTML += `
-                <tr>
-                    <td>${delivery.orderNo}</td>
-                    <td>${delivery.customer}</td>
-                    <td>${delivery.deliveryDate}</td>
-                    <td>${delivery.remainingDays} gün</td>
-                    <td><span class="badge ${statusClass}">${statusText}</span></td>
-                </tr>
-            `;
-        });
-        upcomingDeliveriesTableBody.innerHTML = deliveriesHTML;
+    
+    // Yaklaşan teslimatları yükle
+    if (dashboardElements.upcomingDeliveriesTable) {
+        const demoDeliveries = getDemoUpcomingDeliveries();
+        let deliveriesHTML = generateUpcomingDeliveriesHTML(demoDeliveries);
+        dashboardElements.upcomingDeliveriesTable.innerHTML = deliveriesHTML;
     }
-
-    // Eksik malzemeler
-    const missingMaterialsTableBody = document.querySelector('#missing-materials-table tbody');
-    if (missingMaterialsTableBody) {
-        const demoMissingMaterials = [
-            {
-                orderNo: '24-03-B002',
-                name: 'Kablo Başlıkları',
-                status: 'Siparişte',
-                supplyDate: '01.05.2024',
-                priority: 'Kritik'
-            },
-            {
-                orderNo: '24-03-B002',
-                name: 'Gerilim Gösterge',
-                status: 'Siparişte',
-                supplyDate: '28.04.2024',
-                priority: 'Uyarı'
-            }
-        ];
-        let materialsHTML = '';
-        demoMissingMaterials.forEach(material => {
-            let priorityClass = '';
-            switch (material.priority) {
-                case 'Kritik': priorityClass = 'badge-danger'; break;
-                case 'Uyarı': priorityClass = 'badge-warning'; break;
-                case 'Normal': priorityClass = 'badge-info'; break;
-                default: priorityClass = 'badge-info';
-            }
-            materialsHTML += `
-                <tr>
-                    <td>${material.orderNo}</td>
-                    <td>${material.name}</td>
-                    <td><span class="badge badge-warning">${material.status}</span></td>
-                    <td>${material.supplyDate}</td>
-                    <td><span class="badge ${priorityClass}">${material.priority}</span></td>
-                </tr>
-            `;
-        });
-        missingMaterialsTableBody.innerHTML = materialsHTML;
+    
+    // Eksik malzemeleri yükle
+    if (dashboardElements.missingMaterialsTable) {
+        const demoMissingMaterials = getDemoMissingMaterials();
+        let materialsHTML = generateMissingMaterialsHTML(demoMissingMaterials);
+        dashboardElements.missingMaterialsTable.innerHTML = materialsHTML;
+    }
+    
+    // Yapay zeka önerileri
+    if (dashboardElements.aiRecommendations) {
+        const demoRecommendationHTML = `
+            <div class="info-box">
+                <div class="info-box-title">Üretim Optimizasyonu</div>
+                <div class="info-box-content">
+                    <p>RM 36 LB tipinde 3 farklı sipariş için benzer üretim adımlarını birleştirerek yaklaşık 5 iş günü tasarruf sağlayabilirsiniz.</p>
+                    <button class="btn btn-primary btn-sm" onclick="applyOptimizationPlan()">
+                        <i class="fas fa-check-circle"></i>
+                        <span>Optimizasyon Planını Uygula</span>
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        dashboardElements.aiRecommendations.innerHTML = demoRecommendationHTML;
     }
 }
 
-// İstatistik verilerini yükle (kod-1)
-async function loadDashboardStatsKOD1() {
+/**
+ * Dashboard istatistik verilerini yükle
+ * @returns {Promise<Object>} İstatistik verileri
+ */
+async function loadDashboardStats() {
     try {
         if (firebase && firebase.firestore) {
+            // Firebase sorguları
             const activeOrdersQuery = firebase.firestore().collection('orders').where('status', '!=', 'completed');
             const missingMaterialsQuery = firebase.firestore().collection('materials').where('inStock', '==', false);
+            
+            // Paralel sorgular çalıştır
             const [activeOrdersSnapshot, missingMaterialsSnapshot] = await Promise.all([
                 activeOrdersQuery.get(),
                 missingMaterialsQuery.get()
             ]);
+            
+            // Mevcut tarihi kullanacak hesaplamalar
             const today = new Date();
             let delayedOrdersCount = 0;
             let thisMonthDeliveryCount = 0;
             const currentMonth = today.getMonth();
             const currentYear = today.getFullYear();
+            
+            // Aktif siparişleri döngüye alarak gecikmiş ve bu ay teslim edilecekleri bul
             activeOrdersSnapshot.forEach(doc => {
                 const data = doc.data();
                 if (data.deliveryDate) {
                     const deliveryDate = data.deliveryDate.toDate ? data.deliveryDate.toDate() : new Date(data.deliveryDate);
+                    
+                    // Gecikmiş siparişleri kontrol et
                     if (deliveryDate < today && data.status !== 'completed') {
                         delayedOrdersCount++;
                     }
-                    if (deliveryDate.getMonth() === currentMonth && deliveryDate.getFullYear() === currentYear) {
+                    
+                    // Bu ay teslim edilecekleri kontrol et
+                    if (deliveryDate.getMonth() === currentMonth && 
+                        deliveryDate.getFullYear() === currentYear) {
                         thisMonthDeliveryCount++;
                     }
                 }
             });
+            
+            // İstatistik verileri
             const statsData = {
                 activeOrders: activeOrdersSnapshot.size,
                 missingMaterials: missingMaterialsSnapshot.size,
                 delayedOrders: delayedOrdersCount,
                 thisMonthDelivery: thisMonthDeliveryCount
             };
-            updateStatCardsKOD1(statsData);
+            
+            // İstatistik kartlarını güncelle
+            updateStatCards(statsData);
             return statsData;
         } else {
+            // Demo verileri
             const statsData = {
                 activeOrders: 24,
                 missingMaterials: 8,
                 delayedOrders: 3,
                 thisMonthDelivery: 12
             };
-            updateStatCardsKOD1(statsData);
+            
+            // İstatistik kartlarını güncelle
+            updateStatCards(statsData);
             return statsData;
         }
     } catch (error) {
-        console.error('(KOD1) İstatistikler yüklenirken hata:', error);
+        console.error('İstatistikler yüklenirken hata:', error);
+        
+        // Demo veriler ile devam et
         const statsData = {
             activeOrders: 24,
             missingMaterials: 8,
             delayedOrders: 3,
             thisMonthDelivery: 12
         };
-        updateStatCardsKOD1(statsData);
+        
+        // İstatistik kartlarını güncelle
+        updateStatCards(statsData);
         return statsData;
     }
 }
 
-// Stat kartlarını güncelle (kod-1)
-function updateStatCardsKOD1(stats) {
-    const activeOrdersElement = document.querySelector('.stats-grid .stat-card:nth-child(1) .stat-value');
-    if (activeOrdersElement) {
-        activeOrdersElement.textContent = stats.activeOrders;
-    }
-    const missingMaterialsElement = document.querySelector('.stats-grid .stat-card:nth-child(2) .stat-value');
-    if (missingMaterialsElement) {
-        missingMaterialsElement.textContent = stats.missingMaterials;
-    }
-    const delayedOrdersElement = document.querySelector('.stats-grid .stat-card:nth-child(3) .stat-value');
-    if (delayedOrdersElement) {
-        delayedOrdersElement.textContent = stats.delayedOrders;
-    }
-    const thisMonthDeliveryElement = document.querySelector('.stats-grid .stat-card:nth-child(4) .stat-value');
-    if (thisMonthDeliveryElement) {
-        thisMonthDeliveryElement.textContent = stats.thisMonthDelivery;
-    }
+/**
+ * İstatistik kartlarını güncelle
+ * @param {Object} stats - İstatistik verileri
+ */
+function updateStatCards(stats) {
+    // Elementleri seç ve her birini güncelle
+    const cards = [
+        { selector: '.stats-grid .stat-card:nth-child(1) .stat-value', value: stats.activeOrders },
+        { selector: '.stats-grid .stat-card:nth-child(2) .stat-value', value: stats.missingMaterials },
+        { selector: '.stats-grid .stat-card:nth-child(3) .stat-value', value: stats.delayedOrders },
+        { selector: '.stats-grid .stat-card:nth-child(4) .stat-value', value: stats.thisMonthDelivery }
+    ];
+    
+    cards.forEach(card => {
+        const element = document.querySelector(card.selector);
+        if (element) {
+            element.textContent = card.value;
+            
+            // Değişimi vurgulamak için basit bir animasyon
+            element.style.transition = 'transform 0.3s ease';
+            element.style.transform = 'scale(1.1)';
+            
+            setTimeout(() => {
+                element.style.transform = 'scale(1)';
+            }, 300);
+        }
+    });
 }
 
-// Grafik çizimi (kod-1)
-function drawChartsKOD1() {
+/**
+ * Dashboard grafikleri çiz
+ */
+function drawDashboardCharts() {
+    // Önce eski grafikleri temizle
+    if (dashboardState.charts.orderChart) {
+        dashboardState.charts.orderChart.destroy();
+    }
+    
+    if (dashboardState.charts.customerChart) {
+        dashboardState.charts.customerChart.destroy();
+    }
+    
+    // Sipariş teslim grafiği için veriler
     const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
     const orderData = [8, 13, 17, 19, 15, 12, 10, 14, 16, 20, 14, 11];
     const deliveryData = [7, 12, 16, 17, 14, 11, 9, 13, 15, 18, 13, 10];
+    
+    // Sipariş-teslim grafiği
     const orderChartCanvas = document.getElementById('orderChart');
     if (orderChartCanvas) {
-        if (window.orderChart) {
-            window.orderChart.destroy();
-        }
-        window.orderChart = new Chart(orderChartCanvas, {
+        dashboardState.charts.orderChart = new Chart(orderChartCanvas, {
             type: 'line',
             data: {
                 labels: months,
@@ -375,6 +347,10 @@ function drawChartsKOD1() {
                             top: 10,
                             bottom: 20
                         }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
                     }
                 },
                 scales: {
@@ -385,16 +361,20 @@ function drawChartsKOD1() {
                             text: 'Sipariş Sayısı'
                         }
                     }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
                 }
             }
         });
     }
+    
+    // Müşteri dağılımı grafiği
     const customerChartCanvas = document.getElementById('customerChart');
     if (customerChartCanvas) {
-        if (window.customerChart) {
-            window.customerChart.destroy();
-        }
-        window.customerChart = new Chart(customerChartCanvas, {
+        dashboardState.charts.customerChart = new Chart(customerChartCanvas, {
             type: 'doughnut',
             data: {
                 labels: ['AYEDAŞ', 'ENERJİSA', 'BAŞKENT EDAŞ', 'TOROSLAR EDAŞ', 'Diğer'],
@@ -407,7 +387,8 @@ function drawChartsKOD1() {
                         '#ef4444',
                         '#6b7280'
                     ],
-                    borderWidth: 1
+                    borderWidth: 1,
+                    borderColor: '#ffffff'
                 }]
             },
             options: {
@@ -418,7 +399,10 @@ function drawChartsKOD1() {
                         position: 'right',
                         labels: {
                             padding: 20,
-                            boxWidth: 12
+                            boxWidth: 12,
+                            font: {
+                                size: 12
+                            }
                         }
                     },
                     title: {
@@ -428,33 +412,60 @@ function drawChartsKOD1() {
                             top: 10,
                             bottom: 20
                         }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = Math.round((value / total) * 100);
+                                return `${label}: ${percentage}% (${value})`;
+                            }
+                        }
                     }
                 },
-                cutout: '60%'
+                cutout: '60%',
+                animation: {
+                    animateScale: true,
+                    animateRotate: true
+                }
             }
         });
     }
 }
 
-// Aktif siparişleri yükle (kod-1)
-async function loadActiveOrdersKOD1() {
+/**
+ * Aktif siparişleri yükle
+ * @returns {Promise<Array>} Siparişler
+ */
+async function loadActiveOrders() {
     try {
-        const ordersTableBody = document.querySelector('#orders-table tbody');
-        if (!ordersTableBody) {
-            console.warn('(KOD1) Sipariş tablosu bulunamadı');
+        if (!dashboardElements.ordersTable) {
+            dashboardElements.ordersTable = document.querySelector('#orders-table tbody');
+        }
+        
+        if (!dashboardElements.ordersTable) {
+            console.warn('Sipariş tablosu elementi bulunamadı');
             return [];
         }
-        ordersTableBody.innerHTML = '<tr><td colspan="7" class="text-center">Yükleniyor...</td></tr>';
+        
+        // Yükleniyor göster
+        dashboardElements.ordersTable.innerHTML = '<tr><td colspan="7" class="text-center">Yükleniyor...</td></tr>';
+        
         if (firebase && firebase.firestore) {
             const ordersSnapshot = await firebase.firestore().collection('orders')
                 .where('status', '!=', 'completed')
                 .orderBy('deliveryDate', 'asc')
                 .limit(10)
                 .get();
+            
             if (ordersSnapshot.empty) {
-                ordersTableBody.innerHTML = '<tr><td colspan="7" class="text-center">Aktif sipariş bulunamadı</td></tr>';
+                dashboardElements.ordersTable.innerHTML = '<tr><td colspan="7" class="text-center">Aktif sipariş bulunamadı</td></tr>';
                 return [];
             }
+            
+            // Siparişleri topla
             const orders = [];
             ordersSnapshot.forEach(doc => {
                 orders.push({
@@ -462,136 +473,112 @@ async function loadActiveOrdersKOD1() {
                     ...doc.data()
                 });
             });
-            let ordersHTML = '';
-            orders.forEach(order => {
-                const orderDate = order.orderDate ? formatDateKOD1(order.orderDate) : '-';
-                const deliveryDate = order.deliveryDate ? formatDateKOD1(order.deliveryDate) : '-';
-                let statusClass = '';
-                switch (order.status) {
-                    case 'waiting': statusClass = 'badge-warning'; break;
-                    case 'production': statusClass = 'badge-info'; break;
-                    case 'ready': statusClass = 'badge-success'; break;
-                    case 'planning': statusClass = 'badge-secondary'; break;
-                    default: statusClass = 'badge-info';
-                }
-                let statusText = '';
-                switch (order.status) {
-                    case 'waiting': statusText = 'Malzeme Bekleniyor'; break;
-                    case 'production': statusText = 'Üretimde'; break;
-                    case 'ready': statusText = 'Malzeme Hazır'; break;
-                    case 'planning': statusText = 'Planlama'; break;
-                    default: statusText = 'Bilinmiyor';
-                }
-                let rowClass = '';
-                if (order.hasMaterialIssue) rowClass = 'danger';
-                else if (order.hasWarning) rowClass = 'warning';
-
-                ordersHTML += `
-                    <tr onclick="showOrderDetail('${doc.id}')" class="${rowClass}">
-                        <td>${order.orderNo || '-'}</td>
-                        <td>${order.customer || '-'}</td>
-                        <td>${order.missingMaterials || 0}</td>
-                        <td>${deliveryDate}</td>
-                        <td>${orderDate}</td>
-                        <td><span class="badge ${statusClass}">${statusText}</span></td>
-                        <td>
-                            <button class="btn btn-outline btn-sm" style="padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); showOrderDetail('${order.id}')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-outline btn-sm" style="padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); editOrder('${order.id}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            ordersTableBody.innerHTML = ordersHTML;
+            
+            // Tablo HTML'ini oluştur ve tabloyu güncelle
+            const ordersHTML = generateOrdersTableHTML(orders);
+            dashboardElements.ordersTable.innerHTML = ordersHTML;
+            
             return orders;
         } else {
-            const demoOrders = [
-                {
-                    id: 'order-1',
-                    orderNo: '24-03-A001',
-                    customer: 'AYEDAŞ',
-                    missingMaterials: 0,
-                    deliveryDate: '10.07.2024',
-                    orderDate: '05.03.2024',
-                    status: 'planning'
-                }
-            ];
-            let ordersHTML = '';
-            demoOrders.forEach(order => {
-                let statusClass = '';
-                switch (order.status) {
-                    case 'waiting': statusClass = 'badge-warning'; break;
-                    case 'production': statusClass = 'badge-info'; break;
-                    case 'ready': statusClass = 'badge-success'; break;
-                    case 'planning': statusClass = 'badge-secondary'; break;
-                    default: statusClass = 'badge-info';
-                }
-                let statusText = '';
-                switch (order.status) {
-                    case 'waiting': statusText = 'Malzeme Bekleniyor'; break;
-                    case 'production': statusText = 'Üretimde'; break;
-                    case 'ready': statusText = 'Malzeme Hazır'; break;
-                    case 'planning': statusText = 'Planlama'; break;
-                    default: statusText = 'Bilinmiyor';
-                }
-                let rowClass = '';
-                if (order.hasMaterialIssue) rowClass = 'danger';
-                else if (order.hasWarning) rowClass = 'warning';
-
-                ordersHTML += `
-                    <tr onclick="showOrderDetail('${order.id}')" class="${rowClass}">
-                        <td>${order.orderNo}</td>
-                        <td>${order.customer}</td>
-                        <td>${order.missingMaterials}</td>
-                        <td>${order.deliveryDate}</td>
-                        <td>${order.orderDate}</td>
-                        <td><span class="badge ${statusClass}">${statusText}</span></td>
-                        <td>
-                            <button class="btn btn-outline btn-sm" style="padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); showOrderDetail('${order.id}')">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button class="btn btn-outline btn-sm" style="padding: 0.25rem 0.5rem;" onclick="event.stopPropagation(); editOrder('${order.id}')">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            ordersTableBody.innerHTML = ordersHTML;
+            // Demo verileri
+            const demoOrders = getDemoOrders();
+            
+            // Tablo HTML'ini oluştur ve tabloyu güncelle
+            const ordersHTML = generateOrdersTableHTML(demoOrders);
+            dashboardElements.ordersTable.innerHTML = ordersHTML;
+            
             return demoOrders;
         }
     } catch (error) {
-        console.error('(KOD1) Aktif siparişler yüklenirken hata:', error);
-        const ordersTableBody = document.querySelector('#orders-table tbody');
-        if (ordersTableBody) {
-            ordersTableBody.innerHTML = `<tr><td colspan="7" class="text-center">Hata: ${error.message}</td></tr>`;
+        console.error("Aktif siparişler yüklenirken hata:", error);
+        
+        if (dashboardElements.ordersTable) {
+            dashboardElements.ordersTable.innerHTML = `<tr><td colspan="7" class="text-center">Hata: ${error.message}</td></tr>`;
         }
-        setTimeout(() => loadDashboardDemoKOD1(), 500);
-        throw error;
+        
+        // Demo verileri döndür
+        return getDemoOrders();
     }
 }
 
-// Eksik malzemeleri yükle (kod-1)
-async function loadMissingMaterialsKOD1() {
+/**
+ * Aktif siparişler tablosu HTML'ini oluştur
+ * @param {Array} orders - Sipariş listesi
+ * @returns {string} Tablo HTML'i
+ */
+function generateOrdersTableHTML(orders) {
+    if (!orders || orders.length === 0) {
+        return '<tr><td colspan="7" class="text-center">Gösterilecek sipariş bulunamadı</td></tr>';
+    }
+    
+    let html = '';
+    
+    orders.forEach(order => {
+        const orderDate = formatDate(order.orderDate);
+        const deliveryDate = formatDate(order.deliveryDate);
+        
+        // Durum sınıfı ve metni belirle
+        let statusClass = getStatusClass(order.status);
+        let statusText = getStatusText(order.status);
+        
+        // Satır sınıfı (kritik, uyarı vb.)
+        let rowClass = '';
+        if (order.hasMaterialIssue) rowClass = 'danger';
+        else if (order.hasWarning) rowClass = 'warning';
+        
+        html += `
+            <tr onclick="showOrderDetail('${order.id}')" class="${rowClass}" style="cursor: pointer;">
+                <td>${order.orderNo || ''}</td>
+                <td>${order.customer || ''}</td>
+                <td>${order.missingMaterials || 0}</td>
+                <td>${deliveryDate}</td>
+                <td>${orderDate}</td>
+                <td><span class="badge ${statusClass}">${statusText}</span></td>
+                <td>
+                    <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); showOrderDetail('${order.id}')">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); editOrder('${order.id}')">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+    
+    return html;
+}
+
+/**
+ * Eksik malzemeleri yükle
+ * @returns {Promise<Array>} Eksik malzemeler
+ */
+async function loadMissingMaterials() {
     try {
-        const missingMaterialsTableBody = document.querySelector('#missing-materials-table tbody');
-        if (!missingMaterialsTableBody) {
-            console.warn('(KOD1) Eksik malzemeler tablosu bulunamadı');
+        if (!dashboardElements.missingMaterialsTable) {
+            dashboardElements.missingMaterialsTable = document.querySelector('#missing-materials-table tbody');
+        }
+        
+        if (!dashboardElements.missingMaterialsTable) {
+            console.warn('Eksik malzemeler tablosu elementi bulunamadı');
             return [];
         }
-        missingMaterialsTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Yükleniyor...</td></tr>';
+        
+        // Yükleniyor göster
+        dashboardElements.missingMaterialsTable.innerHTML = '<tr><td colspan="5" class="text-center">Yükleniyor...</td></tr>';
+        
         if (firebase && firebase.firestore) {
             const materialsSnapshot = await firebase.firestore().collection('materials')
                 .where('inStock', '==', false)
                 .limit(5)
                 .get();
+            
             if (materialsSnapshot.empty) {
-                missingMaterialsTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Eksik malzeme bulunamadı</td></tr>';
+                dashboardElements.missingMaterialsTable.innerHTML = '<tr><td colspan="5" class="text-center">Eksik malzeme bulunamadı</td></tr>';
                 return [];
             }
+            
+            // Malzemeleri topla
             const materials = [];
             materialsSnapshot.forEach(doc => {
                 materials.push({
@@ -599,114 +586,105 @@ async function loadMissingMaterialsKOD1() {
                     ...doc.data()
                 });
             });
-            let materialsHTML = '';
-            materials.forEach(material => {
-                const supplyDate = material.expectedSupplyDate ? 
-                    formatDateKOD1(material.expectedSupplyDate) : '-';
-                let delayClass = 'badge-info';
-                let delayText = 'Normal';
-                if (material.expectedSupplyDate) {
-                    const today = new Date();
-                    const supplyDateObj = new Date(material.expectedSupplyDate.toDate ? material.expectedSupplyDate.toDate() : material.expectedSupplyDate);
-                    const orderNeedDate = material.orderNeedDate ? new Date(material.orderNeedDate.toDate ? material.orderNeedDate.toDate() : material.orderNeedDate) : null;
-                    if (orderNeedDate && supplyDateObj > orderNeedDate) {
-                        delayClass = 'badge-danger';
-                        delayText = 'Kritik';
-                    } else if (supplyDateObj < today) {
-                        delayClass = 'badge-warning';
-                        delayText = 'Uyarı';
-                    }
-                }
-                materialsHTML += `
-                    <tr>
-                        <td>${material.orderNo || '-'}</td>
-                        <td>${material.name || '-'}</td>
-                        <td><span class="badge badge-warning">Siparişte</span></td>
-                        <td>${supplyDate}</td>
-                        <td><span class="badge ${delayClass}">${delayText}</span></td>
-                    </tr>
-                `;
-            });
-            missingMaterialsTableBody.innerHTML = materialsHTML;
+            
+            // Tablo HTML'ini oluştur ve tabloyu güncelle
+            const materialsHTML = generateMissingMaterialsHTML(materials);
+            dashboardElements.missingMaterialsTable.innerHTML = materialsHTML;
+            
             return materials;
         } else {
-            const demoMissingMaterials = [
-                {
-                    orderNo: '24-03-B002',
-                    name: 'Kablo Başlıkları',
-                    status: 'Siparişte',
-                    supplyDate: '01.05.2024',
-                    priority: 'Kritik'
-                },
-                {
-                    orderNo: '24-03-B002',
-                    name: 'Gerilim Gösterge',
-                    status: 'Siparişte',
-                    supplyDate: '28.04.2024',
-                    priority: 'Uyarı'
-                }
-            ];
-            let materialsHTML = '';
-            demoMissingMaterials.forEach(material => {
-                let priorityClass = '';
-                switch (material.priority) {
-                    case 'Kritik': priorityClass = 'badge-danger'; break;
-                    case 'Uyarı': priorityClass = 'badge-warning'; break;
-                    case 'Normal': priorityClass = 'badge-info'; break;
-                    default: priorityClass = 'badge-info';
-                }
-                materialsHTML += `
-                    <tr>
-                        <td>${material.orderNo}</td>
-                        <td>${material.name}</td>
-                        <td><span class="badge badge-warning">${material.status}</span></td>
-                        <td>${material.supplyDate}</td>
-                        <td><span class="badge ${priorityClass}">${material.priority}</span></td>
-                    </tr>
-                `;
-            });
-            missingMaterialsTableBody.innerHTML = materialsHTML;
+            // Demo verileri
+            const demoMissingMaterials = getDemoMissingMaterials();
+            
+            // Tablo HTML'ini oluştur ve tabloyu güncelle
+            const materialsHTML = generateMissingMaterialsHTML(demoMissingMaterials);
+            dashboardElements.missingMaterialsTable.innerHTML = materialsHTML;
+            
             return demoMissingMaterials;
         }
     } catch (error) {
-        console.error('(KOD1) Eksik malzemeler yüklenirken hata:', error);
-        const missingMaterialsTableBody = document.querySelector('#missing-materials-table tbody');
-        if (missingMaterialsTableBody) {
-            missingMaterialsTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Hata: ${error.message}</td></tr>`;
+        console.error("Eksik malzemeler yüklenirken hata:", error);
+        
+        if (dashboardElements.missingMaterialsTable) {
+            dashboardElements.missingMaterialsTable.innerHTML = `<tr><td colspan="5" class="text-center">Hata: ${error.message}</td></tr>`;
         }
-        const demoMissingMaterials = [
-            {
-                orderNo: '24-03-B002',
-                name: 'Kablo Başlıkları',
-                status: 'Siparişte',
-                supplyDate: '01.05.2024',
-                priority: 'Kritik'
-            },
-            {
-                orderNo: '24-03-B002',
-                name: 'Gerilim Gösterge',
-                status: 'Siparişte',
-                supplyDate: '28.04.2024',
-                priority: 'Uyarı'
-            }
-        ];
-        return demoMissingMaterials;
+        
+        // Demo verileri döndür
+        return getDemoMissingMaterials();
     }
 }
 
-// Yaklaşan teslimleri yükle (kod-1)
-async function loadUpcomingDeliveriesKOD1() {
+/**
+ * Eksik malzemeler tablosu HTML'ini oluştur
+ * @param {Array} materials - Malzeme listesi
+ * @returns {string} Tablo HTML'i
+ */
+function generateMissingMaterialsHTML(materials) {
+    if (!materials || materials.length === 0) {
+        return '<tr><td colspan="5" class="text-center">Eksik malzeme bulunamadı</td></tr>';
+    }
+    
+    let html = '';
+    
+    materials.forEach(material => {
+        // Tedarik tarihi formatla
+        const supplyDate = formatDate(material.expectedSupplyDate);
+        
+        // Öncelik sınıfı ve metni belirle
+        let priorityClass = 'badge-info';
+        let priorityText = 'Normal';
+        
+        if (material.expectedSupplyDate) {
+            const today = new Date();
+            const supplyDateObj = new Date(material.expectedSupplyDate.toDate ? material.expectedSupplyDate.toDate() : material.expectedSupplyDate);
+            const orderNeedDate = material.orderNeedDate ? new Date(material.orderNeedDate.toDate ? material.orderNeedDate.toDate() : material.orderNeedDate) : null;
+            
+            if (orderNeedDate && supplyDateObj > orderNeedDate) {
+                priorityClass = 'badge-danger';
+                priorityText = 'Kritik';
+            } else if (supplyDateObj < today) {
+                priorityClass = 'badge-warning';
+                priorityText = 'Uyarı';
+            }
+        }
+        
+        html += `
+            <tr>
+                <td>${material.orderNo || ''}</td>
+                <td>${material.name || ''}</td>
+                <td><span class="badge badge-warning">Siparişte</span></td>
+                <td>${supplyDate}</td>
+                <td><span class="badge ${priorityClass}">${priorityText}</span></td>
+            </tr>
+        `;
+    });
+    
+    return html;
+}
+
+/**
+ * Yaklaşan teslimleri yükle
+ * @returns {Promise<Array>} Yaklaşan teslimler
+ */
+async function loadUpcomingDeliveries() {
     try {
-        const upcomingDeliveriesTableBody = document.querySelector('#upcoming-deliveries-table tbody');
-        if (!upcomingDeliveriesTableBody) {
-            console.warn('(KOD1) Yaklaşan teslimler tablosu bulunamadı');
+        if (!dashboardElements.upcomingDeliveriesTable) {
+            dashboardElements.upcomingDeliveriesTable = document.querySelector('#upcoming-deliveries-table tbody');
+        }
+        
+        if (!dashboardElements.upcomingDeliveriesTable) {
+            console.warn('Yaklaşan teslimler tablosu elementi bulunamadı');
             return [];
         }
-        upcomingDeliveriesTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Yükleniyor...</td></tr>';
+        
+        // Yükleniyor göster
+        dashboardElements.upcomingDeliveriesTable.innerHTML = '<tr><td colspan="5" class="text-center">Yükleniyor...</td></tr>';
+        
         if (firebase && firebase.firestore) {
             const today = new Date();
             const thirtyDaysLater = new Date(today);
             thirtyDaysLater.setDate(today.getDate() + 30);
+            
             const deliveriesSnapshot = await firebase.firestore().collection('orders')
                 .where('deliveryDate', '>', today)
                 .where('deliveryDate', '<=', thirtyDaysLater)
@@ -714,10 +692,13 @@ async function loadUpcomingDeliveriesKOD1() {
                 .orderBy('deliveryDate', 'asc')
                 .limit(5)
                 .get();
+            
             if (deliveriesSnapshot.empty) {
-                upcomingDeliveriesTableBody.innerHTML = '<tr><td colspan="5" class="text-center">Yaklaşan teslimat bulunamadı</td></tr>';
+                dashboardElements.upcomingDeliveriesTable.innerHTML = '<tr><td colspan="5" class="text-center">Yaklaşan teslimat bulunamadı</td></tr>';
                 return [];
             }
+            
+            // Teslimatları topla
             const deliveries = [];
             deliveriesSnapshot.forEach(doc => {
                 deliveries.push({
@@ -725,126 +706,305 @@ async function loadUpcomingDeliveriesKOD1() {
                     ...doc.data()
                 });
             });
-            let deliveriesHTML = '';
-            deliveries.forEach(order => {
-                const deliveryDate = order.deliveryDate ? formatDateKOD1(order.deliveryDate) : '-';
-                const remainingDays = order.deliveryDate ? Math.ceil((new Date(order.deliveryDate.toDate ? order.deliveryDate.toDate() : order.deliveryDate) - today)/(1000*60*60*24)) : 0;
-                let statusClass = '';
-                switch (order.status) {
-                    case 'waiting': statusClass = 'badge-warning'; break;
-                    case 'production': statusClass = 'badge-info'; break;
-                    case 'ready': statusClass = 'badge-success'; break;
-                    case 'planning': statusClass = 'badge-secondary'; break;
-                    default: statusClass = 'badge-info';
-                }
-                let statusText = '';
-                switch (order.status) {
-                    case 'waiting': statusText = 'Malzeme Bekleniyor'; break;
-                    case 'production': statusText = 'Üretimde'; break;
-                    case 'ready': statusText = 'Malzeme Hazır'; break;
-                    case 'planning': statusText = 'Planlama'; break;
-                    default: statusText = 'Bilinmiyor';
-                }
-                deliveriesHTML += `
-                    <tr onclick="showOrderDetail('${order.id}')">
-                        <td>${order.orderNo || '-'}</td>
-                        <td>${order.customer || '-'}</td>
-                        <td>${deliveryDate}</td>
-                        <td>${remainingDays} gün</td>
-                        <td><span class="badge ${statusClass}">${statusText}</span></td>
-                    </tr>
-                `;
-            });
-            upcomingDeliveriesTableBody.innerHTML = deliveriesHTML;
+            
+            // Tablo HTML'ini oluştur ve tabloyu güncelle
+            const deliveriesHTML = generateUpcomingDeliveriesHTML(deliveries);
+            dashboardElements.upcomingDeliveriesTable.innerHTML = deliveriesHTML;
+            
             return deliveries;
         } else {
-            const demoDeliveries = [
-                {
-                    orderNo: '24-03-B002',
-                    customer: 'BAŞKENT EDAŞ',
-                    deliveryDate: '15.05.2024',
-                    remainingDays: 7,
-                    status: 'waiting'
-                },
-                {
-                    orderNo: '24-03-A001',
-                    customer: 'AYEDAŞ',
-                    deliveryDate: '20.05.2024',
-                    remainingDays: 12,
-                    status: 'production'
-                },
-                {
-                    orderNo: '24-03-C003',
-                    customer: 'ENERJİSA',
-                    deliveryDate: '10.06.2024',
-                    remainingDays: 33,
-                    status: 'ready'
-                }
-            ];
-            let deliveriesHTML = '';
-            demoDeliveries.forEach(delivery => {
-                let statusClass = '';
-                switch (delivery.status) {
-                    case 'waiting': statusClass = 'badge-warning'; break;
-                    case 'production': statusClass = 'badge-info'; break;
-                    case 'ready': statusClass = 'badge-success'; break;
-                    case 'planning': statusClass = 'badge-secondary'; break;
-                    default: statusClass = 'badge-info';
-                }
-                let statusText = '';
-                switch (delivery.status) {
-                    case 'waiting': statusText = 'Malzeme Bekleniyor'; break;
-                    case 'production': statusText = 'Üretimde'; break;
-                    case 'ready': statusText = 'Malzeme Hazır'; break;
-                    case 'planning': statusText = 'Planlama'; break;
-                    default: statusText = 'Bilinmiyor';
-                }
-                deliveriesHTML += `
-                    <tr>
-                        <td>${delivery.orderNo}</td>
-                        <td>${delivery.customer}</td>
-                        <td>${delivery.deliveryDate}</td>
-                        <td>${delivery.remainingDays} gün</td>
-                        <td><span class="badge ${statusClass}">${statusText}</span></td>
-                    </tr>
-                `;
-            });
-            upcomingDeliveriesTableBody.innerHTML = deliveriesHTML;
+            // Demo verileri
+            const demoDeliveries = getDemoUpcomingDeliveries();
+            
+            // Tablo HTML'ini oluştur ve tabloyu güncelle
+            const deliveriesHTML = generateUpcomingDeliveriesHTML(demoDeliveries);
+            dashboardElements.upcomingDeliveriesTable.innerHTML = deliveriesHTML;
+            
             return demoDeliveries;
         }
     } catch (error) {
-        console.error('(KOD1) Yaklaşan teslimler yüklenirken hata:', error);
-        const upcomingDeliveriesTableBody = document.querySelector('#upcoming-deliveries-table tbody');
-        if (upcomingDeliveriesTableBody) {
-            upcomingDeliveriesTableBody.innerHTML = `<tr><td colspan="5" class="text-center">Hata: ${error.message}</td></tr>`;
+        console.error("Yaklaşan teslimler yüklenirken hata:", error);
+        
+        if (dashboardElements.upcomingDeliveriesTable) {
+            dashboardElements.upcomingDeliveriesTable.innerHTML = `<tr><td colspan="5" class="text-center">Hata: ${error.message}</td></tr>`;
         }
-        throw error;
+        
+        // Demo verileri döndür
+        return getDemoUpcomingDeliveries();
     }
 }
 
-function showErrorSectionKOD1(containerId, title, message) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    const errorHTML = `
-        <div class="error-section">
-            <div class="card">
-                <div class="card-body text-center" style="padding: 2rem;">
-                    <div style="font-size: 3rem; color: var(--danger); margin-bottom: 1rem;">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <h3 style="margin-bottom: 1rem;">${title}</h3>
-                    <p style="margin-bottom: 1.5rem;">${message}</p>
-                    <button class="btn btn-primary" onclick="refreshData()">
-                        <i class="fas fa-sync-alt"></i> Yeniden Dene
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-    container.insertAdjacentHTML('beforeend', errorHTML);
+/**
+ * Yaklaşan teslimler tablosu HTML'ini oluştur
+ * @param {Array} deliveries - Teslimat listesi
+ * @returns {string} Tablo HTML'i
+ */
+function generateUpcomingDeliveriesHTML(deliveries) {
+    if (!deliveries || deliveries.length === 0) {
+        return '<tr><td colspan="5" class="text-center">Yaklaşan teslimat bulunamadı</td></tr>';
+    }
+    
+    let html = '';
+    const today = new Date();
+    
+    deliveries.forEach(delivery => {
+        // Teslimat tarihi formatla
+        const deliveryDate = formatDate(delivery.deliveryDate);
+        
+        // Kalan gün hesapla
+        const deliveryDateObj = new Date(delivery.deliveryDate.toDate ? delivery.deliveryDate.toDate() : delivery.deliveryDate);
+        const remainingDays = Math.ceil((deliveryDateObj - today) / (1000 * 60 * 60 * 24));
+        
+        // Durum sınıfı ve metni belirle
+        let statusClass = getStatusClass(delivery.status);
+        let statusText = getStatusText(delivery.status);
+        
+        // Kalan gün sınıfı (acil, uyarı vb.)
+        let daysClass = '';
+        if (remainingDays <= 3) daysClass = 'text-danger';
+        else if (remainingDays <= 7) daysClass = 'text-warning';
+        
+        html += `
+            <tr onclick="showOrderDetail('${delivery.id}')" style="cursor: pointer;">
+                <td>${delivery.orderNo || ''}</td>
+                <td>${delivery.customer || ''}</td>
+                <td>${deliveryDate}</td>
+                <td class="${daysClass}">${remainingDays} gün</td>
+                <td><span class="badge ${statusClass}">${statusText}</span></td>
+            </tr>
+        `;
+    });
+    
+    return html;
 }
 
-function showOrderDetailKOD1(orderId) {
+/**
+ * Durum metnini al
+ * @param {string} status - Durum kodu
+ * @returns {string} Durum metni
+ */
+function getStatusText(status) {
+    switch (status) {
+        case 'waiting': return 'Malzeme Bekleniyor';
+        case 'production': return 'Üretimde';
+        case 'ready': return 'Malzeme Hazır';
+        case 'planning': return 'Planlama';
+        case 'testing': return 'Test';
+        case 'completed': return 'Tamamlandı';
+        default: return 'Bilinmiyor';
+    }
+}
+
+/**
+ * Durum sınıfını al
+ * @param {string} status - Durum kodu
+ * @returns {string} CSS sınıfı
+ */
+function getStatusClass(status) {
+    switch (status) {
+        case 'waiting': return 'badge-warning';
+        case 'production': return 'badge-info';
+        case 'ready': return 'badge-success';
+        case 'planning': return 'badge-secondary';
+        case 'testing': return 'badge-primary';
+        case 'completed': return 'badge-dark';
+        default: return 'badge-info';
+    }
+}
+
+/**
+ * Siparişleri filtrele
+ */
+function filterOrders() {
+    // Filtre değerlerini al
+    const searchText = document.querySelector('.search-input')?.value.toLowerCase() || '';
+    const statusFilter = document.querySelector('.filter-item select:nth-child(1)')?.value || '';
+    const customerFilter = document.querySelector('.filter-item select:nth-child(2)')?.value || '';
+    
+    // Filtreleme durumunu kaydet
+    dashboardState.activeFilters = {
+        searchText,
+        status: statusFilter,
+        customer: customerFilter
+    };
+    
+    // Tüm satırları kontrol et
+    const rows = document.querySelectorAll('#orders-table tbody tr');
+    
+    rows.forEach(row => {
+        let showRow = true;
+        
+        // Metin araması
+        if (searchText) {
+            let found = false;
+            row.querySelectorAll('td').forEach(cell => {
+                if (cell.textContent.toLowerCase().includes(searchText)) {
+                    found = true;
+                }
+            });
+            if (!found) showRow = false;
+        }
+        
+        // Status filtresi
+        if (statusFilter && showRow) {
+            const statusCell = row.querySelector('td:nth-child(6)');
+            if (statusCell) {
+                const status = statusCell.textContent.toLowerCase();
+                if (!status.includes(statusFilter.toLowerCase())) {
+                    showRow = false;
+                }
+            }
+        }
+        
+        // Müşteri filtresi
+        if (customerFilter && showRow) {
+            const customerCell = row.querySelector('td:nth-child(2)');
+            if (customerCell) {
+                const customer = customerCell.textContent;
+                if (customer !== customerFilter) {
+                    showRow = false;
+                }
+            }
+        }
+        
+        // Satırı göster/gizle
+        row.style.display = showRow ? '' : 'none';
+    });
+    
+    // Filtreleme sonucunu özetle
+    const visibleRows = [...rows].filter(row => row.style.display !== 'none').length;
+    const totalRows = rows.length;
+    
+    console.log(`Filtreleme sonucu: ${visibleRows}/${totalRows} sipariş gösteriliyor`);
+}
+
+/**
+ * Demo sipariş verilerini al
+ * @returns {Array} Demo siparişler
+ */
+function getDemoOrders() {
+    return [
+        {
+            id: 'order-1',
+            orderNo: '24-03-A001',
+            customer: 'AYEDAŞ',
+            missingMaterials: 0,
+            deliveryDate: '20.05.2024',
+            orderDate: '15.02.2024',
+            status: 'production',
+            hasWarning: true
+        },
+        {
+            id: 'order-2',
+            orderNo: '24-03-B002',
+            customer: 'BAŞKENT EDAŞ',
+            missingMaterials: 2,
+            deliveryDate: '15.05.2024',
+            orderDate: '20.02.2024',
+            status: 'waiting',
+            hasMaterialIssue: true
+        },
+        {
+            id: 'order-3',
+            orderNo: '24-03-C003',
+            customer: 'ENERJİSA',
+            missingMaterials: 0,
+            deliveryDate: '10.06.2024',
+            orderDate: '25.02.2024',
+            status: 'ready'
+        },
+        {
+            id: 'order-4',
+            orderNo: '24-04-D004',
+            customer: 'TOROSLAR EDAŞ',
+            missingMaterials: 0,
+            deliveryDate: '25.06.2024',
+            orderDate: '01.03.2024',
+            status: 'planning'
+        },
+        {
+            id: 'order-5',
+            orderNo: '24-04-E005',
+            customer: 'AYEDAŞ',
+            missingMaterials: 0,
+            deliveryDate: '10.07.2024',
+            orderDate: '05.03.2024',
+            status: 'planning'
+        }
+    ];
+}
+
+/**
+ * Demo eksik malzeme verilerini al
+ * @returns {Array} Demo eksik malzemeler
+ */
+function getDemoMissingMaterials() {
+    return [
+        {
+            orderNo: '24-03-B002',
+            name: 'Kablo Başlıkları',
+            status: 'Siparişte',
+            expectedSupplyDate: '01.05.2024',
+            orderNeedDate: '20.04.2024',
+            priority: 'Kritik'
+        },
+        {
+            orderNo: '24-03-B002',
+            name: 'Gerilim Gösterge',
+            status: 'Siparişte',
+            expectedSupplyDate: '28.04.2024',
+            orderNeedDate: '30.04.2024',
+            priority: 'Uyarı'
+        },
+        {
+            orderNo: '24-05-F007',
+            name: 'Kesici',
+            status: 'Siparişte',
+            expectedSupplyDate: '15.05.2024',
+            orderNeedDate: '20.05.2024',
+            priority: 'Normal'
+        }
+    ];
+}
+
+/**
+ * Demo yaklaşan teslimatlar verilerini al
+ * @returns {Array} Demo yaklaşan teslimatlar
+ */
+function getDemoUpcomingDeliveries() {
+    return [
+        {
+            id: 'order-2',
+            orderNo: '24-03-B002',
+            customer: 'BAŞKENT EDAŞ',
+            deliveryDate: '15.05.2024',
+            remainingDays: 7,
+            status: 'waiting'
+        },
+        {
+            id: 'order-1',
+            orderNo: '24-03-A001',
+            customer: 'AYEDAŞ',
+            deliveryDate: '20.05.2024',
+            remainingDays: 12,
+            status: 'production'
+        },
+        {
+            id: 'order-3',
+            orderNo: '24-03-C003',
+            customer: 'ENERJİSA',
+            deliveryDate: '10.06.2024',
+            remainingDays: 33,
+            status: 'ready'
+        }
+    ];
+}
+
+/**
+ * Sipariş detayını göster
+ * @param {string} orderId - Sipariş ID'si
+ */
+function showOrderDetail(orderId) {
     if (typeof window.showOrderDetail === 'function') {
         window.showOrderDetail(orderId);
     } else {
@@ -852,114 +1012,181 @@ function showOrderDetailKOD1(orderId) {
         const idSpan = document.getElementById('order-detail-id');
         if (modal && idSpan) {
             idSpan.textContent = orderId;
-            modal.style.display = 'block';
+            
+            // Demo sipariş detayları
+            const demoOrders = getDemoOrders();
+            const order = demoOrders.find(o => o.id === orderId) || demoOrders[0];
+            
+            // Modalı göster
+            showModal('order-detail-modal');
+            
+            // Form alanlarını doldur
             setTimeout(() => {
-                document.querySelector('#order-general input[name="orderNo"]').value = `24-03-${orderId.substring(0, 4).toUpperCase()}`;
-                document.querySelector('#order-general input[name="customer"]').value = "AYEDAŞ";
+                document.querySelector('#order-general input[name="orderNo"]').value = order.orderNo;
+                document.querySelector('#order-general input[name="customer"]').value = order.customer;
                 document.querySelector('#order-general input[name="cellType"]').value = "RM 36 LB";
                 document.querySelector('#order-general input[name="cellCount"]').value = "3";
-                document.querySelector('#order-general input[name="orderDate"]').value = "15.02.2024";
-                document.querySelector('#order-general input[name="deliveryDate"]').value = "20.05.2024";
-                document.querySelector('#order-general select[name="status"]').value = "production";
-                updateWorkflowStatus("production");
+                document.querySelector('#order-general input[name="orderDate"]').value = order.orderDate;
+                document.querySelector('#order-general input[name="deliveryDate"]').value = order.deliveryDate;
+                document.querySelector('#order-general select[name="status"]').value = order.status;
+                
+                // İş akışı durumunu güncelle
+                updateWorkflowStatus(order.status);
             }, 300);
         }
     }
 }
 
-function formatDateKOD1(date) {
-    if (window.formatDate && typeof window.formatDate === 'function') {
-        return window.formatDate(date);
+/**
+ * İş akışı durumunu güncelle
+ * @param {string} status - Sipariş durumu
+ */
+function updateWorkflowStatus(status) {
+    const steps = document.querySelectorAll('.workflow-step');
+    if (!steps || steps.length === 0) return;
+    
+    // Tüm adımları sıfırla
+    steps.forEach(step => {
+        step.classList.remove('active', 'completed');
+    });
+    
+    // Durum göre adımları işaretle
+    switch (status) {
+        case 'planning':
+            steps[0].classList.add('active');
+            break;
+        case 'waiting':
+            steps[0].classList.add('completed');
+            steps[1].classList.add('active');
+            break;
+        case 'production':
+            steps[0].classList.add('completed');
+            steps[1].classList.add('completed');
+            steps[2].classList.add('active');
+            break;
+        case 'testing':
+            steps[0].classList.add('completed');
+            steps[1].classList.add('completed');
+            steps[2].classList.add('completed');
+            steps[3].classList.add('active');
+            break;
+        case 'ready':
+        case 'completed':
+            steps[0].classList.add('completed');
+            steps[1].classList.add('completed');
+            steps[2].classList.add('completed');
+            steps[3].classList.add('completed');
+            steps[4].classList.add('active');
+            break;
+        default:
+            steps[0].classList.add('active');
     }
-    if (!date) return '';
-    if (typeof date === 'string') {
-        if (date.includes('T')) {
-            date = new Date(date);
-        } else if (date.includes('.')) {
-            return date;
-        } else if (date.includes('/')) {
-            const parts = date.split('/');
-            if (parts.length === 3) {
-                return `${parts[1]}.${parts[0]}.${parts[2]}`;
-            } else {
-                return date;
-            }
-        } else {
-            return date;
-        }
-    } else if (!(date instanceof Date)) {
-        if (date.toDate && typeof date.toDate === 'function') {
-            date = date.toDate();
-        } else {
-            return '';
-        }
-    }
-    return date.toLocaleDateString('tr-TR');
 }
-
-/**********************************************
- * BÖLÜM B: kod-2 (dashboard-KOD2.js)
- **********************************************/
 
 /**
- * dashboard-KOD2.js
- * İyileştirilmiş Kontrol Paneli İşlevleri (kod-2)
+ * Sipariş detay formdaki verilerini kaydet
+ * @param {string} orderId - Sipariş ID'si
  */
-
-async function loadDashboardDataKOD2() {
+async function saveOrderDetails(orderId) {
     try {
-        console.log("(KOD2) Dashboard verileri yükleniyor...");
-        toggleLoading(true, 'dashboard-page');
-        try {
-            const [stats, activeOrders, missingMaterials, upcomingDeliveries] = await Promise.all([
-                loadDashboardStatsKOD2(),
-                loadActiveOrdersKOD2(),
-                loadMissingMaterialsKOD2(),
-                loadUpcomingDeliveriesKOD2()
-            ]);
-            drawChartsKOD2();
-            toggleLoading(false, 'dashboard-page');
-            return {
-                stats,
-                activeOrders,
-                missingMaterials,
-                upcomingDeliveries
-            };
-        } catch (dataError) {
-            console.error('(KOD2) Dashboard veri yüklemede hata:', dataError);
-            console.log('(KOD2) Demo verileri yükleniyor...');
-            loadDashboardDemoKOD2();
-            if (typeof displayAIInsights === 'function') {
-                displayAIInsights('ai-recommendations');
+        // Form değerleri topla
+        const orderData = {
+            customer: document.querySelector('#order-general input[name="customer"]').value,
+            cellType: document.querySelector('#order-general input[name="cellType"]').value,
+            cellCount: parseInt(document.querySelector('#order-general input[name="cellCount"]').value) || 0,
+            status: document.querySelector('#order-general select[name="status"]').value
+        };
+        
+        // Tarihleri düzenle
+        const orderDateStr = document.querySelector('#order-general input[name="orderDate"]').value;
+        const deliveryDateStr = document.querySelector('#order-general input[name="deliveryDate"]').value;
+        
+        if (orderDateStr) {
+            // TR formatı (DD.MM.YYYY) ise Date nesnesine çevir
+            const dateParts = orderDateStr.split('.');
+            if (dateParts.length === 3) {
+                orderData.orderDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
             }
-            toggleLoading(false, 'dashboard-page');
         }
+        
+        if (deliveryDateStr) {
+            // TR formatı (DD.MM.YYYY) ise Date nesnesine çevir
+            const dateParts = deliveryDateStr.split('.');
+            if (dateParts.length === 3) {
+                orderData.deliveryDate = new Date(dateParts[2], dateParts[1] - 1, dateParts[0]);
+            }
+        }
+        
+        // Firebase ile güncelleme yap
+        if (firebase && firebase.firestore) {
+            await firebase.firestore().collection('orders').doc(orderId).update(orderData);
+            showToast("Sipariş bilgileri güncellendi", "success");
+        } else {
+            // Demo modda güncelleme simülasyonu
+            showToast("Sipariş bilgileri güncellendi (Demo)", "success");
+        }
+        
+        // Modal kapat
+        closeModal('order-detail-modal');
+        
+        // Dashboard verilerini yenile
+        refreshData();
+        
+        return true;
     } catch (error) {
-        console.error('(KOD2) Dashboard verileri yüklenirken hata:', error);
-        showToast('(KOD2) Dashboard verileri yüklenirken hata oluştu', 'error');
-        toggleLoading(false, 'dashboard-page');
-        loadDashboardDemoKOD2();
+        console.error("Sipariş güncelleme hatası:", error);
+        showToast("Sipariş güncellenirken bir hata oluştu: " + error.message, "error");
+        return false;
     }
 }
 
-function loadDashboardDemoKOD2() {
-    console.log("(KOD2) Demo dashboard verileri yükleniyor...");
-    drawChartsKOD2();
-    const ordersTableBody = document.querySelector('#orders-table tbody');
-    if (ordersTableBody) {
-        const demoOrders = [
-            {
-                id: 'order-1',
-                orderNo: '24-03-A001',
-                customer: 'AYEDAŞ',
-                missingMaterials: 0,
-                deliveryDate: '20.05.2024',
-                orderDate: '15.02.2024',
-                status: 'production',
-                hasWarning: true
-            },
-            {
-                id: 'order-2',
-                orderNo: '24-03-B002',
-                customer: 'BAŞKENT EDAŞ',
-         
+/**
+ * Dashboard verilerini yükleme işlevini dışa aktar
+ */
+window.loadDashboardData = loadDashboardData;
+
+/**
+ * Sayfa yüklendiğinde çalışacak
+ */
+document.addEventListener('DOMContentLoaded', function() {
+    // Dashboard aktifse verileri yükle
+    if (document.getElementById('dashboard-page')?.classList.contains('active')) {
+        loadDashboardData();
+    }
+    
+    // Sayfa değişikliği olay dinleyicisi
+    document.addEventListener('pageChanged', function(e) {
+        if (e.detail && e.detail.page === 'dashboard') {
+            loadDashboardData();
+        }
+    });
+    
+    // Sipariş detay modalı kaydedildiğinde
+    const orderDetailSaveBtn = document.querySelector('#order-detail-modal .modal-footer .btn-primary');
+    if (orderDetailSaveBtn) {
+        orderDetailSaveBtn.addEventListener('click', function() {
+            const orderId = document.getElementById('order-detail-id').textContent;
+            saveOrderDetails(orderId);
+        });
+    }
+    
+    // Filtre değişikliklerini dinle
+    const searchInput = document.querySelector('.search-input');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', filterOrders);
+    }
+    
+    // Filtre select elementleri
+    const filterSelects = document.querySelectorAll('.filter-item select');
+    filterSelects.forEach(select => {
+        select.addEventListener('change', filterOrders);
+    });
+    
+    // Yenileme butonu
+    const refreshBtn = document.querySelector('.page-header .btn-outline');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            loadDashboardData();
+        });
+    }
+});
