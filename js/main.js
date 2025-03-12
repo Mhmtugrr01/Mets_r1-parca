@@ -1,59 +1,139 @@
 /**
  * main.js
- * Uygulama ana işlevleri ve yardımcı fonksiyonlar
+ * Uygulama ana işlevleri, sayfa kontrolü ve yardımcı fonksiyonlar
  */
 
 // Global durum değişkenleri
-let currentPage = 'dashboard';
-let isUserLoggedIn = false;
-let currentUser = null;
+const appState = {
+    currentPage: 'dashboard',
+    isUserLoggedIn: false,
+    currentUser: null,
+    theme: localStorage.getItem('theme') || 'light',
+    language: localStorage.getItem('language') || 'tr',
+    isLoading: false,
+    notifications: localStorage.getItem('notifications') === 'true',
+    lastError: null,
+    isDemoMode: window.location.hostname === 'localhost' || 
+                window.location.hostname === '127.0.0.1' ||
+                window.location.hostname.includes('netlify.app') ||
+                window.location.search.includes('demo=true')
+};
 
-// Demo mod kontrolü
-const isDemo = window.location.hostname === 'localhost' || 
-               window.location.hostname === '127.0.0.1' ||
-               window.location.hostname.includes('netlify.app') ||
-               window.location.search.includes('demo=true');
+// Sayfa yükleme durumları
+const pageLoadStatus = {};
 
-// Uygulama başlatma fonksiyonu
+/**
+ * Uygulama başlatma işlevi
+ */
 function initApp() {
     console.log("ElektroTrack uygulaması başlatılıyor...");
     
-    // Demo modu kontrolü
-    const isDemo = window.location.hostname === 'localhost' || 
-                   window.location.hostname === '127.0.0.1' ||
-                   window.location.hostname.includes('netlify.app') ||
-                   window.location.search.includes('demo=true');
-                   
-    // Demo modu bildirimi göster
-    if (isDemo) {
+    // Demo modu kontrolü ve bildirimi
+    if (appState.isDemoMode) {
+        console.log("Demo modu tespit edildi");
         const demoModeNotification = document.getElementById('demo-mode-notification');
         if (demoModeNotification) {
             demoModeNotification.style.display = 'block';
         }
     }
     
-    // Service worker kayıt (PWA desteği için)
+    // Tema ayarlarını uygula
+    applyTheme(appState.theme);
+    
+    // Service worker kaydı (PWA desteği için)
     registerServiceWorker();
     
     // URL'den sayfa yönlendirmesini kontrol et
     handleURLRouting();
+    
+    // Sayfa olay dinleyicilerini ayarla
+    setupEventListeners();
+    
+    // Kullanıcı oturum durumu kontrolü
+    checkUserAuthentication();
 }
 
-// URL'den sayfa yönlendirmesini kontrol et
+/**
+ * Kullanıcı kimlik doğrulama durumunu kontrol et
+ */
+function checkUserAuthentication() {
+    // Firebase Auth kontrolü
+    if (typeof firebase !== 'undefined' && firebase.auth) {
+        firebase.auth().onAuthStateChanged(handleAuthStateChanged);
+    } else if (appState.isDemoMode) {
+        // Demo modunda otomatik giriş
+        console.log("Firebase Auth yok, demo mod otomatik giriş yapılıyor");
+        demoLogin();
+    } else {
+        console.warn("Firebase Auth bulunamadı ve demo mod aktif değil");
+        showLogin();
+    }
+}
+
+/**
+ * Kullanıcı oturum durumu değişikliği işleyicisi
+ * @param {Object} user - Firebase kullanıcı objesi (null ise oturum kapalı)
+ */
+function handleAuthStateChanged(user) {
+    if (user) {
+        // Kullanıcı giriş yapmış
+        appState.isUserLoggedIn = true;
+        appState.currentUser = user;
+        
+        console.log("Kullanıcı oturum açtı:", user.email);
+        
+        // Kullanıcı bilgilerini Firestore'dan al
+        if (typeof loadUserData === 'function') {
+            loadUserData(user.uid).catch(error => {
+                console.warn("Kullanıcı bilgileri yüklenemedi:", error);
+            });
+        }
+        
+        // Ana uygulamayı göster
+        showMainApp();
+        
+        // Sayfa yönlendirmesi
+        if (appState.currentPage) {
+            showPage(appState.currentPage);
+        } else {
+            showPage('dashboard');
+        }
+    } else {
+        // Kullanıcı çıkış yapmış veya giriş yapmamış
+        appState.isUserLoggedIn = false;
+        appState.currentUser = null;
+        
+        // Demo modunda otomatik giriş yap
+        if (appState.isDemoMode) {
+            console.log("Demo mod aktif, otomatik giriş yapılıyor");
+            demoLogin();
+        } else {
+            // Normal modda giriş sayfasını göster
+            showLogin();
+        }
+    }
+}
+
+/**
+ * URL'den sayfa yönlendirmesini kontrol et
+ */
 function handleURLRouting() {
     const hash = window.location.hash;
     if (hash && hash.length > 1) {
         const pageName = hash.substring(1);
-        currentPage = pageName;
+        appState.currentPage = pageName;
         // Auth kontrol edildikten sonra doğru sayfa yüklenecek
     }
 }
 
-// Sayfa olay dinleyicilerini ayarla
+/**
+ * Tüm sayfa ve arayüz olay dinleyicilerini ayarla
+ */
 function setupEventListeners() {
     // Navigasyon menü öğeleri
     document.querySelectorAll('.navbar-item').forEach(item => {
         item.addEventListener('click', function(event) {
+            // İçeriği al ve lowercase yap
             const pageId = this.textContent.trim().toLowerCase();
             if (pageId) {
                 showPage(pageId);
@@ -69,7 +149,7 @@ function setupEventListeners() {
         userAvatar.addEventListener('click', toggleUserMenu);
     }
     
-    // Modal kapatma butonları için tıklama olayı
+    // Modal kapatma butonları
     document.querySelectorAll('.modal-close').forEach(closeBtn => {
         closeBtn.addEventListener('click', function() {
             const modalId = this.closest('.modal').id;
@@ -77,7 +157,7 @@ function setupEventListeners() {
         });
     });
     
-    // Tab içerikleri için olay dinleyicileri
+    // Tab içerikleri
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', function() {
             const tabContentId = this.getAttribute('data-tab');
@@ -85,32 +165,8 @@ function setupEventListeners() {
         });
     });
     
-    // Giriş formu
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            login();
-        });
-    }
-    
-    // Kayıt formu
-    const registerForm = document.getElementById('register-form');
-    if (registerForm) {
-        registerForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            register();
-        });
-    }
-    
-    // Şifre sıfırlama formu
-    const forgotPasswordForm = document.getElementById('forgot-password-form');
-    if (forgotPasswordForm) {
-        forgotPasswordForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            resetPassword();
-        });
-    }
+    // Tüm form eklentileri
+    setupFormEventListeners();
     
     // URL hash değişikliğini dinle
     window.addEventListener('hashchange', function() {
@@ -124,7 +180,22 @@ function setupEventListeners() {
     // Arama filtresi
     const searchInput = document.querySelector('.search-input');
     if (searchInput) {
-        searchInput.addEventListener('keyup', filterOrders);
+        searchInput.addEventListener('keyup', function() {
+            // İlgili filtre fonksiyonunu çağır
+            if (appState.currentPage === 'dashboard' || appState.currentPage === 'orders') {
+                if (typeof filterOrders === 'function') {
+                    filterOrders();
+                }
+            } else if (appState.currentPage === 'stock') {
+                if (typeof filterStock === 'function') {
+                    filterStock();
+                }
+            } else if (appState.currentPage === 'customers') {
+                if (typeof filterCustomers === 'function') {
+                    filterCustomers();
+                }
+            }
+        });
     }
     
     // Chatbot input için Enter tuşu
@@ -163,118 +234,129 @@ function setupEventListeners() {
             });
         }
     });
+    
+    // Ayarlar form olayları
+    const settingsForm = document.getElementById('settings-form');
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            saveSettings();
+        });
+    }
+    
+    // Yenile butonu
+    const refreshBtn = document.querySelector('.page-header .btn-outline');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', refreshData);
+    }
 }
 
-// Kullanıcı oturum durumu değişikliği
-function handleAuthStateChanged(user) {
-    if (user) {
-        // Kullanıcı giriş yapmış
-        isUserLoggedIn = true;
-        currentUser = user;
-        
-        console.log("Kullanıcı giriş yaptı:", user.email);
-        
-        // Kullanıcı bilgilerini Firestore'dan al
-        loadUserData(user.uid);
-        
-        // Ana uygulamayı göster
-        showMainApp();
-        
-        // Dashboard verilerini yükle (eğer dashboard sayfasındaysa)
-        if (currentPage === 'dashboard') {
-            setTimeout(() => {
-                loadDashboardData();
-            }, 100);
-        } else {
-            // Farklı sayfa istendiyse onu göster
-            showPage(currentPage);
-        }
-    } else {
-        // Kullanıcı çıkış yapmış
-        isUserLoggedIn = false;
-        currentUser = null;
-        
-        // Demo modunda otomatik giriş yap
-        if (isDemo) {
-            // Demo kullanıcısıyla otomatik giriş yap
-            try {
-                if (typeof firebase !== 'undefined' && firebase.auth) {
-                    firebase.auth().signInWithEmailAndPassword('demo@elektrotrack.com', 'demo123')
-                        .then(() => {
-                            console.log("Demo kullanıcısıyla otomatik giriş yapıldı");
-                            
-                            // Demo modu bildirimini göster
-                            const demoModeNotification = document.getElementById('demo-mode-notification');
-                            if (demoModeNotification) {
-                                demoModeNotification.style.display = 'block';
-                            }
-                        })
-                        .catch(error => {
-                            console.warn("Demo kullanıcısıyla otomatik giriş yapılamadı:", error);
-                            // Firebase hata verirse, yine de ana uygulamaya yönlendir
-                            demoLogin();
-                        });
-                } else {
-                    // Firebase yoksa direkt ana uygulamayı göster
-                    demoLogin();
-                }
-            } catch (error) {
-                console.warn("Demo modu otomatik giriş hatası:", error);
-                // Hata olsa da direkt ana uygulamayı göster
+/**
+ * Form olay dinleyicilerini ayarla
+ */
+function setupFormEventListeners() {
+    // Giriş formu
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (typeof login === 'function') {
+                login();
+            } else {
+                console.warn("Login fonksiyonu bulunamadı");
                 demoLogin();
             }
-        } else {
-            // Normal modda giriş sayfasını göster
-            showLogin();
-        }
+        });
+    }
+    
+    // Kayıt formu
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (typeof register === 'function') {
+                register();
+            } else {
+                console.warn("Register fonksiyonu bulunamadı");
+                showToast('Kayıt işlemi şu anda kullanılamıyor', 'error');
+            }
+        });
+    }
+    
+    // Şifre sıfırlama formu
+    const forgotPasswordForm = document.getElementById('forgot-password-form');
+    if (forgotPasswordForm) {
+        forgotPasswordForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (typeof resetPassword === 'function') {
+                resetPassword();
+            } else {
+                console.warn("resetPassword fonksiyonu bulunamadı");
+                showToast('Şifre sıfırlama işlemi şu anda kullanılamıyor', 'error');
+            }
+        });
+    }
+    
+    // Sipariş oluşturma formu
+    const createOrderForm = document.getElementById('create-order-form');
+    if (createOrderForm) {
+        createOrderForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (typeof createOrder === 'function') {
+                // Form verilerini topla
+                const formData = new FormData(this);
+                const orderData = {
+                    customer: formData.get('customer'),
+                    cellType: formData.get('cellType'),
+                    cellCount: parseInt(formData.get('cellCount')) || 0,
+                    orderDate: formData.get('orderDate') ? new Date(formData.get('orderDate')) : new Date(),
+                    deliveryDate: formData.get('deliveryDate') ? new Date(formData.get('deliveryDate')) : null,
+                    status: formData.get('status') || 'planning',
+                    description: formData.get('description') || ''
+                };
+                
+                createOrder(orderData);
+            } else {
+                console.warn("createOrder fonksiyonu bulunamadı");
+                closeModal('create-order-modal');
+                showToast('Sipariş oluşturma işlemi şu anda kullanılamıyor', 'error');
+            }
+        });
     }
 }
 
-// Kullanıcı bilgilerini Firestore'dan al
-async function loadUserData(userId) {
-    try {
-        if (!firebase || !firebase.firestore) {
-            console.warn("Firebase Firestore bulunamadı, kullanıcı bilgileri alınamadı");
-            return null;
-        }
-        
-        const userDoc = await firebase.firestore().collection('users').doc(userId).get();
-        
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            
-            // Avatar için kullanıcı adının ilk harfini ayarla
-            const avatarElement = document.querySelector('.user-avatar');
-            if (avatarElement && userData.name) {
-                avatarElement.textContent = userData.name.charAt(0).toUpperCase();
-            } else if (avatarElement && currentUser.email) {
-                avatarElement.textContent = currentUser.email.charAt(0).toUpperCase();
-            }
-            
-            return userData;
-        } else {
-            console.warn("Kullanıcı verisi bulunamadı");
-            
-            // Kullanıcı verisini oluştur
-            if (firebase && firebase.firestore) {
-                await firebase.firestore().collection('users').doc(userId).set({
-                    name: currentUser.displayName || currentUser.email.split('@')[0],
-                    email: currentUser.email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    role: 'user'
-                });
-            }
-            
-            return null;
-        }
-    } catch (error) {
-        console.error("Kullanıcı verileri yüklenirken hata:", error);
-        return null;
-    }
-}
-
-// Sayfa değiştirme
+/**
+ * Uygulamadaki sayfa içeriklerini göster/gizle
+ * @param {string} pageName - Gösterilecek sayfa adı
+ */
 function showPage(pageName) {
+    // Gereksiz boşlukları temizle
+    pageName = pageName.trim().toLowerCase();
+    
+    // Arama için doğru sayfa adını belirle
+    const pageMap = {
+        'kontrol paneli': 'dashboard',
+        'sipariş': 'orders',
+        'siparişler': 'orders',
+        'müşteriler': 'customers',
+        'malzemeler': 'stock',
+        'stok': 'stock',
+        'satınalma': 'purchasing',
+        'satın alma': 'purchasing',
+        'üretim': 'production',
+        'raporlar': 'reports',
+        'ayarlar': 'settings',
+        'profil': 'profile',
+        'notlar': 'notes',
+        'yapay zeka': 'ai'
+    };
+    
+    // Sayfa adını düzelt
+    if (pageMap[pageName]) {
+        pageName = pageMap[pageName];
+    }
+    
     // Sayfaları gizle
     const pages = document.querySelectorAll('.page');
     pages.forEach(page => {
@@ -285,11 +367,14 @@ function showPage(pageName) {
     const targetPage = document.getElementById(`${pageName}-page`);
     if (targetPage) {
         targetPage.classList.add('active');
-        currentPage = pageName;
+        appState.currentPage = pageName;
         
         // Sayfa başlığı ve URL'yi güncelle
         document.title = `ElektroTrack - ${getPageTitle(pageName)}`;
         history.pushState({ page: pageName }, document.title, `#${pageName}`);
+        
+        // Sayfa görünürlük değişikliği olayını tetikle
+        dispatchPageChangeEvent(pageName);
     } else {
         console.warn(`Sayfa bulunamadı: ${pageName}`);
         // Sayfa bulunamadıysa dashboard'a yönlendir
@@ -305,7 +390,8 @@ function showPage(pageName) {
         item.classList.remove('active');
         
         // Sayfa adına göre menü öğesini bul
-        if (item.textContent.trim().toLowerCase() === pageName.toLowerCase()) {
+        if (item.textContent.trim().toLowerCase() === pageName.toLowerCase() ||
+            (pageMap[item.textContent.trim().toLowerCase()] === pageName)) {
             item.classList.add('active');
         }
     });
@@ -314,7 +400,243 @@ function showPage(pageName) {
     loadPageContent(pageName);
 }
 
-// Sayfa başlığını getir
+/**
+ * Sayfa içeriğini yükle
+ * @param {string} pageName - Sayfa adı
+ */
+function loadPageContent(pageName) {
+    console.log(`${pageName} sayfası yükleniyor...`);
+    
+    // Sayfa daha önce yüklendi mi kontrol et
+    if (pageLoadStatus[pageName]) {
+        console.log(`${pageName} sayfası zaten yüklendi, yenilenmeyecek`);
+        return;
+    }
+    
+    switch (pageName) {
+        case 'dashboard':
+            showLoadingInPage('dashboard-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Dashboard verilerini yükle
+            if (typeof loadDashboardData === 'function') {
+                loadDashboardData().catch(error => {
+                    console.error("Dashboard verileri yüklenirken hata:", error);
+                    showErrorInPage('dashboard-page', 'Dashboard verileri yüklenemedi', error.message);
+                });
+            } else if (typeof loadDashboardDataKOD1 === 'function') {
+                loadDashboardDataKOD1().catch(error => {
+                    console.error("Dashboard verileri yüklenirken hata:", error);
+                    showErrorInPage('dashboard-page', 'Dashboard verileri yüklenemedi', error.message);
+                });
+            } else if (typeof loadDashboardDataKOD2 === 'function') {
+                loadDashboardDataKOD2().catch(error => {
+                    console.error("Dashboard verileri yüklenirken hata:", error);
+                    showErrorInPage('dashboard-page', 'Dashboard verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Dashboard verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('dashboard-page');
+            }
+            
+            // Yapay zeka önerilerini yükle
+            if (typeof displayAIInsights === 'function') {
+                displayAIInsights('ai-recommendations').catch(error => {
+                    console.warn("AI önerileri yüklenirken hata:", error);
+                });
+            }
+            break;
+            
+        case 'sales':
+            showLoadingInPage('sales-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Satış sayfası içeriğini yükle
+            if (typeof loadSalesData === 'function') {
+                loadSalesData().catch(error => {
+                    console.error("Satış verileri yüklenirken hata:", error);
+                    showErrorInPage('sales-page', 'Satış verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Satış verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('sales-page');
+            }
+            break;
+            
+        case 'projects':
+            showLoadingInPage('projects-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Projeler sayfası içeriğini yükle
+            if (typeof loadProjects === 'function') {
+                loadProjects().catch(error => {
+                    console.error("Proje verileri yüklenirken hata:", error);
+                    showErrorInPage('projects-page', 'Proje verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Proje verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('projects-page');
+            }
+            break;
+            
+        case 'production':
+            showLoadingInPage('production-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Üretim sayfası içeriğini yükle
+            if (typeof loadProductionPlans === 'function') {
+                loadProductionPlans().catch(error => {
+                    console.error("Üretim verileri yüklenirken hata:", error);
+                    showErrorInPage('production-page', 'Üretim verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Üretim verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('production-page');
+            }
+            break;
+            
+        case 'stock':
+            showLoadingInPage('stock-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Stok sayfası içeriğini yükle
+            if (typeof loadStockData === 'function') {
+                loadStockData().catch(error => {
+                    console.error("Stok verileri yüklenirken hata:", error);
+                    showErrorInPage('stock-page', 'Stok verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Stok verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('stock-page');
+            }
+            break;
+            
+        case 'purchasing':
+            showLoadingInPage('purchasing-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Satın alma sayfası içeriğini yükle
+            if (typeof loadPurchaseRequests === 'function') {
+                loadPurchaseRequests().catch(error => {
+                    console.error("Satın alma verileri yüklenirken hata:", error);
+                    showErrorInPage('purchasing-page', 'Satın alma verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Satın alma verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('purchasing-page');
+            }
+            
+            // Eksik malzemeleri yükle
+            if (typeof loadMissingMaterials === 'function') {
+                loadMissingMaterials().catch(error => {
+                    console.warn("Eksik malzemeler yüklenirken hata:", error);
+                });
+            }
+            break;
+            
+        case 'quality':
+            showLoadingInPage('quality-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Kalite sayfası içeriğini yükle
+            if (typeof loadQualityData === 'function') {
+                loadQualityData().catch(error => {
+                    console.error("Kalite verileri yüklenirken hata:", error);
+                    showErrorInPage('quality-page', 'Kalite verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Kalite verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('quality-page');
+            }
+            break;
+            
+        case 'reports':
+            showLoadingInPage('reports-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Raporlar sayfası içeriğini yükle
+            if (typeof loadReports === 'function') {
+                loadReports().catch(error => {
+                    console.error("Rapor verileri yüklenirken hata:", error);
+                    showErrorInPage('reports-page', 'Rapor verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Rapor verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('reports-page');
+            }
+            break;
+            
+        case 'notes':
+            showLoadingInPage('notes-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Notlar sayfası içeriğini yükle
+            if (typeof loadNotes === 'function') {
+                loadNotes().catch(error => {
+                    console.error("Not verileri yüklenirken hata:", error);
+                    showErrorInPage('notes-page', 'Not verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Not verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('notes-page');
+            }
+            break;
+            
+        case 'ai':
+            showLoadingInPage('ai-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Yapay Zeka sayfası içeriğini yükle
+            if (typeof displayAIInsights === 'function') {
+                displayAIInsights('ai-page').catch(error => {
+                    console.error("Yapay zeka verileri yüklenirken hata:", error);
+                    showErrorInPage('ai-page', 'Yapay zeka verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Yapay zeka verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('ai-page');
+            }
+            break;
+            
+        case 'profile':
+            showLoadingInPage('profile-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Profil bilgilerini yükle
+            loadProfileData();
+            break;
+            
+        case 'settings':
+            showLoadingInPage('settings-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Ayarları yükle
+            loadSettingsData();
+            break;
+            
+        case 'orders':
+            showLoadingInPage('orders-page');
+            pageLoadStatus[pageName] = true;
+            
+            // Sipariş listesini yükle
+            if (typeof loadOrders === 'function') {
+                loadOrders().catch(error => {
+                    console.error("Sipariş verileri yüklenirken hata:", error);
+                    showErrorInPage('orders-page', 'Sipariş verileri yüklenemedi', error.message);
+                });
+            } else {
+                console.warn("Sipariş verilerini yükleyecek fonksiyon bulunamadı");
+                hideLoadingInPage('orders-page');
+            }
+            break;
+    }
+}
+
+/**
+ * Sayfa başlığını getir
+ * @param {string} pageName - Sayfa adı
+ * @returns {string} - Sayfa başlığı
+ */
 function getPageTitle(pageName) {
     const titles = {
         'dashboard': 'Kontrol Paneli',
@@ -328,86 +650,23 @@ function getPageTitle(pageName) {
         'notes': 'Notlar',
         'ai': 'Yapay Zeka',
         'profile': 'Profilim',
-        'settings': 'Ayarlar'
+        'settings': 'Ayarlar',
+        'orders': 'Siparişler',
+        'customers': 'Müşteriler'
     };
     
     return titles[pageName] || 'ElektroTrack';
 }
 
-// Sayfa içeriğini yükle
-function loadPageContent(pageName) {
-    console.log(`${pageName} sayfası yükleniyor...`);
-    
-    switch (pageName) {
-        case 'dashboard':
-            loadDashboardData();
-            break;
-        case 'sales':
-            // Satış sayfası içeriğini yükle
-            showLoadingInCard('sales-page');
-            // İleriki sürümlerde eklenecek
-            break;
-        case 'projects':
-            // Projeler sayfası içeriğini yükle
-            showLoadingInCard('projects-page');
-            // İleriki sürümlerde eklenecek
-            break;
-        case 'production':
-            // Üretim sayfası içeriğini yükle
-            showLoadingInCard('production-page');
-            if (typeof loadProductionPlans === 'function') {
-                loadProductionPlans();
-            }
-            break;
-        case 'stock':
-            // Stok sayfası içeriğini yükle
-            showLoadingInCard('stock-page');
-            // İleriki sürümlerde eklenecek
-            break;
-        case 'purchasing':
-            // Satın alma sayfası içeriğini yükle
-            showLoadingInCard('purchasing-page');
-            if (typeof loadPurchaseRequests === 'function') {
-                loadPurchaseRequests();
-            }
-            break;
-        case 'quality':
-            // Kalite sayfası içeriğini yükle
-            showLoadingInCard('quality-page');
-            // İleriki sürümlerde eklenecek
-            break;
-        case 'reports':
-            // Raporlar sayfası içeriğini yükle
-            showLoadingInCard('reports-page');
-            // İleriki sürümlerde eklenecek
-            break;
-        case 'notes':
-            // Notlar sayfası içeriğini yükle
-            showLoadingInCard('notes-page');
-            // İleriki sürümlerde eklenecek
-            break;
-        case 'ai':
-            // Yapay Zeka sayfası içeriğini yükle
-            showLoadingInCard('ai-page');
-            // Yapay zeka önerilerini yükle
-            if (typeof displayAIInsights === 'function') {
-                displayAIInsights('ai-page');
-            }
-            break;
-        case 'profile':
-            // Profil sayfası içeriğini yükle
-            loadProfileData();
-            break;
-        case 'settings':
-            // Ayarlar sayfası içeriğini yükle
-            loadSettingsData();
-            break;
-    }
-}
-
-// Profil verilerini yükle
+/**
+ * Profil verilerini yükle ve formu doldur
+ */
 function loadProfileData() {
-    if (!currentUser) return;
+    if (!appState.currentUser) {
+        console.warn("Profil verileri yüklenemedi: Kullanıcı giriş yapmamış");
+        hideLoadingInPage('profile-page');
+        return;
+    }
     
     // Profil formunu doldur
     const profileName = document.getElementById('profile-name');
@@ -415,12 +674,12 @@ function loadProfileData() {
     const profileDepartment = document.getElementById('profile-department');
     const profilePhone = document.getElementById('profile-phone');
     
-    // Email doğrudan geliyor
-    if (profileEmail) profileEmail.value = currentUser.email || '';
+    // Email doğrudan mevcut kullanıcıdan gelir
+    if (profileEmail) profileEmail.value = appState.currentUser.email || '';
     
     // Diğer bilgileri Firebase'den al
     if (firebase && firebase.firestore) {
-        firebase.firestore().collection('users').doc(currentUser.uid).get()
+        firebase.firestore().collection('users').doc(appState.currentUser.uid).get()
             .then(doc => {
                 if (doc.exists) {
                     const userData = doc.data();
@@ -428,6 +687,7 @@ function loadProfileData() {
                     if (profileDepartment) profileDepartment.value = userData.department || '';
                     if (profilePhone) profilePhone.value = userData.phone || '';
                 }
+                hideLoadingInPage('profile-page');
             })
             .catch(error => {
                 console.error("Profil verileri yüklenemedi:", error);
@@ -435,90 +695,261 @@ function loadProfileData() {
                 
                 // Demo verileri göster
                 if (profileName) profileName.value = 'Demo Kullanıcı';
+                if (profileDepartment) profileDepartment.value = 'Yönetim';
+                
+                hideLoadingInPage('profile-page');
             });
     } else {
         // Demo verileri
-        if (profileName) profileName.value = 'Demo Kullanıcı';
+        if (profileName) profileName.value = appState.currentUser.displayName || 'Demo Kullanıcı';
         if (profileDepartment) profileDepartment.value = 'Yönetim';
+        if (profilePhone) profilePhone.value = '';
+        
+        hideLoadingInPage('profile-page');
     }
 }
 
-// Ayarlar verilerini yükle
+/**
+ * Ayarlar verilerini yükle ve formu doldur
+ */
 function loadSettingsData() {
     // Tema, dil ve bildirim ayarlarını localStorage'dan al
     const themeSelect = document.getElementById('theme-select');
     const languageSelect = document.getElementById('language-select');
     const notificationsEnabled = document.getElementById('notifications-enabled');
     
-    if (themeSelect) themeSelect.value = localStorage.getItem('theme') || 'light';
-    if (languageSelect) languageSelect.value = localStorage.getItem('language') || 'tr';
-    if (notificationsEnabled) notificationsEnabled.checked = localStorage.getItem('notifications') === 'true';
+    if (themeSelect) themeSelect.value = appState.theme;
+    if (languageSelect) languageSelect.value = appState.language;
+    if (notificationsEnabled) notificationsEnabled.checked = appState.notifications;
     
-    // Form submit olayını dinle
-    const settingsForm = document.getElementById('settings-form');
-    if (settingsForm) {
-        settingsForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            // Ayarları kaydet
-            localStorage.setItem('theme', themeSelect.value);
-            localStorage.setItem('language', languageSelect.value);
-            localStorage.setItem('notifications', notificationsEnabled.checked);
-            
-            // Temayı hemen uygula
-            applyTheme(themeSelect.value);
-            
-            showToast("Ayarlar kaydedildi", "success");
-        });
-    }
+    hideLoadingInPage('settings-page');
 }
 
-// Temayı uygula
+/**
+ * Ayarları kaydet
+ */
+function saveSettings() {
+    const themeSelect = document.getElementById('theme-select');
+    const languageSelect = document.getElementById('language-select');
+    const notificationsEnabled = document.getElementById('notifications-enabled');
+    
+    if (themeSelect) {
+        appState.theme = themeSelect.value;
+        localStorage.setItem('theme', themeSelect.value);
+        applyTheme(themeSelect.value);
+    }
+    
+    if (languageSelect) {
+        appState.language = languageSelect.value;
+        localStorage.setItem('language', languageSelect.value);
+    }
+    
+    if (notificationsEnabled) {
+        appState.notifications = notificationsEnabled.checked;
+        localStorage.setItem('notifications', notificationsEnabled.checked);
+    }
+    
+    showToast("Ayarlar kaydedildi", "success");
+}
+
+/**
+ * Temayı uygula
+ * @param {string} theme - Tema adı ('light', 'dark', 'system')
+ */
 function applyTheme(theme) {
     const body = document.body;
     
+    if (theme === 'system') {
+        // Sistem ayarlarına göre tema belirle
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        theme = prefersDark ? 'dark' : 'light';
+    }
+    
     if (theme === 'dark') {
         body.classList.add('dark-theme');
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#1a202c');
     } else {
         body.classList.remove('dark-theme');
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#1e40af');
     }
 }
 
-// Modal içerisinde loading göster
-function showLoadingInCard(pageId) {
+/**
+ * Sayfa içinde loading göster
+ * @param {string} pageId - Sayfa element ID'si
+ */
+function showLoadingInPage(pageId) {
     const page = document.getElementById(pageId);
     if (!page) return;
     
-    const cardBodies = page.querySelectorAll('.card-body');
-    cardBodies.forEach(cardBody => {
-        if (!cardBody.querySelector('.loading-spinner')) {
-            cardBody.innerHTML = `
-                <div class="loading-spinner text-center" style="padding: 2rem;">
-                    <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary);"></i>
-                    <p style="margin-top: 1rem;">Veriler yükleniyor...</p>
-                </div>
-            `;
-        }
-    });
+    // Sayfa içinde loading spinner oluştur
+    const loadingContainer = document.createElement('div');
+    loadingContainer.className = 'page-loading-container';
+    loadingContainer.style.position = 'absolute';
+    loadingContainer.style.top = '0';
+    loadingContainer.style.left = '0';
+    loadingContainer.style.width = '100%';
+    loadingContainer.style.height = '100%';
+    loadingContainer.style.display = 'flex';
+    loadingContainer.style.alignItems = 'center';
+    loadingContainer.style.justifyContent = 'center';
+    loadingContainer.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
+    loadingContainer.style.zIndex = '10';
+    
+    loadingContainer.innerHTML = `
+        <div class="loading-spinner" style="text-align: center;">
+            <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary);"></i>
+            <p style="margin-top: 1rem; color: var(--secondary);">Veriler yükleniyor...</p>
+        </div>
+    `;
+    
+    // Sayfaya position:relative ekle (mutlak konumlandırma için)
+    page.style.position = 'relative';
+    
+    // Eğer daha önce loading container eklenmişse kaldır
+    const existingLoader = page.querySelector('.page-loading-container');
+    if (existingLoader) {
+        existingLoader.remove();
+    }
+    
+    // Loading container'ı sayfaya ekle
+    page.appendChild(loadingContainer);
 }
 
-// Modal göster
+/**
+ * Sayfa içindeki loading'i gizle
+ * @param {string} pageId - Sayfa element ID'si
+ */
+function hideLoadingInPage(pageId) {
+    const page = document.getElementById(pageId);
+    if (!page) return;
+    
+    // Loading container'ı bul ve kaldır
+    const loadingContainer = page.querySelector('.page-loading-container');
+    if (loadingContainer) {
+        // Yumuşak geçiş için önce opasitesini azalt
+        loadingContainer.style.transition = 'opacity 0.3s ease';
+        loadingContainer.style.opacity = '0';
+        
+        // Animasyon bittikten sonra elementi kaldır
+        setTimeout(() => {
+            loadingContainer.remove();
+        }, 300);
+    }
+}
+
+/**
+ * Sayfa içinde hata mesajı göster
+ * @param {string} pageId - Sayfa element ID'si
+ * @param {string} title - Hata başlığı
+ * @param {string} message - Hata mesajı
+ */
+function showErrorInPage(pageId, title, message) {
+    const page = document.getElementById(pageId);
+    if (!page) return;
+    
+    // Loading göstergesini kaldır
+    hideLoadingInPage(pageId);
+    
+    // Hata mesajı container'ı oluştur
+    const errorContainer = document.createElement('div');
+    errorContainer.className = 'page-error-container';
+    errorContainer.style.margin = '2rem auto';
+    errorContainer.style.maxWidth = '600px';
+    errorContainer.style.padding = '2rem';
+    errorContainer.style.backgroundColor = '#fff8f8';
+    errorContainer.style.border = '1px solid #ffcdd2';
+    errorContainer.style.borderRadius = '0.5rem';
+    errorContainer.style.textAlign = 'center';
+    
+    errorContainer.innerHTML = `
+        <div style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem;">
+            <i class="fas fa-exclamation-circle"></i>
+        </div>
+        <h3 style="margin-bottom: 1rem; color: #b91c1c;">${title || 'Hata Oluştu'}</h3>
+        <p style="margin-bottom: 1.5rem; color: #64748b;">${message || 'Veriler yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.'}</p>
+        <button class="btn btn-danger" onclick="refreshData()">
+            <i class="fas fa-sync-alt"></i> Yeniden Dene
+        </button>
+    `;
+    
+    // Sayfanın ilk içerik alanına ekle
+    const contentArea = page.querySelector('.card-body') || page;
+    contentArea.prepend(errorContainer);
+}
+
+/**
+ * Modal göster
+ * @param {string} modalId - Modal element ID'si
+ */
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.style.display = 'block';
+        
+        // Modalı açtığımızda body scroll'u engelle
+        document.body.style.overflow = 'hidden';
+        
+        // Modala açılış animasyonu ekle
+        const modalDialog = modal.querySelector('.modal-dialog');
+        if (modalDialog) {
+            modalDialog.style.transform = 'translateY(-20px)';
+            modalDialog.style.opacity = '0';
+            
+            setTimeout(() => {
+                modalDialog.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+                modalDialog.style.transform = 'translateY(0)';
+                modalDialog.style.opacity = '1';
+            }, 10);
+        }
+        
+        // Özel açılış olayını tetikle
+        const event = new CustomEvent('modalOpen', { detail: { modalId } });
+        document.dispatchEvent(event);
     }
 }
 
-// Modal kapat
+/**
+ * Modal kapat
+ * @param {string} modalId - Modal element ID'si
+ */
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
-        modal.style.display = 'none';
+        // Modala kapanış animasyonu ekle
+        const modalDialog = modal.querySelector('.modal-dialog');
+        if (modalDialog) {
+            modalDialog.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+            modalDialog.style.transform = 'translateY(-20px)';
+            modalDialog.style.opacity = '0';
+            
+            // Animasyon bittikten sonra modalı tamamen gizle
+            setTimeout(() => {
+                modal.style.display = 'none';
+                // Body scroll'u geri aç
+                document.body.style.overflow = '';
+                
+                // Modal içindeki stilleri sıfırla
+                modalDialog.style.transform = '';
+                modalDialog.style.opacity = '';
+            }, 200);
+        } else {
+            // Modalda dialog yoksa direkt gizle
+            modal.style.display = 'none';
+            // Body scroll'u geri aç
+            document.body.style.overflow = '';
+        }
+        
+        // Özel kapanış olayını tetikle
+        const event = new CustomEvent('modalClose', { detail: { modalId } });
+        document.dispatchEvent(event);
     }
 }
 
-// Tab değiştir
+/**
+ * Tab değiştir
+ * @param {string} tabId - Tab ID'si
+ */
 function switchTab(tabId) {
     // Önceki aktif tab ve içeriğini bul
     const activeTab = document.querySelector('.tab.active');
@@ -534,41 +965,71 @@ function switchTab(tabId) {
     
     if (newTab) newTab.classList.add('active');
     if (newContent) newContent.classList.add('active');
+    
+    // Tab değişikliği olayını tetikle
+    const event = new CustomEvent('tabChange', { detail: { tabId } });
+    document.dispatchEvent(event);
 }
 
-// Giriş sayfasını göster
+/**
+ * Giriş sayfasını göster
+ */
 function showLogin() {
     document.getElementById('login-page').style.display = 'flex';
     document.getElementById('register-page').style.display = 'none';
     document.getElementById('forgot-password-page').style.display = 'none';
     document.getElementById('main-app').style.display = 'none';
+    
+    // Sayfa değişikliği olayını tetikle
+    const event = new CustomEvent('pageChange', { detail: { page: 'login' } });
+    document.dispatchEvent(event);
 }
 
-// Kayıt sayfasını göster
+/**
+ * Kayıt sayfasını göster
+ */
 function showRegister() {
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('register-page').style.display = 'flex';
     document.getElementById('forgot-password-page').style.display = 'none';
     document.getElementById('main-app').style.display = 'none';
+    
+    // Sayfa değişikliği olayını tetikle
+    const event = new CustomEvent('pageChange', { detail: { page: 'register' } });
+    document.dispatchEvent(event);
 }
 
-// Şifre sıfırlama sayfasını göster
+/**
+ * Şifre sıfırlama sayfasını göster
+ */
 function showForgotPassword() {
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('register-page').style.display = 'none';
     document.getElementById('forgot-password-page').style.display = 'flex';
     document.getElementById('main-app').style.display = 'none';
+    
+    // Sayfa değişikliği olayını tetikle
+    const event = new CustomEvent('pageChange', { detail: { page: 'forgot-password' } });
+    document.dispatchEvent(event);
 }
 
-// Ana uygulamayı göster
+/**
+ * Ana uygulamayı göster
+ */
 function showMainApp() {
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('register-page').style.display = 'none';
     document.getElementById('forgot-password-page').style.display = 'none';
     document.getElementById('main-app').style.display = 'block';
+    
+    // Sayfa değişikliği olayını tetikle
+    const event = new CustomEvent('pageChange', { detail: { page: 'main-app' } });
+    document.dispatchEvent(event);
 }
 
-// Demo modunu etkinleştir
+/**
+ * Demo modunu etkinleştir
+ */
 function enableDemoMode() {
     console.log("Demo modu etkinleştiriliyor...");
     
@@ -580,19 +1041,51 @@ function enableDemoMode() {
         window.history.replaceState({}, document.title, currentUrl.toString());
     }
     
-    // Demo modu bildirimi göster
-    setTimeout(() => {
-        const demoModeNotification = document.getElementById('demo-mode-notification');
-        if (demoModeNotification) {
-            demoModeNotification.style.display = 'block';
-        }
-    }, 2000);
+    // Demo modu durumunu güncelle
+    appState.isDemoMode = true;
     
-    // Demo kullanıcısıyla otomatik giriş
+    // Demo modu bildirimi göster
+    showDemoModeNotification();
+    
+    // Demo giriş
     demoLogin();
 }
 
-// Verileri yenile
+/**
+ * Demo modu bildirimini göster
+ */
+function showDemoModeNotification() {
+    const demoModeNotification = document.getElementById('demo-mode-notification');
+    if (demoModeNotification) {
+        demoModeNotification.style.display = 'block';
+    } else {
+        // Demo modu bildirimi oluştur
+        const notification = document.createElement('div');
+        notification.id = 'demo-mode-notification';
+        notification.className = 'info-box warning';
+        notification.style.position = 'fixed';
+        notification.style.bottom = '10px';
+        notification.style.left = '10px';
+        notification.style.width = 'auto';
+        notification.style.zIndex = '1000';
+        
+        notification.innerHTML = `
+            <div class="info-box-title">Demo Modu</div>
+            <div class="info-box-content">
+                <p>Uygulama şu anda demo modunda çalışıyor. Firebase kimlik doğrulaması atlanıyor.</p>
+                <button class="btn btn-sm btn-warning" onclick="document.getElementById('demo-mode-notification').style.display = 'none';">
+                    <i class="fas fa-times"></i> Kapat
+                </button>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+    }
+}
+
+/**
+ * Verileri yenile
+ */
 function refreshData() {
     // Yenileme animasyonunu başlat
     const refreshBtn = document.querySelector('.page-header .btn-outline i');
@@ -600,105 +1093,24 @@ function refreshData() {
         refreshBtn.classList.add('fa-spin');
     }
     
+    // Mevcut sayfanın daha önce yüklenip yüklenmediği bilgisini sıfırla
+    pageLoadStatus[appState.currentPage] = false;
+    
     // Mevcut sayfaya göre verileri yenile
-    switch (currentPage) {
-        case 'dashboard':
-            loadDashboardData().then(() => {
-                // Animasyonu durdur
-                if (refreshBtn) {
-                    setTimeout(() => {
-                        refreshBtn.classList.remove('fa-spin');
-                    }, 500);
-                }
-            });
-            break;
-        case 'sales':
-            // Satış verilerini yenile
-            setTimeout(() => {
-                if (refreshBtn) refreshBtn.classList.remove('fa-spin');
-                showToast("Satış verileri güncellendi", "success");
-            }, 1000);
-            break;
-        case 'projects':
-            // Proje verilerini yenile
-            setTimeout(() => {
-                if (refreshBtn) refreshBtn.classList.remove('fa-spin');
-                showToast("Proje verileri güncellendi", "success");
-            }, 1000);
-            break;
-        case 'production':
-            // Üretim verilerini yenile
-            if (typeof loadProductionPlans === 'function') {
-                loadProductionPlans();
-            }
-            setTimeout(() => {
-                if (refreshBtn) refreshBtn.classList.remove('fa-spin');
-                showToast("Üretim verileri güncellendi", "success");
-            }, 1000);
-            break;
-        case 'stock':
-            // Stok verilerini yenile
-            setTimeout(() => {
-                if (refreshBtn) refreshBtn.classList.remove('fa-spin');
-                showToast("Stok verileri güncellendi", "success");
-            }, 1000);
-            break;
-        case 'purchasing':
-            // Satın alma verilerini yenile
-            if (typeof loadPurchaseRequests === 'function') {
-                loadPurchaseRequests();
-            }
-            if (typeof loadMissingMaterials === 'function') {
-                loadMissingMaterials();
-            }
-            setTimeout(() => {
-                if (refreshBtn) refreshBtn.classList.remove('fa-spin');
-                showToast("Satın alma verileri güncellendi", "success");
-            }, 1000);
-            break;
-        case 'quality':
-            // Kalite verilerini yenile
-            setTimeout(() => {
-                if (refreshBtn) refreshBtn.classList.remove('fa-spin');
-                showToast("Kalite verileri güncellendi", "success");
-            }, 1000);
-            break;
-        case 'reports':
-            // Rapor verilerini yenile
-            setTimeout(() => {
-                if (refreshBtn) refreshBtn.classList.remove('fa-spin');
-                showToast("Rapor verileri güncellendi", "success");
-            }, 1000);
-            break;
-        case 'notes':
-            // Not verilerini yenile
-            setTimeout(() => {
-                if (refreshBtn) refreshBtn.classList.remove('fa-spin');
-                showToast("Not verileri güncellendi", "success");
-            }, 1000);
-            break;
-        case 'ai':
-            // Yapay zeka verilerini yenile
-            if (typeof displayAIInsights === 'function') {
-                displayAIInsights('ai-page');
-            }
-            setTimeout(() => {
-                if (refreshBtn) refreshBtn.classList.remove('fa-spin');
-                showToast("Yapay zeka önerileri güncellendi", "success");
-            }, 1000);
-            break;
-        default:
-            // Varsayılan yenileme işlemi
-            if (refreshBtn) {
-                setTimeout(() => {
-                    refreshBtn.classList.remove('fa-spin');
-                }, 1000);
-            }
-            break;
-    }
+    loadPageContent(appState.currentPage);
+    
+    // Animasyonu durdur
+    setTimeout(() => {
+        if (refreshBtn) {
+            refreshBtn.classList.remove('fa-spin');
+        }
+        showToast(`${getPageTitle(appState.currentPage)} verileri güncellendi`, "success");
+    }, 1000);
 }
 
-// Sipariş oluşturma modalını göster
+/**
+ * Sipariş oluşturma modalını göster
+ */
 function showCreateOrderModal() {
     // Form alanlarını temizle
     const form = document.getElementById('create-order-form');
@@ -727,7 +1139,9 @@ function showCreateOrderModal() {
     showModal('create-order-modal');
 }
 
-// Müşteri seçim listesini doldur
+/**
+ * Müşteri seçim listesini doldur
+ */
 function fillCustomerSelect() {
     const customerSelect = document.querySelector('#create-order-form select[name="customer"]');
     if (!customerSelect) return;
@@ -761,7 +1175,10 @@ function fillCustomerSelect() {
     }
 }
 
-// Müşteri seçimini demo verilerle doldur
+/**
+ * Müşteri seçimini demo verilerle doldur
+ * @param {HTMLElement} customerSelect - Müşteri seçim elementi
+ */
 function fillCustomerSelectWithDemoData(customerSelect) {
     const sampleCustomers = [
         { id: 'customer-1', name: 'AYEDAŞ' },
@@ -776,7 +1193,55 @@ function fillCustomerSelectWithDemoData(customerSelect) {
     });
 }
 
-// İstek durumu mesajını göster (Success, Error, Warning)
+/**
+ * Kullanıcı menüsünü göster/gizle
+ */
+function toggleUserMenu() {
+    const dropdown = document.getElementById('user-dropdown');
+    if (dropdown) {
+        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+}
+
+/**
+ * Optimizasyon planını uygula (demo)
+ */
+function applyOptimizationPlan() {
+    // Yükleniyor göster
+    toggleLoading(true);
+    
+    // Demo için biraz bekleyelim
+    setTimeout(() => {
+        // Yükleniyor gizle
+        toggleLoading(false);
+        
+        // Başarılı mesajı göster
+        showToast("Optimizasyon planı başarıyla uygulandı. Üretim planları güncellendi.", "success");
+        
+        // Bildirimi kapat
+        const aiRecommendations = document.getElementById('ai-recommendations');
+        if (aiRecommendations) {
+            aiRecommendations.innerHTML = `
+                <div class="info-box success">
+                    <div class="info-box-title">Optimizasyon Tamamlandı</div>
+                    <div class="info-box-content">
+                        <p>RM 36 LB tipindeki 3 siparişin üretimi birleştirildi. Tasarruf: 5 iş günü, 12.500₺ maliyet.</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Dashboard verilerini yenile
+        loadPageContent('dashboard');
+    }, 2000);
+}
+
+/**
+ * Toast mesajı göster
+ * @param {string} message - Mesaj metni
+ * @param {string} type - Mesaj tipi (success, error, warning, info)
+ * @param {number} duration - Mesajın görüntülenme süresi (ms)
+ */
 function showToast(message, type = 'success', duration = 3000) {
     // Toast container elementini kontrol et veya oluştur
     let toastContainer = document.getElementById('toast-container');
@@ -870,28 +1335,45 @@ function showToast(message, type = 'success', duration = 3000) {
     // Toast'u container'a ekle
     toastContainer.appendChild(toast);
     
+    // Toast'u akıcı bir şekilde göster
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+    
+    // Akıcı geçiş için timeout kullan
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(0)';
+    }, 10);
+    
     // Toast'u otomatik kapat
     setTimeout(() => {
         if (toast.parentNode === toastContainer) {
             // Kaldırılmadan önce animasyon ekle
-            toast.style.transition = 'opacity 0.5s ease';
             toast.style.opacity = '0';
+            toast.style.transform = 'translateX(20px)';
             
             setTimeout(() => {
                 if (toast.parentNode === toastContainer) {
                     toastContainer.removeChild(toast);
                 }
-            }, 500);
+            }, 300);
         }
     }, duration);
 }
 
-// Loading spinner göster/gizle
+/**
+ * Loading spinner göster/gizle
+ * @param {boolean} show - Göster/gizle durumu
+ * @param {string} containerId - Loading spinner'ın ekleneceği container ID'si (opsiyonel)
+ */
 function toggleLoading(show, containerId = null) {
     // Loading overlay'i al veya oluştur
     let loadingOverlay = document.getElementById('loading-overlay');
     
     if (show) {
+        appState.isLoading = true;
+        
         if (!loadingOverlay) {
             loadingOverlay = document.createElement('div');
             loadingOverlay.id = 'loading-overlay';
@@ -926,53 +1408,26 @@ function toggleLoading(show, containerId = null) {
             }
         }
     } else {
+        appState.isLoading = false;
+        
         // Loading overlay'i kaldır
         if (loadingOverlay) {
-            loadingOverlay.remove();
+            // Yumuşak geçiş için
+            loadingOverlay.style.transition = 'opacity 0.3s ease';
+            loadingOverlay.style.opacity = '0';
+            
+            setTimeout(() => {
+                if (loadingOverlay.parentNode) {
+                    loadingOverlay.parentNode.removeChild(loadingOverlay);
+                }
+            }, 300);
         }
     }
 }
 
-// Optimizasyon planını uygula (demo)
-function applyOptimizationPlan() {
-    // Yükleniyor göster
-    toggleLoading(true);
-    
-    // Demo için biraz bekleyelim
-    setTimeout(() => {
-        // Yükleniyor gizle
-        toggleLoading(false);
-        
-        // Başarılı mesajı göster
-        showToast("Optimizasyon planı başarıyla uygulandı. Üretim planları güncellendi.", "success");
-        
-        // Bildirimi kapat
-        const aiRecommendations = document.getElementById('ai-recommendations');
-        if (aiRecommendations) {
-            aiRecommendations.innerHTML = `
-                <div class="info-box success">
-                    <div class="info-box-title">Optimizasyon Tamamlandı</div>
-                    <div class="info-box-content">
-                        <p>RM 36 LB tipindeki 3 siparişin üretimi birleştirildi. Tasarruf: 5 iş günü, 12.500₺ maliyet.</p>
-                    </div>
-                </div>
-            `;
-        }
-        
-        // Dashboard verilerini yenile
-        loadDashboardData();
-    }, 2000);
-}
-
-// Kullanıcı menüsünü göster/gizle
-function toggleUserMenu() {
-    const dropdown = document.getElementById('user-dropdown');
-    if (dropdown) {
-        dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-    }
-}
-
-// Service worker kayıt
+/**
+ * Service worker kaydı
+ */
 function registerServiceWorker() {
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
@@ -987,12 +1442,24 @@ function registerServiceWorker() {
     }
 }
 
-// Yardımcılar
-function getCurrentDate() {
-    const now = new Date();
-    return now.toLocaleDateString('tr-TR');
+/**
+ * Sayfa değişikliği olayını tetikle
+ * @param {string} page - Sayfa adı
+ */
+function dispatchPageChangeEvent(page) {
+    const event = new CustomEvent('pageChanged', {
+        detail: {
+            page: page
+        }
+    });
+    document.dispatchEvent(event);
 }
 
+/**
+ * Tarih formatla
+ * @param {Date|string|Object} date - Tarih objesi, string veya Firestore Timestamp
+ * @returns {string} - Formatlanmış tarih (GG.AA.YYYY)
+ */
 function formatDate(date) {
     if (!date) return '';
     
@@ -1034,24 +1501,34 @@ function formatDate(date) {
     return date.toLocaleDateString('tr-TR');
 }
 
+// Gerekli fonksiyonları global olarak dışa aktar
+window.showPage = showPage;
+window.showModal = showModal;
+window.closeModal = closeModal;
+window.switchTab = switchTab;
+window.showLogin = showLogin;
+window.showRegister = showRegister;
+window.showForgotPassword = showForgotPassword;
+window.showMainApp = showMainApp;
+window.enableDemoMode = enableDemoMode;
+window.showToast = showToast;
+window.toggleLoading = toggleLoading;
+window.refreshData = refreshData;
+window.showCreateOrderModal = showCreateOrderModal;
+window.applyOptimizationPlan = applyOptimizationPlan;
+window.toggleUserMenu = toggleUserMenu;
+window.formatDate = formatDate;
+window.appState = appState;
+
 // Sayfa yüklendiğinde initApp çağrılsın
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof initApp === 'function') {
         initApp();
     } else {
-        console.warn("initApp fonksiyonu bulunamadı, firebase-config.js'in doğru yüklendiğinden emin olun");
+        console.warn("initApp fonksiyonu zaten tanımlanmış, main.js'deki başka bir script tarafından yüklenmiş olabilir");
         
-        // initApp tanımlanmamış, manuel olarak başlatalım
-        window.initApp = initApp = function() {
-            console.log("Manuel başlatma: initApp");
-            
-            // Sayfa olaylarını ayarla
-            setupEventListeners();
-            
-            // Demo modunu etkinleştir
-            enableDemoMode();
-        };
-        
-        initApp();
+        // Bu durumda manuel olarak başlatma yapalım
+        setupEventListeners();
+        checkUserAuthentication();
     }
 });
