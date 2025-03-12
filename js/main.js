@@ -18,16 +18,18 @@ const isDemo = window.location.hostname === 'localhost' ||
 function initApp() {
     console.log("ElektroTrack uygulaması başlatılıyor...");
     
-    // Sayfa olaylarını ayarla
-    setupEventListeners();
-    
-    // Kullanıcı oturum durumunu dinle
-    if (typeof firebase !== 'undefined' && firebase.auth) {
-        firebase.auth().onAuthStateChanged(handleAuthStateChanged);
-    } else {
-        console.warn("Firebase Auth bulunamadı, demo moduna geçiliyor");
-        // Demo modunda direkt ana uygulamayı göster
-        enableDemoMode();
+    // Demo modu kontrolü
+    const isDemo = window.location.hostname === 'localhost' || 
+                   window.location.hostname === '127.0.0.1' ||
+                   window.location.hostname.includes('netlify.app') ||
+                   window.location.search.includes('demo=true');
+                   
+    // Demo modu bildirimi göster
+    if (isDemo) {
+        const demoModeNotification = document.getElementById('demo-mode-notification');
+        if (demoModeNotification) {
+            demoModeNotification.style.display = 'block';
+        }
     }
     
     // Service worker kayıt (PWA desteği için)
