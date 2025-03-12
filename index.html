@@ -1,3 +1,5 @@
+index.html  1056 satırlık uzun kod
+
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -802,4 +804,256 @@
                             <div class="workflow-icon">
                                 <i class="fas fa-clipboard-check"></i>
                             </div>
-                            <div class="workflow-label">
+                            <div class="workflow-label">Planlama</div>
+                        </div>
+                        <div class="workflow-step completed">
+                            <div class="workflow-icon">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <div class="workflow-label">Malzeme</div>
+                        </div>
+                        <div class="workflow-step active">
+                            <div class="workflow-icon">
+                                <i class="fas fa-cogs"></i>
+                            </div>
+                            <div class="workflow-label">Üretim</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="workflow-icon">
+                                <i class="fas fa-tasks"></i>
+                            </div>
+                            <div class="workflow-label">Test</div>
+                        </div>
+                        <div class="workflow-step">
+                            <div class="workflow-icon">
+                                <i class="fas fa-truck-loading"></i>
+                            </div>
+                            <div class="workflow-label">Teslimat</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="materials-content">
+                    <div class="materials-header">
+                        <div>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-print"></i>
+                                <span>Malzeme Listesi Yazdır</span>
+                            </button>
+                            <button class="btn btn-outline">
+                                <i class="fas fa-file-excel"></i>
+                                <span>Excel'e Aktar</span>
+                            </button>
+                        </div>
+                        <div class="search-box small">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" placeholder="Malzeme ara...">
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table class="table" id="materials-table">
+                            <thead>
+                                <tr>
+                                    <th>Malzeme Kodu</th>
+                                    <th>Malzeme Adı</th>
+                                    <th>Miktar</th>
+                                    <th>Birim</th>
+                                    <th>Durum</th>
+                                    <th>Tedarik Tarihi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="text-center">Yükleniyor...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="form-group">
+                        <button class="btn btn-primary">
+                            <i class="fas fa-plus"></i>
+                            <span>Malzeme Ekle</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tab-content" id="production-content">
+                    <!-- Üretim planlama içeriği buraya gelecek -->
+                </div>
+                
+                <div class="tab-content" id="documents-content">
+                    <!-- Dokümanlar içeriği buraya gelecek -->
+                </div>
+                
+                <div class="tab-content" id="notes-content">
+                    <div class="notes-container">
+                        <!-- Notlar buraya dinamik olarak eklenecek -->
+                    </div>
+                    <div class="add-note">
+                        <textarea class="form-control" placeholder="Not ekleyin..."></textarea>
+                        <button class="btn btn-primary">Ekle</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('order-detail-modal')">Kapat</button>
+                <button class="btn btn-primary">Kaydet</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Yeni Sipariş Modalı -->
+    <div id="create-order-modal" class="modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h2 class="modal-title">Yeni Sipariş Oluştur</h2>
+                <button class="modal-close" onclick="closeModal('create-order-modal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="create-order-form">
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="form-label">Müşteri</label>
+                                <select class="form-control" name="customer" required>
+                                    <option value="">Müşteri Seçin</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="form-label">Hücre Tipi</label>
+                                <select class="form-control" name="cellType" required>
+                                    <option value="">Hücre Tipi Seçin</option>
+                                    <option value="RM 36 LB">RM 36 LB</option>
+                                    <option value="RM 36 CB">RM 36 CB</option>
+                                    <option value="RM 36 FL">RM 36 FL</option>
+                                    <option value="RM 36 BC">RM 36 BC</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="form-label">Hücre Sayısı</label>
+                                <input type="number" class="form-control" name="cellCount" min="1" required>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="form-label">Öncelik</label>
+                                <select class="form-control" name="priority">
+                                    <option value="normal">Normal</option>
+                                    <option value="medium">Orta</option>
+                                    <option value="high">Yüksek</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="form-label">Sipariş Tarihi</label>
+                                <input type="date" class="form-control" name="orderDate" required>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="form-group">
+                                <label class="form-label">Teslim Tarihi</label>
+                                <input type="date" class="form-control" name="deliveryDate" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Açıklama</label>
+                        <textarea class="form-control" name="description" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('create-order-modal')">İptal</button>
+                <button class="btn btn-primary" type="submit" form="create-order-form">Sipariş Oluştur</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Demo Modu Bildirimi (Kod-1'den Alındı) -->
+    <div id="demo-mode-notification" class="info-box warning" style="position: fixed; bottom: 10px; left: 10px; width: auto; z-index: 1000; display: none;">
+        <div class="info-box-title">Demo Modu</div>
+        <div class="info-box-content">
+            <p>Uygulama şu anda demo modunda çalışıyor. Firebase kimlik doğrulaması atlanıyor.</p>
+            <button class="btn btn-sm btn-warning" onclick="document.getElementById('demo-mode-notification').style.display = 'none';">
+                <i class="fas fa-times"></i> Kapat
+            </button>
+        </div>
+    </div>
+
+    <!-- Önce Mock Firebase yükleyerek Firebase bağlantı hatalarını önle -->
+    <script src="js/mock-firebase.js"></script>
+
+    <!-- Firebase SDK (Compat sürümleri) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+
+    <!-- Yardımcı Fonksiyonlar (demoLogin gibi) -->
+    <script>
+    // Demo giriş fonksiyonu
+    function demoLogin() {
+        // Demo kullanıcısı bilgileri
+        const email = "demo@elektrotrack.com";
+        const password = "demo123";
+        
+        // Demo bilgileriyle form doldur
+        document.getElementById('username').value = email;
+        document.getElementById('password').value = password;
+        
+        // Login formunu gönder
+        document.getElementById('login-form').dispatchEvent(new Event('submit'));
+    }
+
+    // Modal kapatma fonksiyonu
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) {
+            modal.style.display = 'none';
+        }
+    }
+    </script>
+
+    <!-- Uygulama JavaScript -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/compat-check.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/orders.js"></script>
+    <script src="js/purchasing.js"></script>
+    <script src="js/production.js"></script>
+    <script src="js/chatbot.js"></script>
+    <script src="js/ai-analytics.js"></script>
+    <script src="js/data-viz.js"></script>
+
+    <!-- Service Worker -->
+    <script>
+        // Service worker kaydı
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker başarıyla kaydedildi:', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker kaydı başarısız:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
+
+
