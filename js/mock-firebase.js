@@ -290,3 +290,514 @@ class MockFirestore {
                 }
             }
         }
+// Date stringlerini Date nesnelerine çevir
+    convertDatesToObjects(obj) {
+        if (!obj) return;
+        
+        for (let key in obj) {
+            if (obj[key] && typeof obj[key] === 'object') {
+                if (obj[key] instanceof Array) {
+                    obj[key].forEach(item => this.convertDatesToObjects(item));
+                } else if (obj[key] instanceof Date) {
+                    // Zaten Date nesnesi
+                    continue;
+                } else if (obj[key].hasOwnProperty('_seconds') && obj[key].hasOwnProperty('_nanoseconds')) {
+                    // Firestore Timestamp gibi görünen nesne
+                    obj[key] = {
+                        toDate: () => new Date(obj[key]._seconds * 1000)
+                    };
+                } else {
+                    this.convertDatesToObjects(obj[key]);
+                }
+            }
+        }
+    }
+
+    collection(collectionName) {
+        return new MockCollectionReference(this, collectionName);
+    }
+
+    doc(path) {
+        if (path.includes('/')) {
+            const parts = path.split('/');
+            const collectionName = parts[0];
+            const docId = parts[1];
+            return new MockDocumentReference(this, collectionName, docId);
+        }
+        
+        return new MockDocumentReference(this, path);
+    }
+}
+
+// MockCollectionReference sınıfı
+class MockCollectionReference {
+    constructor(firestore, collectionName) {
+        this.firestore = firestore;
+        this.collectionName = collectionName;
+    }
+
+    doc(docId) {
+        return new MockDocumentReference(this.firestore, this.collectionName, docId);
+    }
+
+    where(field, operator, value) {
+        return new MockQuery(this.firestore, this.collectionName, [{field, operator, value}]);
+    }
+
+    orderBy(field, direction = 'asc') {
+        return new MockQuery(this.firestore, this.collectionName, [], [{field, direction}]);
+    }
+
+    limit(n) {
+        return new MockQuery(this.firestore, this.collectionName, [], [], n);
+    }
+
+    async get() {
+        // Koleksiyondaki tüm belgeleri döndür
+        const data = this.firestore.data[this.collectionName] || [];
+        
+        return this._createQuerySnapshot(data);
+    }
+
+    _createQuerySnapshot(data) {
+        const docs = data.map(item => {
+            return {
+                id: item.id,
+                data: () => ({...item}),
+                exists: true,
+                ref: new MockDocumentReference(this.firestore, this.collectionName, item.id)
+            };
+        });
+        
+        return {
+            docs,
+            empty: docs.length === 0,
+            size: docs.length,
+            forEach: (callback) => docs.forEach(callback)
+        };
+    }
+
+    async add(data) {
+        // Yeni belge ID'si oluştur
+        const id = `mock-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+        const newData = { 
+            ...data,
+            id
+        };
+        
+        // ServerTimestamp'ları işle
+        this._processServerTimestamps(newData);
+        
+        // Belgeyi koleksiyona ekle
+        if (!this.firestore.data[this.collectionName]) {
+            this.firestore.data[this.collectionName] = [];
+        }
+        
+        this.firestore.data[this.collectionName].push(newData);
+        
+        // Belge referansını döndür
+        return new MockDocumentReference(this.firestore, this.collectionName, id);
+    }
+
+    _processServerTimestamps(data) {
+        if (!data) return;
+        
+        for (let key in data) {
+            if (data[key] && typeof data[key] === 'object') {
+                if (data[key]._isServerTimestamp) {
+                    data[key] = {
+                        toDate: () => new Date(),
+                        _seconds: Math.floor(Date.now() / 1000),
+                        _nanoseconds: 0
+                    };
+                } else if (Array.isArray(data[key])) {
+                    data[key].forEach(item => {
+                        if (typeof item === 'object') {
+                            this._processServerTimestamps(item);
+                        }
+                    });
+                } else {
+                    this._processServerTimestamps(data[key]);
+                }
+            }
+        }
+    }
+}
+
+// MockDocumentReference sınıfı
+class MockDocumentReference {
+    constructor(firestore, collectionName, docId) {
+        this.firestore = firestore;
+        this.collectionName = collectionName;
+        this.id = docId;
+        this.path = docId ? `${collectionName}/${docId}` : collectionName;
+    }
+
+    collection(collectionName) {
+        return new MockCollectionReference(this.firestore, `${this.path}/${collectionName}`);
+    }
+
+    async get() {
+        if (!this.id) {
+            throw new Error('Document ID is required');
+        }
+        
+        const collection = this.firestore.data[this.collectionName] || [];
+        const doc = collection.find(item => item.id === this.id);
+        
+        if (!doc) {
+            return {
+                exists: false,
+                data: () => null,
+                id: this.id,
+                ref: this
+            };
+        }
+        
+        return {
+            exists: true,
+            data: () => ({...doc}),
+            id: this.id,
+            ref: this
+        };
+    }
+
+    async set(data, options) {
+        // Koleksiyonu oluştur (yoksa)
+        if (!this.firestore.data[this.collectionName]) {
+            this.firestore.data[this.collectionName] = [];
+        }
+        
+        // ServerTimestamp'ları işle
+        const collectionRef = new MockCollectionReference(this.firestore, this.collectionName);
+        collectionRef._processServerTimestamps(data);
+        
+        const collection = this.firestore.data[this.collectionName];
+        const index = collection.findIndex(doc => doc.id === this.id);
+        
+        if (index === -1) {
+            // Yeni belge ekle
+            collection.push({
+                ...data,
+                id: this.id
+            });
+        } else {
+            // Varolan belgeyi güncelle
+            if (options && options.merge) {
+                collection[index] = {
+                    ...collection[index],
+                    ...data
+                };
+            } else {
+                collection[index] = {
+                    ...data,
+                    id: this.id
+                };
+            }
+        }
+        
+        return this;
+    }
+
+    async update(data) {
+        // Koleksiyon var mı kontrol et
+        if (!this.firestore.data[this.collectionName]) {
+            throw new Error(`Collection ${this.collectionName} does not exist`);
+        }
+        
+        // Belge var mı kontrol et
+        const collection = this.firestore.data[this.collectionName];
+        const index = collection.findIndex(doc => doc.id === this.id);
+        
+        if (index === -1) {
+            throw new Error(`Document with ID ${this.id} does not exist`);
+        }
+        
+        // ServerTimestamp'ları işle
+        const collectionRef = new MockCollectionReference(this.firestore, this.collectionName);
+        collectionRef._processServerTimestamps(data);
+        
+        // Belgeyi güncelle
+        collection[index] = {
+            ...collection[index],
+            ...data
+        };
+        
+        return this;
+    }
+
+    async delete() {
+        // Koleksiyon var mı kontrol et
+        if (!this.firestore.data[this.collectionName]) {
+            return; // Silecek bir şey yok
+        }
+        
+        // Belgeyi sil
+        const collection = this.firestore.data[this.collectionName];
+        const index = collection.findIndex(doc => doc.id === this.id);
+        
+        if (index !== -1) {
+            collection.splice(index, 1);
+        }
+        
+        return true;
+    }
+}
+
+// MockQuery sınıfı
+class MockQuery {
+    constructor(firestore, collectionName, filters = [], orderBys = [], limitVal = null) {
+        this.firestore = firestore;
+        this.collectionName = collectionName;
+        this.filters = filters;
+        this.orderBys = orderBys;
+        this.limitVal = limitVal;
+    }
+
+    where(field, operator, value) {
+        this.filters.push({field, operator, value});
+        return this;
+    }
+
+    orderBy(field, direction = 'asc') {
+        this.orderBys.push({field, direction});
+        return this;
+    }
+
+    limit(n) {
+        this.limitVal = n;
+        return this;
+    }
+
+    async get() {
+        // Koleksiyonu al
+        let data = this.firestore.data[this.collectionName] || [];
+        
+        // Filtreleri uygula
+        if (this.filters.length > 0) {
+            data = this._applyFilters(data);
+        }
+        
+        // Sıralamayı uygula
+        if (this.orderBys.length > 0) {
+            data = this._applyOrderBy(data);
+        }
+        
+        // Limiti uygula
+        if (this.limitVal !== null && this.limitVal < data.length) {
+            data = data.slice(0, this.limitVal);
+        }
+        
+        // QuerySnapshot oluştur
+        return this._createQuerySnapshot(data);
+    }
+
+    _applyFilters(data) {
+        return data.filter(doc => {
+            // Tüm filtreler için AND operatörü uygula
+            return this.filters.every(filter => {
+                const { field, operator, value } = filter;
+                
+                // Nokta notasyonuyla iç içe alanları destekle
+                const fieldValue = this._getFieldValue(doc, field);
+                
+                switch (operator) {
+                    case '==':
+                        return this._isEqual(fieldValue, value);
+                    case '!=':
+                        return !this._isEqual(fieldValue, value);
+                    case '>':
+                        return fieldValue > value;
+                    case '>=':
+                        return fieldValue >= value;
+                    case '<':
+                        return fieldValue < value;
+                    case '<=':
+                        return fieldValue <= value;
+                    case 'array-contains':
+                        return Array.isArray(fieldValue) && fieldValue.some(item => this._isEqual(item, value));
+                    case 'array-contains-any':
+                        return Array.isArray(fieldValue) && Array.isArray(value) && 
+                               value.some(v => fieldValue.some(item => this._isEqual(item, v)));
+                    case 'in':
+                        return Array.isArray(value) && value.some(v => this._isEqual(fieldValue, v));
+                    case 'not-in':
+                        return Array.isArray(value) && !value.some(v => this._isEqual(fieldValue, v));
+                    default:
+                        console.warn(`Unsupported operator: ${operator}`);
+                        return true;
+                }
+            });
+        });
+    }
+
+    _getFieldValue(doc, field) {
+        // Nokta notasyonuyla iç içe alanları destekle: 'user.name'
+        const parts = field.split('.');
+        let value = doc;
+        
+        for (const part of parts) {
+            if (value === undefined || value === null) {
+                return undefined;
+            }
+            value = value[part];
+        }
+        
+        // Timestamp nesnelerini Date'e çevir
+        if (value && typeof value === 'object' && value.toDate && typeof value.toDate === 'function') {
+            return value.toDate();
+        }
+        
+        return value;
+    }
+
+    _isEqual(a, b) {
+        // Date nesnelerini karşılaştır
+        if (a instanceof Date && b instanceof Date) {
+            return a.getTime() === b.getTime();
+        }
+        
+        // Timestamp nesnelerini karşılaştır
+        if (a && typeof a === 'object' && a.toDate && typeof a.toDate === 'function') {
+            const dateA = a.toDate();
+            if (b instanceof Date) {
+                return dateA.getTime() === b.getTime();
+            } else if (b && typeof b === 'object' && b.toDate && typeof b.toDate === 'function') {
+                return dateA.getTime() === b.toDate().getTime();
+            }
+        }
+        
+        // Temel karşılaştırma
+        return a === b;
+    }
+
+    _applyOrderBy(data) {
+        // Sıralama uygulamaları
+        return [...data].sort((a, b) => {
+            for (const order of this.orderBys) {
+                const { field, direction } = order;
+                
+                // Alanları al
+                const valueA = this._getFieldValue(a, field);
+                const valueB = this._getFieldValue(b, field);
+                
+                // Sıralamaya göre karşılaştır
+                const result = this._compare(valueA, valueB);
+                
+                if (result !== 0) {
+                    return direction === 'asc' ? result : -result;
+                }
+            }
+            
+            return 0;
+        });
+    }
+
+    _compare(a, b) {
+        // null ve undefined karşılaştırması
+        if (a === undefined || a === null) {
+            return b === undefined || b === null ? 0 : -1;
+        }
+        if (b === undefined || b === null) {
+            return 1;
+        }
+        
+        // Date nesneleri için
+        if (a instanceof Date && b instanceof Date) {
+            return a.getTime() - b.getTime();
+        }
+        
+        // Timestamp nesneleri için
+        if (a && typeof a === 'object' && a.toDate && typeof a.toDate === 'function') {
+            if (b && typeof b === 'object' && b.toDate && typeof b.toDate === 'function') {
+                return a.toDate().getTime() - b.toDate().getTime();
+            }
+            return a.toDate().getTime() - (b instanceof Date ? b.getTime() : 0);
+        }
+        
+        // String karşılaştırma
+        if (typeof a === 'string' && typeof b === 'string') {
+            return a.localeCompare(b);
+        }
+        
+        // Sayı karşılaştırma
+        if (typeof a === 'number' && typeof b === 'number') {
+            return a - b;
+        }
+        
+        // Boolean karşılaştırma
+        if (typeof a === 'boolean' && typeof b === 'boolean') {
+            return a === b ? 0 : (a ? 1 : -1);
+        }
+        
+        // Diğer tipler için
+        return String(a).localeCompare(String(b));
+    }
+
+    _createQuerySnapshot(data) {
+        const docs = data.map(item => {
+            return {
+                id: item.id,
+                data: () => ({...item}),
+                exists: true,
+                ref: new MockDocumentReference(this.firestore, this.collectionName, item.id)
+            };
+        });
+        
+        return {
+            docs,
+            empty: docs.length === 0,
+            size: docs.length,
+            forEach: (callback) => docs.forEach(callback)
+        };
+    }
+}
+
+// Firebase global nesne
+let mockFirebase = {
+    // Firebase Auth
+    auth: () => new MockAuth(),
+    
+    // Firebase Firestore
+    firestore: () => {
+        const firestoreInstance = new MockFirestore();
+        
+        // Firestore instance özel alanları
+        firestoreInstance.enablePersistence = async () => {
+            console.log("Mock persistence enabled");
+            return true;
+        };
+        
+        return firestoreInstance;
+    },
+    
+    // Firebase Analytics (dummy)
+    analytics: () => {
+        return {
+            logEvent: (eventName, eventParams) => {
+                console.log("Mock Analytics event:", eventName, eventParams);
+            }
+        };
+    },
+    
+    // Uygulama nesnesi
+    apps: [],
+    
+    // Firebase App
+    initializeApp: (config) => {
+        console.log("Mock Firebase initialized with config:", config);
+        mockFirebase.apps.push({});
+        return {};
+    },
+    
+    app: () => ({})
+};
+
+// Firebase global nesnesine ata
+if (typeof window !== 'undefined') {
+    window.firebase = mockFirebase;
+    console.log("Mock Firebase globally available");
+}
+
+// Mock Firebase'in yüklendiğini belirt
+console.log("Mock Firebase loaded successfully");
