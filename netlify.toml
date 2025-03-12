@@ -8,7 +8,7 @@
   to = "/index.html"
   status = 200
 
-# Özel başlıklar - Content Security Policy değiştirildi
+# Özel başlıklar - Content Security Policy Düzeltildi
 [[headers]]
   for = "/*"
   [headers.values]
@@ -16,8 +16,8 @@
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer-when-downgrade"
-    # CSP yumuşatıldı, Netlify ortamında çalışması için
-    Content-Security-Policy = "default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.firebaseio.com https://*.googleapis.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self' https://*.firebaseio.com https://*.googleapis.com wss://*.firebaseio.com; font-src 'self' https://cdnjs.cloudflare.com;"
+    # CSP yumuşatıldı
+    Content-Security-Policy = "default-src 'self' data: https: wss:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; style-src 'self' 'unsafe-inline' https:; connect-src 'self' https: wss:; font-src 'self' data: https:;"
 
 # Gzip ve Brotli sıkıştırma aktif
 [build.processing]
