@@ -992,68 +992,33 @@ index.html  1056 satırlık uzun kod
     </div>
 
     <!-- Önce Mock Firebase yükleyerek Firebase bağlantı hatalarını önle -->
-    <script src="js/mock-firebase.js"></script>
+    <!-- Demo modu bildirimi için görünmez div -->
+<div id="demo-mode-notification" class="info-box warning" style="position: fixed; bottom: 10px; left: 10px; width: auto; z-index: 1000; display: none;">
+    <div class="info-box-title">Demo Modu</div>
+    <div class="info-box-content">
+        <p>Uygulama şu anda demo modunda çalışıyor. Firebase kimlik doğrulaması atlanıyor.</p>
+        <button class="btn btn-sm btn-warning" onclick="document.getElementById('demo-mode-notification').style.display = 'none';">
+            <i class="fas fa-times"></i> Kapat
+        </button>
+    </div>
+</div>
 
-    <!-- Firebase SDK (Compat sürümleri) -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-analytics-compat.js"></script>
+<!-- JavaScript yükleme işlemlerini yönetecek ana script -->
+<script src="js/app.js"></script>
 
-    <!-- Yardımcı Fonksiyonlar (demoLogin gibi) -->
-    <script>
-    // Demo giriş fonksiyonu
-    function demoLogin() {
-        // Demo kullanıcısı bilgileri
-        const email = "demo@elektrotrack.com";
-        const password = "demo123";
-        
-        // Demo bilgileriyle form doldur
-        document.getElementById('username').value = email;
-        document.getElementById('password').value = password;
-        
-        // Login formunu gönder
-        document.getElementById('login-form').dispatchEvent(new Event('submit'));
+<!-- Service Worker -->
+<script>
+    // Service worker kaydı
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/service-worker.js')
+                .then(function(registration) {
+                    console.log('ServiceWorker başarıyla kaydedildi:', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('ServiceWorker kaydı başarısız:', error);
+                });
+        });
     }
-
-    // Modal kapatma fonksiyonu
-    function closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-        }
-    }
-    </script>
-
-    <!-- Uygulama JavaScript -->
-    <script src="js/firebase-config.js"></script>
-    <script src="js/compat-check.js"></script>
-    <script src="js/main.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/orders.js"></script>
-    <script src="js/purchasing.js"></script>
-    <script src="js/production.js"></script>
-    <script src="js/chatbot.js"></script>
-    <script src="js/ai-analytics.js"></script>
-    <script src="js/data-viz.js"></script>
-
-    <!-- Service Worker -->
-    <script>
-        // Service worker kaydı
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('/service-worker.js')
-                    .then(function(registration) {
-                        console.log('ServiceWorker başarıyla kaydedildi:', registration.scope);
-                    })
-                    .catch(function(error) {
-                        console.log('ServiceWorker kaydı başarısız:', error);
-                    });
-            });
-        }
-    </script>
-</body>
-</html>
-
+</script>
 
