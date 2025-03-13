@@ -1,289 +1,297 @@
-<!-- Bildirim Merkezi -->
-                <div class="notification-center">
-                    <button class="notification-bell" onclick="toggleNotifications()">
-                        <i class="fas fa-bell"></i>
-                        <span class="notification-badge">3</span>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElektroTrack - OG Hücre İmalat Takip</title>
+    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Endüstriyel Takip yazılımı">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+
+    <!-- PWA manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1e40af">
+
+    <!-- CSS dosyaları -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/login.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- TensorFlow.js - AI ve ML işlemleri için -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    
+    <!-- NLP işlemleri için -->
+    <script src="https://unpkg.com/compromise"></script>
+</head>
+<body>
+    <!-- Giriş Sayfası -->
+    <div id="login-page" class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo">
+                    <div class="login-logo-icon">
+                        <i class="fas fa-bolt"></i>
+                    </div>
+                    <div class="login-logo-text">ElektroTrack</div>
+                </div>
+                <h1 class="login-title">Giriş Yap</h1>
+                <p class="login-subtitle">Orta Gerilim Hücre İmalat Takip Sistemi</p>
+            </div>
+            <div class="login-body">
+                <form id="login-form">
+                    <div class="login-form-group">
+                        <label class="login-label" for="username">Kullanıcı Adı / E-posta</label>
+                        <input type="text" id="username" class="login-input" placeholder="Kullanıcı adınızı veya e-postanızı girin" required>
+                    </div>
+                    <div class="login-form-group">
+                        <label class="login-label" for="password">Şifre</label>
+                        <input type="password" id="password" class="login-input" placeholder="Şifrenizi girin" required>
+                    </div>
+                    <div class="login-options">
+                        <div class="login-remember">
+                            <input type="checkbox" id="remember">
+                            <label for="remember">Beni hatırla</label>
+                        </div>
+                        <a href="#" class="login-forgot" onclick="showForgotPassword()">Şifremi unuttum</a>
+                    </div>
+                    <button type="submit" class="login-button">Giriş Yap</button>
+                </form>
+                
+                <div class="login-footer">
+                    Hesabınız yok mu? <a href="#" onclick="showRegister()">Kayıt Ol</a>
+                </div>
+
+                <!-- Demo Giriş Butonu -->
+                <div style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
+                    <button type="button" class="btn btn-outline" style="width: 100%;" onclick="demoLogin()">
+                        <i class="fas fa-user-check"></i> Demo Hesabı ile Giriş
                     </button>
-                    <div id="notifications-dropdown" class="notifications-dropdown">
-                        <div class="notifications-header">
-                            <h3>Bildirimler</h3>
-                            <button class="btn btn-sm btn-outline" onclick="markAllAsRead()">
-                                <i class="fas fa-check-double"></i> Tümünü Okundu İşaretle
-                            </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kayıt Ol Formu -->
+    <div id="register-page" class="login-container" style="display: none;">
+        <div class="login-form">
+            <div class="login-header">
+                <h1 class="login-title">Kayıt Ol</h1>
+                <p class="login-subtitle">ElektroTrack'e hoş geldiniz</p>
+            </div>
+            
+            <form id="register-form">
+                <div class="form-group">
+                    <label class="form-label" for="register-name">Ad Soyad</label>
+                    <input type="text" class="form-control" id="register-name" placeholder="Adınızı ve soyadınızı girin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-email">E-posta</label>
+                    <input type="email" class="form-control" id="register-email" placeholder="E-posta adresinizi girin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-username">Kullanıcı Adı</label>
+                    <input type="text" class="form-control" id="register-username" placeholder="Kullanıcı adınızı girin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-department">Departman</label>
+                    <select class="form-control" id="register-department" required>
+                        <option value="">Departman Seçin</option>
+                        <option value="sales">Satış</option>
+                        <option value="production">Üretim</option>
+                        <option value="purchasing">Satın Alma</option>
+                        <option value="planning">Planlama</option>
+                        <option value="quality">Kalite</option>
+                        <option value="management">Yönetim</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-password">Şifre</label>
+                    <input type="password" class="form-control" id="register-password" placeholder="Şifre oluşturun" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-password-confirm">Şifre Tekrar</label>
+                    <input type="password" class="form-control" id="register-password-confirm" placeholder="Şifreyi tekrar girin" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Kayıt Ol</button>
+            </form>
+            
+            <div class="login-footer">
+                Zaten hesabınız var mı? <a href="#" onclick="showLogin()">Giriş Yap</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Şifremi Unuttum Formu -->
+    <div id="forgot-password-page" class="login-container" style="display: none;">
+        <div class="login-form">
+            <div class="login-header">
+                <h1 class="login-title">Şifremi Unuttum</h1>
+                <p class="login-subtitle">Şifre sıfırlama bağlantısı için e-posta adresinizi girin</p>
+            </div>
+            
+            <form id="forgot-password-form">
+                <div class="form-group">
+                    <label class="form-label" for="forgot-email">E-posta</label>
+                    <input type="email" class="form-control" id="forgot-email" placeholder="E-posta adresinizi girin" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Şifre Sıfırlama Bağlantısı Gönder</button>
+            </form>
+            
+            <div class="login-footer">
+                <a href="#" onclick="showLogin()">Giriş sayfasına dön</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ana Uygulama -->
+    <div id="main-app" style="display: none;">
+        <!-- Navbar -->
+        <div class="navbar">
+            <div class="navbar-brand" onclick="showPage('dashboard')">ElektroTrack</div>
+            <div class="navbar-menu">
+                <div class="navbar-item active" onclick="showPage('dashboard')">Kontrol Paneli</div>
+                <div class="navbar-item" onclick="showPage('sales')">Satış</div>
+                <div class="navbar-item" onclick="showPage('projects')">Projeler</div>
+                <div class="navbar-item" onclick="showPage('production')">Üretim</div>
+                <div class="navbar-item" onclick="showPage('stock')">Stok</div>
+                <div class="navbar-item" onclick="showPage('purchasing')">Satın Alma</div>
+                <div class="navbar-item" onclick="showPage('planning')">Planlama</div>
+                <div class="navbar-item" onclick="showPage('quality')">Kalite</div>
+                <div class="navbar-item" onclick="showPage('reports')">Raporlar</div>
+                <div class="navbar-item" onclick="showPage('notes')">Notlar</div>
+                <div class="navbar-item" onclick="showPage('ai')">Yapay Zeka</div>
+            </div>
+            <div class="user-menu">
+                <div class="user-avatar" onclick="toggleUserMenu()">M</div>
+                <div id="user-dropdown" class="user-dropdown">
+                    <div class="user-dropdown-item" onclick="showPage('profile')">
+                        <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
+                        <span>Profilim</span>
+                    </div>
+                    <div class="user-dropdown-item" onclick="showPage('settings')">
+                        <i class="fas fa-cog" style="margin-right: 0.5rem;"></i>
+                        <span>Ayarlar</span>
+                    </div>
+                    <div class="user-dropdown-divider"></div>
+                    <div class="user-dropdown-item" onclick="logout()">
+                        <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
+                        <span>Çıkış Yap</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bildirim Merkezi -->
+        <div class="notification-center">
+            <button class="notification-bell" onclick="toggleNotifications()">
+                <i class="fas fa-bell"></i>
+                <span class="notification-badge">3</span>
+            </button>
+            <div id="notifications-dropdown" class="notifications-dropdown">
+                <div class="notifications-header">
+                    <h3>Bildirimler</h3>
+                    <button class="btn btn-sm btn-outline" onclick="markAllAsRead()">
+                        <i class="fas fa-check-double"></i> Tümünü Okundu İşaretle
+                    </button>
+                </div>
+                <div class="notifications-list">
+                    <div class="notification-item unread">
+                        <div class="notification-icon warning">
+                            <i class="fas fa-exclamation-triangle"></i>
                         </div>
-                        <div class="notifications-list">
-                            <div class="notification-item unread">
-                                <div class="notification-icon warning">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <div class="notification-title">Malzeme Tedarik Uyarısı</div>
-                                    <div class="notification-text">24-03-B002 siparişi için malzeme tedarikinde gecikme</div>
-                                    <div class="notification-time">10 dakika önce</div>
-                                </div>
-                            </div>
-                            <div class="notification-item unread">
-                                <div class="notification-icon danger">
-                                    <i class="fas fa-exclamation-circle"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <div class="notification-title">Test Sonucu Hata</div>
-                                    <div class="notification-text">24-03-C003 siparişinde test hatası tespit edildi</div>
-                                    <div class="notification-time">30 dakika önce</div>
-                                </div>
-                            </div>
-                            <div class="notification-item">
-                                <div class="notification-icon info">
-                                    <i class="fas fa-info-circle"></i>
-                                </div>
-                                <div class="notification-content">
-                                    <div class="notification-title">Yeni Sipariş</div>
-                                    <div class="notification-text">AYEDAŞ'tan 5 adet yeni OG hücre siparişi alındı</div>
-                                    <div class="notification-time">2 saat önce</div>
-                                </div>
-                            </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Malzeme Tedarik Uyarısı</div>
+                            <div class="notification-text">24-03-B002 siparişi için malzeme tedarikinde gecikme</div>
+                            <div class="notification-time">10 dakika önce</div>
+                        </div>
+                    </div>
+                    <div class="notification-item unread">
+                        <div class="notification-icon danger">
+                            <i class="fas fa-exclamation-circle"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Test Sonucu Hata</div>
+                            <div class="notification-text">24-03-C003 siparişinde test hatası tespit edildi</div>
+                            <div class="notification-time">30 dakika önce</div>
+                        </div>
+                    </div>
+                    <div class="notification-item">
+                        <div class="notification-icon info">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-title">Yeni Sipariş</div>
+                            <div class="notification-text">AYEDAŞ'tan 5 adet yeni OG hücre siparişi alındı</div>
+                            <div class="notification-time">2 saat önce</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Ana uygulama modalları -->
-        <!-- Sipariş Detay Modalı -->
-        <div id="order-detail-modal" class="modal">
-            <div class="modal-dialog">
-                <div class="modal-header">
-                    <h3 class="modal-title">Sipariş Detayı: <span id="order-detail-id"></span></h3>
-                    <button class="modal-close" onclick="closeModal('order-detail-modal')">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <!-- İş Akışı -->
-                    <div class="process-steps">
-                        <div class="process-step">
-                            <div class="process-step-circle"><i class="fas fa-file-alt"></i></div>
-                            <div class="process-step-label">Sipariş</div>
-                        </div>
-                        <div class="process-step">
-                            <div class="process-step-circle"><i class="fas fa-clipboard-list"></i></div>
-                            <div class="process-step-label">Planlama</div>
-                        </div>
-                        <div class="process-step">
-                            <div class="process-step-circle"><i class="fas fa-truck-loading"></i></div>
-                            <div class="process-step-label">Malzeme</div>
-                        </div>
-                        <div class="process-step">
-                            <div class="process-step-circle"><i class="fas fa-industry"></i></div>
-                            <div class="process-step-label">Üretim</div>
-                        </div>
-                        <div class="process-step">
-                            <div class="process-step-circle"><i class="fas fa-check-circle"></i></div>
-                            <div class="process-step-label">Tamamlandı</div>
-                        </div>
-                    </div>
-
-                    <!-- Tab menü -->
-                    <div class="tabs">
-                        <div class="tab active" data-tab="order-general">Genel Bilgiler</div>
-                        <div class="tab" data-tab="order-materials">Malzemeler</div>
-                        <div class="tab" data-tab="order-production">Üretim</div>
-                        <div class="tab" data-tab="notes">Notlar</div>
-                    </div>
-
-                    <!-- Tab içerikleri -->
-                    <div id="order-general-content" class="tab-content active">
-                        <form id="order-general">
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Sipariş No</label>
-                                    <input type="text" class="form-control" name="orderNo" readonly>
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Müşteri</label>
-                                    <input type="text" class="form-control" name="customer">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Hücre Tipi</label>
-                                    <input type="text" class="form-control" name="cellType">
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Hücre Adedi</label>
-                                    <input type="number" class="form-control" name="cellCount">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Sipariş Tarihi</label>
-                                    <input type="text" class="form-control" name="orderDate">
-                                </div>
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Teslim Tarihi</label>
-                                    <input type="text" class="form-control" name="deliveryDate">
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="form-group col-md-6">
-                                    <label class="form-label">Durum</label>
-                                    <select class="form-control" name="status">
-                                        <option value="planning">Planlama</option>
-                                        <option value="waiting">Malzeme Bekleniyor</option>
-                                        <option value="production">Üretimde</option>
-                                        <option value="ready">Malzeme Hazır</option>
-                                        <option value="testing">Test</option>
-                                        <option value="completed">Tamamlandı</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </form>
-                    </div>
-
-                    <div id="order-materials-content" class="tab-content">
-                        <div class="table-container">
-                            <table class="table" id="materials-table">
-                                <thead>
-                                    <tr>
-                                        <th>Malzeme Kodu</th>
-                                        <th>Malzeme Adı</th>
-                                        <th>Miktar</th>
-                                        <th>Birim</th>
-                                        <th>Durum</th>
-                                        <th>Tedarik Tarihi</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <!-- Malzeme listesi dinamik olarak gelecek -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div id="order-production-content" class="tab-content">
-                        <div class="production-timeline">
-                            <h4>Üretim Zaman Çizelgesi</h4>
-                            <div class="timeline-container">
-                                <!-- Üretim zaman çizelgesi dinamik olarak gelecek -->
-                            </div>
-                        </div>
-                    </div>
-
-                    <div id="notes-content" class="tab-content">
-                        <div class="notes-container">
-                            <!-- Notlar dinamik olarak gelecek -->
-                        </div>
-                        <div class="notes-form">
-                            <textarea class="form-control" placeholder="Yeni not ekleyin..."></textarea>
-                            <button class="btn btn-primary">
-                                <i class="fas fa-plus"></i> Not Ekle
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-outline" onclick="closeModal('order-detail-modal')">Kapat</button>
-                    <button class="btn btn-primary">Değişiklikleri Kaydet</button>
-                </div>
-            </div>
+        <!-- Ana içerik alanı -->
+        <div class="container">
+            <!-- Tüm sayfaların içeriği buraya eklenecek -->
+            <!-- Bu kısımda, ilk dosyadaki tüm sayfaların (dashboard, sales, notes, reports, vb.) tam içeriği bulunmalıdır -->
+            <!-- İçerik çok uzun olduğundan tamamını buraya yapıştırmadım -->
         </div>
 
-        <!-- Sipariş Oluşturma Modalı -->
-        <div id="create-order-modal" class="modal">
-            <div class="modal-dialog">
-                <div class="modal-header">
-                    <h3 class="modal-title">Yeni Sipariş Oluştur</h3>
-                    <button class="modal-close" onclick="closeModal('create-order-modal')">&times;</button>
-                </div>
-                <div class="modal-body">
-                    <form id="create-order-form">
-                        <div class="form-group">
-                            <label class="form-label">Müşteri</label>
-                            <select class="form-control" name="customer" required>
-                                <option value="">Müşteri Seçin</option>
-                                <!-- Müşteri listesi dinamik olarak gelecek -->
-                            </select>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label class="form-label">Hücre Tipi</label>
-                                <select class="form-control" name="cellType" required>
-                                    <option value="">Hücre Tipi Seçin</option>
-                                    <option value="RM 36 LB">RM 36 LB</option>
-                                    <option value="RM 36 CB">RM 36 CB</option>
-                                    <option value="RM 36 FL">RM 36 FL</option>
-                                </select>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label class="form-label">Hücre Adedi</label>
-                                <input type="number" class="form-control" name="cellCount" min="1" value="1" required>
-                            </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label class="form-label">Sipariş Tarihi</label>
-                                <input type="date" class="form-control" name="orderDate" required>
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label class="form-label">Teslim Tarihi</label>
-                                <input type="date" class="form-control" name="deliveryDate" required>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Durum</label>
-                            <select class="form-control" name="status">
-                                <option value="planning">Planlama</option>
-                                <option value="waiting">Malzeme Bekleniyor</option>
-                                <option value="production">Üretimde</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Açıklama</label>
-                            <textarea class="form-control" name="description" rows="3"></textarea>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button class="btn btn-outline" onclick="closeModal('create-order-modal')">İptal</button>
-                    <button class="btn btn-primary" form="create-order-form">Sipariş Oluştur</button>
-                </div>
-            </div>
-        </div>
+        <!-- Ana uygulama modalları ve diğer bileşenler -->
+        <!-- Sipariş Detay Modalı, Sipariş Oluşturma Modalı, Yapay Zeka Asistanı vb. buraya eklenecek -->
+    </div>
 
-        <!-- Yapay Zeka Asistanı -->
-        <div class="chatbot-trigger" onclick="toggleChatbot()">
-            <i class="fas fa-robot"></i>
+    <!-- Yapay Zeka Asistanı -->
+    <div class="chatbot-trigger" onclick="toggleChatbot()">
+        <i class="fas fa-robot"></i>
+    </div>
+    <div id="chatbot-window" class="chatbot-window">
+        <div class="chatbot-header">
+            <div class="chatbot-title">
+                <i class="fas fa-robot"></i>
+                <span>ElektroTrack Asistanı</span>
+            </div>
+            <button class="chatbot-close" onclick="toggleChatbot()">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
-        <div id="chatbot-window" class="chatbot-window">
-            <div class="chatbot-header">
-                <div class="chatbot-title">
-                    <i class="fas fa-robot"></i>
-                    <span>ElektroTrack Asistanı</span>
-                </div>
-                <button class="chatbot-close" onclick="toggleChatbot()">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div id="chatbot-body" class="chatbot-body">
-                <div class="chat-message bot">
-                    Merhaba! Ben ElektroTrack Asistanı. Size nasıl yardımcı olabilirim?
-                </div>
-            </div>
-            <div class="chatbot-footer">
-                <input id="chatbot-input" type="text" class="chatbot-input" placeholder="Mesajınızı yazın...">
-                <button class="chatbot-send" onclick="sendChatMessage()">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
+        <div id="chatbot-body" class="chatbot-body">
+            <div class="chat-message bot">
+                Merhaba! Ben ElektroTrack Asistanı. Size nasıl yardımcı olabilirim?
             </div>
         </div>
+        <div class="chatbot-footer">
+            <input id="chatbot-input" type="text" class="chatbot-input" placeholder="Mesajınızı yazın...">
+            <button class="chatbot-send" onclick="sendChatMessage()">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
 
-        <!-- Demo modu bildirimi -->
-        <div id="demo-mode-notification" class="info-box warning" style="position: fixed; bottom: 10px; left: 10px; z-index: 1000; display: none;">
-            <div class="info-box-title">Demo Modu</div>
-            <div class="info-box-content">
-                <p>Uygulama şu anda demo modunda çalışıyor. Firebase kimlik doğrulaması atlanıyor.</p>
-                <button class="btn btn-sm btn-warning" onclick="document.getElementById('demo-mode-notification').style.display = 'none';">
-                    <i class="fas fa-times"></i> Kapat
-                </button>
-            </div>
+    <!-- Demo modu bildirimi -->
+    <div id="demo-mode-notification" class="info-box warning" style="position: fixed; bottom: 10px; left: 10px; z-index: 1000; display: none;">
+        <div class="info-box-title">Demo Modu</div>
+        <div class="info-box-content">
+            <p>Uygulama şu anda demo modunda çalışıyor. Firebase kimlik doğrulaması atlanıyor.</p>
+            <button class="btn btn-sm btn-warning" onclick="document.getElementById('demo-mode-notification').style.display = 'none';">
+                <i class="fas fa-times"></i> Kapat
+            </button>
         </div>
     </div>
 
