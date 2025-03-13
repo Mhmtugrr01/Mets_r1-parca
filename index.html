@@ -1,1666 +1,293 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElektroTrack - OG Hücre İmalat Takip</title>
-    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Endüstriyel Takip yazılımı">
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="img/favicon.png">
-    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-
-    <!-- PWA manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e40af">
-
-    <!-- CSS dosyaları -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/login.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/responsive.css">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- TensorFlow.js - AI ve ML işlemleri için -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    
-    <!-- NLP işlemleri için -->
-    <script src="https://unpkg.com/compromise"></script>
-</head>
-<body>
-    <!-- Giriş Sayfası -->
-    <div id="login-page" class="login-container">
-        <div class="login-card">
-            <div class="login-header">
-                <div class="login-logo">
-                    <div class="login-logo-icon">
-                        <i class="fas fa-bolt"></i>
-                    
-                <!-- Özel Rapor Oluşturma -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Özel Rapor Oluştur</div>
-                    
-            <!-- Kalite Sayfası -->
-            <div id="quality-page" class="page">
-                <div class="page-header">
-                    <h1 class="page-title">Kalite</h1>
-                    <div>
-                        <button class="btn btn-outline" onclick="refreshQualityData()">
-                            <i class="fas fa-sync-alt"></i>
-                            <span>Yenile</span>
-                        </button>
-                        <button class="btn btn-primary" onclick="showNewTestModal()">
-                            <i class="fas fa-plus"></i>
-                            <span>Yeni Test</span>
-                        </button>
-                    
-                <!-- Kalite Kontrolcü Atama -->
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Test Atama</div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-container">
-                                    <table class="table" id="pending-test-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Sipariş No</th>
-                                                <th>Hücre Tipi</th>
-                                                <th>Test Tipi</th>
-                                                <th>Planlanan Tarih</th>
-                                                <th>Öncelik</th>
-                                                <th>Atanan Kişi</th>
-                                                <th>İşlemler</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>24-04-E005</td>
-                                                <td>RM 36 CB</td>
-                                                <td>Yüksek Gerilim</td>
-                                                <td>15.03.2024</td>
-                                                <td><span class="badge badge-info">Normal</span></td>
-                                                <td>
-                                                    <select class="form-control form-control-sm" onchange="assignTest('24-04-E005', 'hv', this.value)">
-                                                        <option value="">Atama Yok</option>
-                                                        <option value="ahmet">Ahmet Yılmaz</option>
-                                                        <option value="mehmet">Mehmet Kaya</option>
-                                                        <option value="ayse">Ayşe Demir</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-primary" onclick="scheduleTest('24-04-E005', 'hv')">
-                                                        <i class="fas fa-calendar"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-success" onclick="startTest('24-04-E005', 'hv')">
-                                                        <i class="fas fa-play"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>24-04-E005</td>
-                                                <td>RM 36 CB</td>
-                                                <td>Fonksiyon Testi</td>
-                                                <td>15.03.2024</td>
-                                                <td><span class="badge badge-info">Normal</span></td>
-                                                <td>
-                                                    <select class="form-control form-control-sm" onchange="assignTest('24-04-E005', 'func', this.value)">
-                                                        <option value="">Atama Yok</option>
-                                                        <option value="ahmet">Ahmet Yılmaz</option>
-                                                        <option value="mehmet">Mehmet Kaya</option>
-                                                        <option value="ayse">Ayşe Demir</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-primary" onclick="scheduleTest('24-04-E005', 'func')">
-                                                        <i class="fas fa-calendar"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-success" onclick="startTest('24-04-E005', 'func')">
-                                                        <i class="fas fa-play"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td>24-04-D004</td>
-                                                <td>RM 36 LB</td>
-                                                <td>İzolasyon Testi</td>
-                                                <td>14.03.2024</td>
-                                                <td><span class="badge badge-warning">Yüksek</span></td>
-                                                <td>
-                                                    <select class="form-control form-control-sm" onchange="assignTest('24-04-D004', 'iso', this.value)">
-                                                        <option value="">Atama Yok</option>
-                                                        <option value="ahmet" selected>Ahmet Yılmaz</option>
-                                                        <option value="mehmet">Mehmet Kaya</option>
-                                                        <option value="ayse">Ayşe Demir</option>
-                                                    </select>
-                                                </td>
-                                                <td>
-                                                    <button class="btn btn-sm btn-primary" onclick="scheduleTest('24-04-D004', 'iso')">
-                                                        <i class="fas fa-calendar"></i>
-                                                    </button>
-                                                    <button class="btn btn-sm btn-success" onclick="startTest('24-04-D004', 'iso')">
-                                                        <i class="fas fa-play"></i>
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+<!-- Bildirim Merkezi -->
+                <div class="notification-center">
+                    <button class="notification-bell" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge">3</span>
+                    </button>
+                    <div id="notifications-dropdown" class="notifications-dropdown">
+                        <div class="notifications-header">
+                            <h3>Bildirimler</h3>
+                            <button class="btn btn-sm btn-outline" onclick="markAllAsRead()">
+                                <i class="fas fa-check-double"></i> Tümünü Okundu İşaretle
+                            </button>
+                        </div>
+                        <div class="notifications-list">
+                            <div class="notification-item unread">
+                                <div class="notification-icon warning">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Malzeme Tedarik Uyarısı</div>
+                                    <div class="notification-text">24-03-B002 siparişi için malzeme tedarikinde gecikme</div>
+                                    <div class="notification-time">10 dakika önce</div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Test Başarı Oranları</div>
+                            <div class="notification-item unread">
+                                <div class="notification-icon danger">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Test Sonucu Hata</div>
+                                    <div class="notification-text">24-03-C003 siparişinde test hatası tespit edildi</div>
+                                    <div class="notification-time">30 dakika önce</div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <div style="height: 300px;">
-                                    <canvas id="testSuccessRateChart"></canvas>
+                            <div class="notification-item">
+                                <div class="notification-icon info">
+                                    <i class="fas fa-info-circle"></i>
+                                </div>
+                                <div class="notification-content">
+                                    <div class="notification-title">Yeni Sipariş</div>
+                                    <div class="notification-text">AYEDAŞ'tan 5 adet yeni OG hücre siparişi alındı</div>
+                                    <div class="notification-time">2 saat önce</div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Kalite Raporları -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Kalite Raporları</div>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col">
-                                <div class="report-card">
-                                    <div class="report-icon">
-                                        <i class="fas fa-chart-bar"></i>
-                                    </div>
-                                    <div class="report-content">
-                                        <h3 class="report-title">Aylık Kalite Raporu</h3>
-                                        <p class="report-description">Mart 2024 ayı için genel kalite metrikleri ve test sonuçlarının özeti.</p>
-                                    </div>
-                                    <div class="report-actions">
-                                        <button class="btn btn-sm btn-primary" onclick="viewReport('report-monthly-2024-03')">
-                                            <i class="fas fa-eye"></i> Görüntüle
-                                        </button>
-                                        <button class="btn btn-sm btn-outline" onclick="downloadReport('report-monthly-2024-03')">
-                                            <i class="fas fa-download"></i> İndir
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="report-card">
-                                    <div class="report-icon">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                    </div>
-                                    <div class="report-content">
-                                        <h3 class="report-title">Hata Analiz Raporu</h3>
-                                        <p class="report-description">Son bir ay içerisinde tespit edilen kalite sorunları ve çözüm önerileri.</p>
-                                    </div>
-                                    <div class="report-actions">
-                                        <button class="btn btn-sm btn-primary" onclick="viewReport('report-issues-2024-03')">
-                                            <i class="fas fa-eye"></i> Görüntüle
-                                        </button>
-                                        <button class="btn btn-sm btn-outline" onclick="downloadReport('report-issues-2024-03')">
-                                            <i class="fas fa-download"></i> İndir
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col">
-                                <div class="report-card">
-                                    <div class="report-icon">
-                                        <i class="fas fa-tasks"></i>
-                                    </div>
-                                    <div class="report-content">
-                                        <h3 class="report-title">Malzeme Kalite Raporu</h3>
-                                        <p class="report-description">Gelen malzemelerin kalite kontrol süreçleri ve uygunsuzluklar.</p>
-                                    </div>
-                                    <div class="report-actions">
+            </div>
+        </div>
+
+        <!-- Ana uygulama modalları -->
+        <!-- Sipariş Detay Modalı -->
+        <div id="order-detail-modal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3 class="modal-title">Sipariş Detayı: <span id="order-detail-id"></span></h3>
+                    <button class="modal-close" onclick="closeModal('order-detail-modal')">&times;</button>
                 </div>
-                
-                <!-- Kalite Özet Kartları -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-primary">
-                            <i class="fas fa-clipboard-check"></i>
+                <div class="modal-body">
+                    <!-- İş Akışı -->
+                    <div class="process-steps">
+                        <div class="process-step">
+                            <div class="process-step-circle"><i class="fas fa-file-alt"></i></div>
+                            <div class="process-step-label">Sipariş</div>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Bekleyen Testler</div>
-                            <div class="stat-value">8</div>
+                        <div class="process-step">
+                            <div class="process-step-circle"><i class="fas fa-clipboard-list"></i></div>
+                            <div class="process-step-label">Planlama</div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-success">
-                            <i class="fas fa-check-double"></i>
+                        <div class="process-step">
+                            <div class="process-step-circle"><i class="fas fa-truck-loading"></i></div>
+                            <div class="process-step-label">Malzeme</div>
                         </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Onaylanan</div>
-                            <div class="stat-value">35</div>
+                        <div class="process-step">
+                            <div class="process-step-circle"><i class="fas fa-industry"></i></div>
+                            <div class="process-step-label">Üretim</div>
                         </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-danger">
-                            <i class="fas fa-times-circle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Reddedilen</div>
-                            <div class="stat-value">3</div>
+                        <div class="process-step">
+                            <div class="process-step-circle"><i class="fas fa-check-circle"></i></div>
+                            <div class="process-step-label">Tamamlandı</div>
                         </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-warning">
-                            <i class="fas fa-chart-line"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Kalite Oranı</div>
-                            <div class="stat-value">92%</div>
-                        </div>
+
+                    <!-- Tab menü -->
+                    <div class="tabs">
+                        <div class="tab active" data-tab="order-general">Genel Bilgiler</div>
+                        <div class="tab" data-tab="order-materials">Malzemeler</div>
+                        <div class="tab" data-tab="order-production">Üretim</div>
+                        <div class="tab" data-tab="notes">Notlar</div>
                     </div>
-                </div>
-                
-                <!-- Test ve Kontrol Tablosu -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Test ve Kontroller</div>
-                        <div class="filter-tools">
-                            <input type="text" class="form-control search-input" placeholder="Sipariş No veya test tipi ara..." 
-                                  onkeyup="filterQualityTests()">
-                            <select class="form-control" onchange="filterQualityTests()">
-                                <option value="all">Tüm Durumlar</option>
-                                <option value="pending">Beklemede</option>
-                                <option value="inprogress">Test Ediliyor</option>
-                                <option value="passed">Geçti</option>
-                                <option value="failed">Kaldı</option>
-                                <option value="conditional">Şartlı Geçti</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="table" id="quality-test-table">
-                                <thead>
-                                    <tr>
-                                        <th>Test ID</th>
-                                        <th>Sipariş No</th>
-                                        <th>Hücre Tipi</th>
-                                        <th>Test Tipi</th>
-                                        <th>Test Tarihi</th>
-                                        <th>Test Eden</th>
-                                        <th>Test Sonucu</th>
-                                        <th>Durum</th>
-                                        <th>İşlemler</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>T-2024-052</td>
-                                        <td>24-03-A001</td>
-                                        <td>RM 36 LB</td>
-                                        <td>Yüksek Gerilim</td>
-                                        <td>12.03.2024</td>
-                                        <td>Ahmet Yılmaz</td>
-                                        <td>24kV / 0.01 mA</td>
-                                        <td><span class="badge badge-success">Geçti</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewTestDetails('T-2024-052')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="generateTestReport('T-2024-052')">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>T-2024-051</td>
-                                        <td>24-03-A001</td>
-                                        <td>RM 36 LB</td>
-                                        <td>Fonksiyon Testi</td>
-                                        <td>12.03.2024</td>
-                                        <td>Mehmet Kaya</td>
-                                        <td>15 Açma-Kapama</td>
-                                        <td><span class="badge badge-success">Geçti</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewTestDetails('T-2024-051')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="generateTestReport('T-2024-051')">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>T-2024-050</td>
-                                        <td>24-03-C003</td>
-                                        <td>RM 36 CB</td>
-                                        <td>Gerilim Gösterge</td>
-                                        <td>11.03.2024</td>
-                                        <td>Ayşe Demir</td>
-                                        <td>Sinyal Negatif</td>
-                                        <td><span class="badge badge-danger">Kaldı</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewTestDetails('T-2024-050')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="generateTestReport('T-2024-050')">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-warning" onclick="retestItem('T-2024-050')">
-                                                <i class="fas fa-redo"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>T-2024-049</td>
-                                        <td>24-03-B002</td>
-                                        <td>RM 36 FL</td>
-                                        <td>İzolasyon Testi</td>
-                                        <td>10.03.2024</td>
-                                        <td>Ahmet Yılmaz</td>
-                                        <td>500 MΩ</td>
-                                        <td><span class="badge badge-success">Geçti</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewTestDetails('T-2024-049')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="generateTestReport('T-2024-049')">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>T-2024-048</td>
-                                        <td>24-03-B002</td>
-                                        <td>RM 36 FL</td>
-                                        <td>Fonksiyon Testi</td>
-                                        <td>10.03.2024</td>
-                                        <td>Mehmet Kaya</td>
-                                        <td>15 Açma-Kapama</td>
-                                        <td><span class="badge badge-warning">Şartlı Geçti</span></td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewTestDetails('T-2024-048')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="generateTestReport('T-2024-048')">
-                                                <i class="fas fa-file-pdf"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-                    <div class="card-body">
-                        <div class="custom-report-builder">
-                            <div class="form-group">
-                                <label class="form-label">Rapor Adı</label>
-                                <input type="text" class="form-control" id="custom-report-name" placeholder="Rapor adını girin">
-                            </div>
-                            
+
+                    <!-- Tab içerikleri -->
+                    <div id="order-general-content" class="tab-content active">
+                        <form id="order-general">
                             <div class="form-row">
-                                <div class="form-group col-md-4">
-                                    <label class="form-label">Kategori</label>
-                                    <select class="form-control" id="custom-report-category">
-                                        <option value="">Kategori Seçin</option>
-                                        <option value="production">Üretim</option>
-                                        <option value="quality">Kalite</option>
-                                        <option value="stock">Stok</option>
-                                        <option value="purchasing">Satın Alma</option>
-                                        <option value="financial">Finansal</option>
-                                        <option value="performance">Performans</option>
-                                        <option value="custom">Özel</option>
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Sipariş No</label>
+                                    <input type="text" class="form-control" name="orderNo" readonly>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Müşteri</label>
+                                    <input type="text" class="form-control" name="customer">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Hücre Tipi</label>
+                                    <input type="text" class="form-control" name="cellType">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Hücre Adedi</label>
+                                    <input type="number" class="form-control" name="cellCount">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Sipariş Tarihi</label>
+                                    <input type="text" class="form-control" name="orderDate">
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Teslim Tarihi</label>
+                                    <input type="text" class="form-control" name="deliveryDate">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label class="form-label">Durum</label>
+                                    <select class="form-control" name="status">
+                                        <option value="planning">Planlama</option>
+                                        <option value="waiting">Malzeme Bekleniyor</option>
+                                        <option value="production">Üretimde</option>
+                                        <option value="ready">Malzeme Hazır</option>
+                                        <option value="testing">Test</option>
+                                        <option value="completed">Tamamlandı</option>
                                     </select>
                                 </div>
-                                <div class="form-group col-md-4">
-                                    <label class="form-label">Başlangıç Tarihi</label>
-                                    <input type="date" class="form-control" id="custom-report-start-date">
-                                </div>
-                                <div class="form-group col-md-4">
-                                    <label class="form-label">Bitiş Tarihi</label>
-                                    <input type="date" class="form-control" id="custom-report-end-date">
-                                </div>
                             </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">Rapor Bileşenleri</label>
-                                <div class="report-components">
-                                    <div class="component-select">
-                                        <div class="component-item" onclick="addReportComponent('production-metrics')">
-                                            <i class="fas fa-industry"></i>
-                                            <span>Üretim Metrikleri</span>
-                                        </div>
-                                        <div class="component-item" onclick="addReportComponent('quality-metrics')">
-                                            <i class="fas fa-clipboard-check"></i>
-                                            <span>Kalite Metrikleri</span>
-                                        </div>
-                                        <div class="component-item" onclick="addReportComponent('stock-analysis')">
-                                            <i class="fas fa-warehouse"></i>
-                                            <span>Stok Analizi</span>
-                                        </div>
-                                        <div class="component-item" onclick="addReportComponent('supplier-analysis')">
-                                            <i class="fas fa-truck"></i>
-                                            <span>Tedarikçi Analizi</span>
-                                        </div>
-                                        <div class="component-item" onclick="addReportComponent('time-analysis')">
-                                            <i class="fas fa-clock"></i>
-                                            <span>Zaman Analizi</span>
-                                        </div>
-                                        <div class="component-item" onclick="addReportComponent('cost-analysis')">
-                                            <i class="fas fa-money-bill"></i>
-                                            <span>Maliyet Analizi</span>
-                                        </div>
-                                        <div class="component-item" onclick="addReportComponent('comparison')">
-                                            <i class="fas fa-balance-scale"></i>
-                                            <span>Karşılaştırma</span>
-                                        </div>
-                                        <div class="component-item" onclick="addReportComponent('custom-chart')">
-                                            <i class="fas fa-chart-bar"></i>
-                                            <span>Özel Grafik</span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="selected-components" id="selected-components">
-                                        <div class="placeholder">Raporunuza eklemek için bileşenleri seçin</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">Rapor Formatı</label>
-                                <div class="report-format-options">
-                                    <label class="format-option">
-                                        <input type="radio" name="report-format" value="pdf" checked>
-                                        <span class="format-icon"><i class="fas fa-file-pdf"></i></span>
-                                        <span class="format-label">PDF</span>
-                                    </label>
-                                    <label class="format-option">
-                                        <input type="radio" name="report-format" value="excel">
-                                        <span class="format-icon"><i class="fas fa-file-excel"></i></span>
-                                        <span class="format-label">Excel</span>
-                                    </label>
-                                    <label class="format-option">
-                                        <input type="radio" name="report-format" value="web">
-                                        <span class="format-icon"><i class="fas fa-globe"></i></span>
-                                        <span class="format-label">Web</span>
-                                    </label>
-                                    <label class="format-option">
-                                        <input type="radio" name="report-format" value="dashboard">
-                                        <span class="format-icon"><i class="fas fa-tachometer-alt"></i></span>
-                                        <span class="format-label">Dashboard</span>
-                                    </label>
-                                </div>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <button class="btn btn-outline" onclick="previewCustomReport()">
-                                    <i class="fas fa-eye"></i> Önizleme
-                                </button>
-                                <button class="btn btn-primary" onclick="generateCustomReport()">
-                                    <i class="fas fa-file-alt"></i> Rapor Oluştur
-                                </button>
-                            </div>
-                        </div>
+                        </form>
                     </div>
-                </div>
-                
-                <!-- AI Rapor Önerileri -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Yapay Zeka Rapor Önerileri</div>
-                    </div>
-                    <div class="card-body" id="ai-report-recommendations">
-                        <div class="info-box">
-                            <div class="info-box-title">Üretim Verimliliği Analizi</div>
-                            <div class="info-box-content">
-                                <p>Son 3 ayın üretim verileri incelendiğinde, RM 36 LB tipi hücreler için ortalama üretim süresinde %12 iyileşme tespit edildi. Detaylı bir rapor, bu gelişmenin nedenlerini ve diğer tiplere de uygulanabilirliğini inceleyebilir.</p>
-                                <button class="btn btn-primary btn-sm" onclick="generateAIReport('production-efficiency')">
-                                    <i class="fas fa-robot"></i>
-                                    <span>Rapor Oluştur</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="info-box warning">
-                            <div class="info-box-title">Tedarik Zinciri Risk Analizi</div>
-                            <div class="info-box-content">
-                                <p>Kablo Başlıkları (M480TB/G-027) ve Gerilim Gösterge (OVI+S-10nf) malzemelerinin tedarikinde son 6 ayda tekrarlayan gecikmeler tespit edildi. Bu riskleri azaltmak için tedarikçi alternatiflerini ve stok stratejilerini inceleyen bir rapor oluşturmak faydalı olabilir.</p>
-                                <button class="btn btn-warning btn-sm" onclick="generateAIReport('supply-chain-risks')">
-                                    <i class="fas fa-robot"></i>
-                                    <span>Rapor Oluştur</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="info-box success">
-                            <div class="info-box-title">Müşteri Sipariş Analizi</div>
-                            <div class="info-box-content">
-                                <p>ENERJİSA ve AYEDAŞ'ın sipariş eğilimlerinde mevsimsel bir model tespit edildi. Bu müşteriler için yıllık bir sipariş tahmin raporu oluşturarak üretim ve tedarik planlamasının optimize edilmesi mümkün.</p>
-                                <button class="btn btn-success btn-sm" onclick="generateAIReport('customer-order-forecast')">
-                                    <i class="fas fa-robot"></i>
-                                    <span>Rapor Oluştur</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-                
-                <!-- Rapor Listesi -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Tüm Raporlar</div>
-                        <div class="filter-tools">
-                            <input type="text" class="form-control search-input" placeholder="Rapor adı veya içeriğinde ara..." 
-                                  onkeyup="filterReportsList()">
-                            <select class="form-control" onchange="filterReportsList()">
-                                <option value="all">Tüm Dönemler</option>
-                                <option value="2024-03">Mart 2024</option>
-                                <option value="2024-02">Şubat 2024</option>
-                                <option value="2024-01">Ocak 2024</option>
-                                <option value="2023-12">Aralık 2023</option>
-                                <option value="2023-Q4">2023 Q4</option>
-                                <option value="2023-Y">2023 Yıllık</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card-body">
+
+                    <div id="order-materials-content" class="tab-content">
                         <div class="table-container">
-                            <table class="table" id="reports-table">
+                            <table class="table" id="materials-table">
                                 <thead>
                                     <tr>
-                                        <th>Rapor ID</th>
-                                        <th>Rapor Adı</th>
-                                        <th>Kategori</th>
-                                        <th>Dönem</th>
-                                        <th>Oluşturulma</th>
-                                        <th>Oluşturan</th>
-                                        <th>Son Güncelleme</th>
-                                        <th>İşlemler</th>
+                                        <th>Malzeme Kodu</th>
+                                        <th>Malzeme Adı</th>
+                                        <th>Miktar</th>
+                                        <th>Birim</th>
+                                        <th>Durum</th>
+                                        <th>Tedarik Tarihi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>R-2024-054</td>
-                                        <td>Üretim Performans Raporu</td>
-                                        <td><span class="badge badge-primary">Üretim</span></td>
-                                        <td>Mart 2024</td>
-                                        <td>12.03.2024</td>
-                                        <td>Ayşe Demir</td>
-                                        <td>12.03.2024</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewReport('R-2024-054')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="downloadReport('R-2024-054')">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline" onclick="shareReport('R-2024-054')">
-                                                <i class="fas fa-share-alt"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>R-2024-053</td>
-                                        <td>Malzeme Tedarik Analizi</td>
-                                        <td><span class="badge badge-info">Satın Alma</span></td>
-                                        <td>Mart 2024</td>
-                                        <td>11.03.2024</td>
-                                        <td>Mehmet Kaya</td>
-                                        <td>12.03.2024</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewReport('R-2024-053')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="downloadReport('R-2024-053')">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline" onclick="shareReport('R-2024-053')">
-                                                <i class="fas fa-share-alt"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>R-2024-052</td>
-                                        <td>Kalite Kontrol Özeti</td>
-                                        <td><span class="badge badge-success">Kalite</span></td>
-                                        <td>Mart 2024</td>
-                                        <td>10.03.2024</td>
-                                        <td>Ahmet Yılmaz</td>
-                                        <td>10.03.2024</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewReport('R-2024-052')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="downloadReport('R-2024-052')">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline" onclick="shareReport('R-2024-052')">
-                                                <i class="fas fa-share-alt"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>R-2024-051</td>
-                                        <td>Stok Durum Analizi</td>
-                                        <td><span class="badge badge-warning">Stok</span></td>
-                                        <td>Mart 2024</td>
-                                        <td>08.03.2024</td>
-                                        <td>Ayşe Demir</td>
-                                        <td>09.03.2024</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewReport('R-2024-051')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="downloadReport('R-2024-051')">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline" onclick="shareReport('R-2024-051')">
-                                                <i class="fas fa-share-alt"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td>R-2024-050</td>
-                                        <td>Maliyet Analizi Raporu</td>
-                                        <td><span class="badge badge-danger">Finansal</span></td>
-                                        <td>Şubat 2024</td>
-                                        <td>05.03.2024</td>
-                                        <td>Mehmet Kaya</td>
-                                        <td>05.03.2024</td>
-                                        <td>
-                                            <button class="btn btn-sm btn-outline" onclick="viewReport('R-2024-050')">
-                                                <i class="fas fa-eye"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-primary" onclick="downloadReport('R-2024-050')">
-                                                <i class="fas fa-download"></i>
-                                            </button>
-                                            <button class="btn btn-sm btn-outline" onclick="shareReport('R-2024-050')">
-                                                <i class="fas fa-share-alt"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
+                                    <!-- Malzeme listesi dinamik olarak gelecek -->
                                 </tbody>
                             </table>
                         </div>
                     </div>
-                </div>
-                    <div class="login-logo-text">ElektroTrack</div>
-                </div>
-                <h1 class="login-title">Giriş Yap</h1>
-                <p class="login-subtitle">Orta Gerilim Hücre İmalat Takip Sistemi</p>
-            </div>
-            <div class="login-body">
-                <form id="login-form">
-                    <div class="login-form-group">
-                        <label class="login-label" for="username">Kullanıcı Adı / E-posta</label>
-                        <input type="text" id="username" class="login-input" placeholder="Kullanıcı adınızı veya e-postanızı girin" required>
-                    </div>
-                    <div class="login-form-group">
-                        <label class="login-label" for="password">Şifre</label>
-                        <input type="password" id="password" class="login-input" placeholder="Şifrenizi girin" required>
-                    </div>
-                    <div class="login-options">
-                        <div class="login-remember">
-                            <input type="checkbox" id="remember">
-                            <label for="remember">Beni hatırla</label>
-                        </div>
-                        <a href="#" class="login-forgot" onclick="showForgotPassword()">Şifremi unuttum</a>
-                    </div>
-                    <button type="submit" class="login-button">Giriş Yap</button>
-                </form>
-                
-                <div class="login-footer">
-                    Hesabınız yok mu? <a href="#" onclick="showRegister()">Kayıt Ol</a>
-                </div>
 
-                <!-- Demo Giriş Butonu (Kod-1'den Alındı) -->
-                <div style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                    <button type="button" class="btn btn-outline" style="width: 100%;" onclick="demoLogin()">
-                        <i class="fas fa-user-check"></i> Demo Hesabı ile Giriş
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
+                    <div id="order-production-content" class="tab-content">
+                        <div class="production-timeline">
+                            <h4>Üretim Zaman Çizelgesi</h4>
+                            <div class="timeline-container">
+                                <!-- Üretim zaman çizelgesi dinamik olarak gelecek -->
+                            </div>
+                        </div>
+                    </div>
 
-    <!-- Kayıt Ol Formu -->
-    <div id="register-page" class="login-container" style="display: none;">
-        <div class="login-form">
-            <div class="login-header">
-                <h1 class="login-title">Kayıt Ol</h1>
-                <p class="login-subtitle">ElektroTrack'e hoş geldiniz</p>
-            </div>
-            
-            <form id="register-form">
-                <div class="form-group">
-                    <label class="form-label" for="register-name">Ad Soyad</label>
-                    <input type="text" class="form-control" id="register-name" placeholder="Adınızı ve soyadınızı girin" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-email">E-posta</label>
-                    <input type="email" class="form-control" id="register-email" placeholder="E-posta adresinizi girin" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-username">Kullanıcı Adı</label>
-                    <input type="text" class="form-control" id="register-username" placeholder="Kullanıcı adınızı girin" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-department">Departman</label>
-                    <select class="form-control" id="register-department" required>
-                        <option value="">Departman Seçin</option>
-                        <option value="sales">Satış</option>
-                        <option value="production">Üretim</option>
-                        <option value="purchasing">Satın Alma</option>
-                        <option value="planning">Planlama</option>
-                        <option value="quality">Kalite</option>
-                        <option value="management">Yönetim</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-password">Şifre</label>
-                    <input type="password" class="form-control" id="register-password" placeholder="Şifre oluşturun" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-password-confirm">Şifre Tekrar</label>
-                    <input type="password" class="form-control" id="register-password-confirm" placeholder="Şifreyi tekrar girin" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Kayıt Ol</button>
-            </form>
-            
-            <div class="login-footer">
-                Zaten hesabınız var mı? <a href="#" onclick="showLogin()">Giriş Yap</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Şifremi Unuttum Formu -->
-    <div id="forgot-password-page" class="login-container" style="display: none;">
-        <div class="login-form">
-            <div class="login-header">
-                <h1 class="login-title">Şifremi Unuttum</h1>
-                <p class="login-subtitle">Şifre sıfırlama bağlantısı için e-posta adresinizi girin</p>
-            </div>
-            
-            <form id="forgot-password-form">
-                <div class="form-group">
-                    <label class="form-label" for="forgot-email">E-posta</label>
-                    <input type="email" class="form-control" id="forgot-email" placeholder="E-posta adresinizi girin" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Şifre Sıfırlama Bağlantısı Gönder</button>
-            </form>
-            
-            <div class="login-footer">
-                <a href="#" onclick="showLogin()">Giriş sayfasına dön</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Ana Uygulama -->
-    <div id="main-app" style="display: none;">
-        <!-- Navbar -->
-        <div class="navbar">
-            <div class="navbar-brand" onclick="showPage('dashboard')">ElektroTrack</div>
-            <div class="navbar-menu">
-                <div class="navbar-item active" onclick="showPage('dashboard')">Kontrol Paneli</div>
-                <div class="navbar-item" onclick="showPage('sales')">Satış</div>
-                <div class="navbar-item" onclick="showPage('projects')">Projeler</div>
-                <div class="navbar-item" onclick="showPage('production')">Üretim</div>
-                <div class="navbar-item" onclick="showPage('stock')">Stok</div>
-                <div class="navbar-item" onclick="showPage('purchasing')">Satın Alma</div>
-                <div class="navbar-item" onclick="showPage('planning')">Planlama</div>
-                <div class="navbar-item" onclick="showPage('quality')">Kalite</div>
-                <div class="navbar-item" onclick="showPage('reports')">Raporlar</div>
-                <div class="navbar-item" onclick="showPage('notes')">Notlar</div>
-                <div class="navbar-item" onclick="showPage('ai')">Yapay Zeka</div>
-            </div>
-            <div class="user-menu">
-                <div class="user-avatar" onclick="toggleUserMenu()">M</div>
-                <div id="user-dropdown" class="user-dropdown">
-                    <div class="user-dropdown-item" onclick="showPage('profile')">
-                        <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
-                        <span>Profilim</span>
-                    </div>
-                    <div class="user-dropdown-item" onclick="showPage('settings')">
-                        <i class="fas fa-cog" style="margin-right: 0.5rem;"></i>
-                        <span>Ayarlar</span>
-                    </div>
-                    <div class="user-dropdown-divider"></div>
-                    <div class="user-dropdown-item" onclick="logout()">
-                        <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
-                        <span>Çıkış Yap</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Ana içerik alanı -->
-        <div class="container">
-            <!-- Kontrol Paneli -->
-            <div id="dashboard-page" class="page active">
-                <div class="page-header">
-                    <h1 class="page-title">Kontrol Paneli</h1>
-                    <div>
-                        <button class="btn btn-outline" onclick="refreshData()">
-                            <i class="fas fa-sync-alt"></i>
-                            <span>Yenile</span>
-                        </button>
-                        <button class="btn btn-primary" onclick="showCreateOrderModal()">
-                            <i class="fas fa-plus"></i>
-                            <span>Yeni Sipariş</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Bildirim ve Uyarı Merkezi -->
-                <div class="notifications-center" id="notifications-center">
-                    <div class="notifications-header">
-                        <h3 class="notifications-title">Bildirimler ve Uyarılar</h3>
-                        <button class="btn btn-sm btn-outline" onclick="markAllNotificationsAsRead()">
-                            <i class="fas fa-check-double"></i> Tümünü Okundu İşaretle
-                        </button>
-                    </div>
-                    <div class="notifications-list" id="notifications-list">
-                        <!-- Bildirimler JS ile doldurulacak -->
-                        <div class="notification-item urgent">
-                            <div class="notification-icon">
-                                <i class="fas fa-exclamation-triangle"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-title">Malzeme Eksikliği Acil</div>
-                                <div class="notification-text">24-03-B002 no'lu sipariş için "Kablo Başlıkları" malzemesi eksik. Tedarik süresi kritik eşiği aştı!</div>
-                                <div class="notification-meta">
-                                    <span class="notification-time">10 dakika önce</span>
-                                    <span class="notification-sender">Satın Alma</span>
-                                </div>
-                            </div>
-                            <div class="notification-actions">
-                                <button class="btn btn-sm btn-danger" onclick="respondToNotification('24-03-B002', 'material-1', 'urgent')">
-                                    <i class="fas fa-reply"></i> Yanıtla
-                                </button>
-                            </div>
+                    <div id="notes-content" class="tab-content">
+                        <div class="notes-container">
+                            <!-- Notlar dinamik olarak gelecek -->
                         </div>
-                        <div class="notification-item warning">
-                            <div class="notification-icon">
-                                <i class="fas fa-exclamation-circle"></i>
-                            </div>
-                            <div class="notification-content">
-                                <div class="notification-title">Üretim Gecikmesi</div>
-                                <div class="notification-text">24-03-A001 no'lu siparişin üretimi planlanan tarihten 2 gün gecikecek. Ek mesai planlaması yapılmalı.</div>
-                                <div class="notification-meta">
-                                    <span class="notification-time">2 saat önce</span>
-                                    <span class="notification-sender">Üretim</span>
-                                </div>
-                            </div>
-                            <div class="notification-actions">
-                                <button class="btn btn-sm btn-warning" onclick="respondToNotification('24-03-A001', null, 'warning')">
-                                    <i class="fas fa-reply"></i> Yanıtla
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- İstatistik Kartları -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-primary">
-                            <i class="fas fa-clipboard-list"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Aktif Siparişler</div>
-                            <div class="stat-value">24</div>
-                            <div class="stat-change stat-change-positive">
-                                <i class="fas fa-arrow-up"></i> %8 geçen aya göre
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Eksik Malzemeler</div>
-                            <div class="stat-value">8</div>
-                            <div class="stat-change stat-change-negative">
-                                <i class="fas fa-arrow-up"></i> %12 geçen aya göre
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-danger">
-                            <i class="fas fa-clock"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Geciken İşler</div>
-                            <div class="stat-value">3</div>
-                            <div class="stat-change stat-change-positive">
-                                <i class="fas fa-arrow-down"></i> %5 geçen aya göre
-                            </div>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon stat-icon-success">
-                            <i class="fas fa-truck"></i>
-                        </div>
-                        <div class="stat-content">
-                            <div class="stat-label">Bu Ay Teslim</div>
-                            <div class="stat-value">12</div>
-                            <div class="stat-change stat-change-positive">
-                                <i class="fas fa-arrow-up"></i> %15 geçen aya göre
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Grafikler Satırı -->
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Aylık Sipariş ve Teslimat</div>
-                            </div>
-                            <div class="card-body">
-                                <div style="height: 300px;">
-                                    <canvas id="orderChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Müşteri Dağılımı</div>
-                            </div>
-                            <div class="card-body">
-                                <div style="height: 300px;">
-                                    <canvas id="customerChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Sipariş Filtresi -->
-                <div class="filters">
-                    <div class="search-box">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" placeholder="Sipariş no, müşteri, hücre tipi ara..." onkeyup="filterOrders()">
-                    </div>
-                    <div class="filter-item">
-                        <select class="form-control" onchange="filterOrders()">
-                            <option value="">Tüm Durumlar</option>
-                            <option value="planning">Planlama</option>
-                            <option value="waiting">Malzeme Bekleniyor</option>
-                            <option value="production">Üretimde</option>
-                            <option value="ready">Malzeme Hazır</option>
-                            <option value="testing">Test</option>
-                            <option value="completed">Tamamlandı</option>
-                        </select>
-                    </div>
-                    <div class="filter-item">
-                        <select class="form-control" onchange="filterOrders()">
-                            <option value="">Tüm Müşteriler</option>
-                            <option value="AYEDAŞ">AYEDAŞ</option>
-                            <option value="ENERJİSA">ENERJİSA</option>
-                            <option value="BAŞKENT EDAŞ">BAŞKENT EDAŞ</option>
-                            <option value="TOROSLAR EDAŞ">TOROSLAR EDAŞ</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Aktif Siparişler Tablosu -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Aktif Siparişler</div>
-                        <div>
-                            <button class="btn btn-outline">
-                                <i class="fas fa-sort"></i>
-                                <span>Teslim Tarihine Göre Sırala</span>
+                        <div class="notes-form">
+                            <textarea class="form-control" placeholder="Yeni not ekleyin..."></textarea>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Not Ekle
                             </button>
                         </div>
                     </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="table" id="orders-table">
-                                <thead>
-                                    <tr>
-                                        <th>Müşteri Adı</th>
-                                        <th>İlgili Kişi</th>
-                                        <th>Telefon</th>
-                                        <th>E-posta</th>
-                                        <th>Açık Sipariş</th>
-                                        <th>İşlemler</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td colspan="6" class="text-center">Yükleniyor...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
                 </div>
-                
-                <!-- Satış İstatistikleri -->
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Aylık Satış Performansı</div>
-                            </div>
-                            <div class="card-body">
-                                <div style="height: 300px;">
-                                    <canvas id="salesPerformanceChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Satış Hedef Gerçekleşme</div>
-                            </div>
-                            <div class="card-body">
-                                <div style="height: 300px;">
-                                    <canvas id="salesTargetChart"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('order-detail-modal')">Kapat</button>
+                    <button class="btn btn-primary">Değişiklikleri Kaydet</button>
                 </div>
             </div>
-            
-            <!-- Notlar Sayfası -->
-            <div id="notes-page" class="page">
-                <div class="page-header">
-                    <h1 class="page-title">Notlar</h1>
-                    <div>
-                        <button class="btn btn-outline" onclick="refreshNotes()">
-                            <i class="fas fa-sync-alt"></i>
-                            <span>Yenile</span>
-                        </button>
-                        <button class="btn btn-primary" onclick="showAddNoteModal()">
-                            <i class="fas fa-plus"></i>
-                            <span>Yeni Not</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Not Filtreleri -->
-                <div class="filters">
-                    <div class="search-box">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" class="search-input" placeholder="Not içeriğinde ara..." onkeyup="filterNotes()">
-                    </div>
-                    <div class="filter-item">
-                        <select class="form-control" onchange="filterNotes()">
-                            <option value="all">Tüm Tipler</option>
-                            <option value="general">Genel</option>
-                            <option value="warning">Uyarı</option>
-                            <option value="critical">Kritik</option>
-                            <option value="info">Bilgi</option>
-                        </select>
-                    </div>
-                    <div class="filter-item">
-                        <select class="form-control" onchange="filterNotes()">
-                            <option value="all">Tüm Departmanlar</option>
-                            <option value="sales">Satış</option>
-                            <option value="production">Üretim</option>
-                            <option value="purchasing">Satın Alma</option>
-                            <option value="planning">Planlama</option>
-                            <option value="quality">Kalite</option>
-                        </select>
-                    </div>
-                    <div class="filter-item">
-                        <select class="form-control" onchange="filterNotes()">
-                            <option value="all">Tüm Durumlar</option>
-                            <option value="active">Aktif</option>
-                            <option value="resolved">Çözüldü</option>
-                            <option value="pending">Beklemede</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Not Listesi -->
-                <div class="notes-container">
-                    <div class="note-item warning">
-                        <div class="note-header">
-                            <div class="note-title">
-                                <span class="note-type"><i class="fas fa-exclamation-triangle"></i> Uyarı</span>
-                                Malzeme Tedarik Sorunu - 24-03-B002
-                            </div>
-                            <div class="note-meta">
-                                <span class="note-time">12.03.2024 09:45</span>
-                                <span class="note-author">Mehmet Kaya (Satın Alma)</span>
-                                <span class="note-status warning">Beklemede</span>
-                            </div>
-                        </div>
-                        <div class="note-content">
-                            <p>24-03-B002 siparişi için Kablo Başlıkları tedarikinde gecikme yaşanıyor. Tedarikçi ile görüşüldü, en erken 18.03.2024 tarihinde teslimat yapılabilecek. Üretim planının buna göre güncellenmesi gerekiyor.</p>
-                            <div class="note-references">
-                                <span class="note-ref">Sipariş: <a href="#" onclick="showOrderDetail('24-03-B002')">24-03-B002</a></span>
-                                <span class="note-ref">Malzeme: <a href="#" onclick="showMaterialDetails('M480TB/G-027')">Kablo Başlıkları (M480TB/G-027)</a></span>
-                            </div>
-                        </div>
-                        <div class="note-footer">
-                            <div class="assigned-to">
-                                <span class="assigned-label">Atandı:</span>
-                                <span class="assigned-user">Ayşe Demir (Planlama)</span>
-                            </div>
-                            <div class="note-actions">
-                                <button class="btn btn-sm btn-outline" onclick="editNote('note-001')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-success" onclick="resolveNote('note-001')">
-                                    <i class="fas fa-check"></i> Çözüldü
-                                </button>
-                                <button class="btn btn-sm btn-primary" onclick="addNoteComment('note-001')">
-                                    <i class="fas fa-reply"></i> Yanıtla
-                                </button>
-                            </div>
-                        </div>
-                        <div class="note-comments">
-                            <div class="comment-item">
-                                <div class="comment-header">
-                                    <span class="comment-author">Ayşe Demir (Planlama)</span>
-                                    <span class="comment-time">12.03.2024 10:15</span>
-                                </div>
-                                <div class="comment-content">
-                                    <p>Üretim planını güncelledim, gecikme müşteriye bildirilecek. Alternatif tedarikçiler araştırılıyor.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="note-item critical">
-                        <div class="note-header">
-                            <div class="note-title">
-                                <span class="note-type"><i class="fas fa-exclamation-circle"></i> Kritik</span>
-                                Test Sonucu Hata - 24-03-C003
-                            </div>
-                            <div class="note-meta">
-                                <span class="note-time">11.03.2024 15:30</span>
-                                <span class="note-author">Ahmet Yılmaz (Kalite)</span>
-                                <span class="note-status danger">Çözüm Bekliyor</span>
-                            </div>
-                        </div>
-                        <div class="note-content">
-                            <p>24-03-C003 siparişinde Gerilim Gösterge testinde başarısız olundu. Sinyal yok hatası alınıyor. Acil olarak üretim ekibi ile görüşülüp sorunun çözülmesi gerekiyor. Teslimat tarihi yaklaşıyor.</p>
-                            <div class="note-references">
-                                <span class="note-ref">Sipariş: <a href="#" onclick="showOrderDetail('24-03-C003')">24-03-C003</a></span>
-                                <span class="note-ref">Test: <a href="#" onclick="viewTestDetails('T-2024-050')">T-2024-050</a></span>
-                            </div>
-                        </div>
-                        <div class="note-footer">
-                            <div class="assigned-to">
-                                <span class="assigned-label">Atandı:</span>
-                                <span class="assigned-user">Mehmet Demir (Üretim)</span>
-                            </div>
-                            <div class="note-actions">
-                                <button class="btn btn-sm btn-outline" onclick="editNote('note-002')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-success" onclick="resolveNote('note-002')">
-                                    <i class="fas fa-check"></i> Çözüldü
-                                </button>
-                                <button class="btn btn-sm btn-primary" onclick="addNoteComment('note-002')">
-                                    <i class="fas fa-reply"></i> Yanıtla
-                                </button>
-                            </div>
-                        </div>
-                        <div class="note-comments">
-                            <div class="comment-item">
-                                <div class="comment-header">
-                                    <span class="comment-author">Mehmet Demir (Üretim)</span>
-                                    <span class="comment-time">11.03.2024 16:10</span>
-                                </div>
-                                <div class="comment-content">
-                                    <p>İncelemeye başladık. İlk bulgulara göre gösterge bağlantılarında sorun var gibi görünüyor. Yarın sabaha kadar çözülecek.</p>
-                                </div>
-                            </div>
-                            <div class="comment-item">
-                                <div class="comment-header">
-                                    <span class="comment-author">Ayşe Kaya (Satın Alma)</span>
-                                    <span class="comment-time">11.03.2024 16:45</span>
-                                </div>
-                                <div class="comment-content">
-                                    <p>Gerekirse yedek gösterge stokta mevcut, değişim yapılabilir.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="note-item info">
-                        <div class="note-header">
-                            <div class="note-title">
-                                <span class="note-type"><i class="fas fa-info-circle"></i> Bilgi</span>
-                                Müşteri Özel İsteği - 24-04-E005
-                            </div>
-                            <div class="note-meta">
-                                <span class="note-time">10.03.2024 11:20</span>
-                                <span class="note-author">Ali Yıldız (Satış)</span>
-                                <span class="note-status info">Aktif</span>
-                            </div>
-                        </div>
-                        <div class="note-content">
-                            <p>AYEDAŞ, 24-04-E005 siparişindeki hücrelerin kapılarında özel AYEDAŞ logosu bulunmasını talep ediyor. Logo dosyası ektedir. Üretim planlaması yapılırken dikkate alınmalı.</p>
-                            <div class="note-references">
-                                <span class="note-ref">Sipariş: <a href="#" onclick="showOrderDetail('24-04-E005')">24-04-E005</a></span>
-                                <span class="note-ref">Dosya: <a href="#" onclick="viewAttachment('ayedas-logo.pdf')">ayedas-logo.pdf</a></span>
-                            </div>
-                        </div>
-                        <div class="note-footer">
-                            <div class="assigned-to">
-                                <span class="assigned-label">Atandı:</span>
-                                <span class="assigned-user">Mehmet Demir (Üretim)</span>
-                            </div>
-                            <div class="note-actions">
-                                <button class="btn btn-sm btn-outline" onclick="editNote('note-003')">
-                                    <i class="fas fa-edit"></i>
-                                </button>
-                                <button class="btn btn-sm btn-success" onclick="resolveNote('note-003')">
-                                    <i class="fas fa-check"></i> Çözüldü
-                                </button>
-                                <button class="btn btn-sm btn-primary" onclick="addNoteComment('note-003')">
-                                    <i class="fas fa-reply"></i> Yanıtla
-                                </button>
-                            </div>
-                        </div>
-                        <div class="note-comments">
-                            <div class="comment-item">
-                                <div class="comment-header">
-                                    <span class="comment-author">Mehmet Demir (Üretim)</span>
-                                    <span class="comment-time">10.03.2024 13:40</span>
-                                </div>
-                                <div class="comment-content">
-                                    <p>Logo dosyası alındı, üretim planına ekledim.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-                  
-            <!-- Raporlar Sayfası -->
-            <div id="reports-page" class="page">
-                <div class="page-header">
-                    <h1 class="page-title">Raporlar</h1>
-                    <div>
-                        <button class="btn btn-outline" onclick="refreshReportData()">
-                            <i class="fas fa-sync-alt"></i>
-                            <span>Yenile</span>
-                        </button>
-                        <button class="btn btn-primary" onclick="showCreateReportModal()">
-                            <i class="fas fa-plus"></i>
-                            <span>Yeni Rapor</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Rapor Kategorileri -->
-                <div class="report-categories">
-                    <div class="report-category active" onclick="filterReports('all')">
-                        <i class="fas fa-chart-pie"></i>
-                        <span>Tümü</span>
-                    </div>
-                    <div class="report-category" onclick="filterReports('production')">
-                        <i class="fas fa-industry"></i>
-                        <span>Üretim</span>
-                    </div>
-                    <div class="report-category" onclick="filterReports('quality')">
-                        <i class="fas fa-clipboard-check"></i>
-                        <span>Kalite</span>
-                    </div>
-                    <div class="report-category" onclick="filterReports('stock')">
-                        <i class="fas fa-warehouse"></i>
-                        <span>Stok</span>
-                    </div>
-                    <div class="report-category" onclick="filterReports('purchasing')">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span>Satın Alma</span>
-                    </div>
-                    <div class="report-category" onclick="filterReports('financial')">
-                        <i class="fas fa-money-bill-wave"></i>
-                        <span>Finansal</span>
-                    </div>
-                    <div class="report-category" onclick="filterReports('performance')">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <span>Performans</span>
-                    </div>
-                    <div class="report-category" onclick="filterReports('custom')">
-                        <i class="fas fa-cogs"></i>
-                        <span>Özel</span>
-                    </div>
-                </div>
-                
-                <!-- Özet Raporlar -->
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Aylık Üretim Özeti</div>
-                                <div>
-                                    <select class="form-control form-control-sm" onchange="changeReportPeriod(this.value, 'production-summary')">
-                                        <option value="2024-03">Mart 2024</option>
-                                        <option value="2024-02">Şubat 2024</option>
-                                        <option value="2024-01">Ocak 2024</option>
-                                        <option value="2023-12">Aralık 2023</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="summary-metrics">
-                                    <div class="metric-item">
-                                        <div class="metric-title">Toplam Üretim</div>
-                                        <div class="metric-value">48</div>
-                                        <div class="metric-unit">Hücre</div>
-                                        <div class="metric-change positive">
-                                            <i class="fas fa-arrow-up"></i> %10
-                                        </div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-title">Zamanında Teslim</div>
-                                        <div class="metric-value">92</div>
-                                        <div class="metric-unit">%</div>
-                                        <div class="metric-change positive">
-                                            <i class="fas fa-arrow-up"></i> %5
-                                        </div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-title">Verimlilik</div>
-                                        <div class="metric-value">85</div>
-                                        <div class="metric-unit">%</div>
-                                        <div class="metric-change positive">
-                                            <i class="fas fa-arrow-up"></i> %3
-                                        </div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-title">Kalite Oranı</div>
-                                        <div class="metric-value">96</div>
-                                        <div class="metric-unit">%</div>
-                                        <div class="metric-change positive">
-                                            <i class="fas fa-arrow-up"></i> %2
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style="height: 250px;">
-                                    <canvas id="productionSummaryChart"></canvas>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <button class="btn btn-sm btn-outline" onclick="downloadReport('production-summary', '2024-03')">
-                                    <i class="fas fa-download"></i> İndir
-                                </button>
-                                <button class="btn btn-sm btn-primary" onclick="viewDetailedReport('production-summary', '2024-03')">
-                                    <i class="fas fa-search-plus"></i> Detaylı Görüntüle
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Malzeme ve Tedarik Analizi</div>
-                                <div>
-                                    <select class="form-control form-control-sm" onchange="changeReportPeriod(this.value, 'material-analysis')">
-                                        <option value="2024-03">Mart 2024</option>
-                                        <option value="2024-02">Şubat 2024</option>
-                                        <option value="2024-01">Ocak 2024</option>
-                                        <option value="2023-12">Aralık 2023</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="card-body">
-                                <div class="summary-metrics">
-                                    <div class="metric-item">
-                                        <div class="metric-title">Toplam Sipariş</div>
-                                        <div class="metric-value">35</div>
-                                        <div class="metric-unit">Adet</div>
-                                        <div class="metric-change positive">
-                                            <i class="fas fa-arrow-up"></i> %15
-                                        </div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-title">Tedarik Süresi</div>
-                                        <div class="metric-value">12</div>
-                                        <div class="metric-unit">Gün</div>
-                                        <div class="metric-change negative">
-                                            <i class="fas fa-arrow-down"></i> %8
-                                        </div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-title">Stok Devir Hızı</div>
-                                        <div class="metric-value">4.2</div>
-                                        <div class="metric-unit">x</div>
-                                        <div class="metric-change positive">
-                                            <i class="fas fa-arrow-up"></i> %10
-                                        </div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-title">Kritik Malzeme</div>
-                                        <div class="metric-value">3</div>
-                                        <div class="metric-unit">Çeşit</div>
-                                        <div class="metric-change positive">
-                                            <i class="fas fa-arrow-down"></i> %25
-                                        </div>
-                                    </div>
-                                </div>
-                                <div style="height: 250px;">
-                                    <canvas id="materialAnalysisChart"></canvas>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <button class="btn btn-sm btn-outline" onclick="downloadReport('material-analysis', '2024-03')">
-                                    <i class="fas fa-download"></i> İndir
-                                </button>
-                                <button class="btn btn-sm btn-primary" onclick="viewDetailedReport('material-analysis', '2024-03')">
-                                    <i class="fas fa-search-plus"></i> Detaylı Görüntüle
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <th>Sipariş No</th>
-                                        <th>Müşteri</th>
-                                        <th>Hücre Tipi</th>
-                                        <th>Eksik Malzeme</th>
-                                        <th>Teslim Tarihi</th>
-                                        <th>Üretim Durumu</th>
-                                        <th>Durum</th>
-                                        <th>İşlemler</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td colspan="8" class="text-center">Yükleniyor...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
+        </div>
 
-                <!-- İki Sütunlu Alan: Yaklaşan Teslimler ve Eksik Malzemeler -->
-                <div class="row">
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Yaklaşan Teslimler</div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-container">
-                                    <table class="table" id="upcoming-deliveries-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Sipariş No</th>
-                                                <th>Müşteri</th>
-                                                <th>Teslim Tarihi</th>
-                                                <th>Kalan Süre</th>
-                                                <th>Durum</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td colspan="5" class="text-center">Yükleniyor...</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col">
-                        <div class="card">
-                            <div class="card-header">
-                                <div class="card-title">Eksik Malzemeler</div>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-container">
-                                    <table class="table" id="missing-materials-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Sipariş No</th>
-                                                <th>Malzeme</th>
-                                                <th>Durum</th>
-                                                <th>Tedarik Tarihi</th>
-                                                <th>Öncelik</th>
-                                                <th>İşlemler</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td colspan="6" class="text-center">Yükleniyor...</td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        <!-- Sipariş Oluşturma Modalı -->
+        <div id="create-order-modal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3 class="modal-title">Yeni Sipariş Oluştur</h3>
+                    <button class="modal-close" onclick="closeModal('create-order-modal')">&times;</button>
                 </div>
-
-                <!-- Yapay Zeka Önerileri -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Yapay Zeka Önerileri</div>
-                    </div>
-                    <div class="card-body" id="ai-recommendations">
-                        <div class="info-box">
-                            <div class="info-box-title">Üretim Optimizasyonu</div>
-                            <div class="info-box-content">
-                                <p>RM 36 LB tipinde 3 farklı sipariş için benzer üretim adımlarını birleştirerek yaklaşık 5 iş günü tasarruf sağlayabilirsiniz.</p>
-                                <button class="btn btn-primary btn-sm" onclick="applyOptimizationPlan()">
-                                    <i class="fas fa-check-circle"></i>
-                                    <span>Optimizasyon Planını Uygula</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="info-box warning">
-                            <div class="info-box-title">Tedarik Riski Analizi</div>
-                            <div class="info-box-content">
-                                <p>Kablo Başlıkları malzemesinin tedariki için alternatif tedarikçi önerisi: Elektra (2 gün teslimat süresi, %5 daha yüksek fiyat).</p>
-                                <button class="btn btn-warning btn-sm" onclick="contactAlternativeSupplier('Elektra', 'Kablo Başlıkları')">
-                                    <i class="fas fa-phone"></i>
-                                    <span>Alternatif Tedarikçi ile İletişime Geç</span>
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="info-box success">
-                            <div class="info-box-title">Üretim Süresi Tahmini</div>
-                            <div class="info-box-content">
-                                <p>Sipariş 24-04-E005 için AI tahmini üretim süresi: 12 iş günü. Bugünkü iş yükü ve personel durumu dikkate alındığında tahmini tamamlanma tarihi: 12.05.2024</p>
-                                <button class="btn btn-success btn-sm" onclick="viewProductionDetails('24-04-E005')">
-                                    <i class="fas fa-calendar-alt"></i>
-                                    <span>Üretim Planını Göster</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Satış Sayfası -->
-            <div id="sales-page" class="page">
-                <div class="page-header">
-                    <h1 class="page-title">Satış</h1>
-                    <div>
-                        <button class="btn btn-primary" onclick="showNewOrderWizard()">
-                            <i class="fas fa-plus"></i>
-                            <span>Yeni Sipariş Oluştur</span>
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Sipariş Listesi -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Siparişler</div>
-                        <div class="filter-tools">
-                            <input type="text" class="form-control search-input" placeholder="Sipariş ara..." 
-                                   onkeyup="filterSalesOrders()">
-                            <select class="form-control" onchange="filterSalesOrders()">
-                                <option value="all">Tüm Durumlar</option>
-                                <option value="active">Aktif</option>
-                                <option value="completed">Tamamlanan</option>
-                                <option value="cancelled">İptal Edilen</option>
+                <div class="modal-body">
+                    <form id="create-order-form">
+                        <div class="form-group">
+                            <label class="form-label">Müşteri</label>
+                            <select class="form-control" name="customer" required>
+                                <option value="">Müşteri Seçin</option>
+                                <!-- Müşteri listesi dinamik olarak gelecek -->
                             </select>
                         </div>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="table" id="sales-orders-table">
-                                <thead>
-                                    <tr>
-                                        <th>Sipariş No</th>
-                                        <th>Müşteri</th>
-                                        <th>Sipariş Tarihi</th>
-                                        <th>Teslim Tarihi</th>
-                                        <th>Toplam Tutar</th>
-                                        <th>Durum</th>
-                                        <th>İşlemler</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td colspan="7" class="text-center">Yükleniyor...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="form-label">Hücre Tipi</label>
+                                <select class="form-control" name="cellType" required>
+                                    <option value="">Hücre Tipi Seçin</option>
+                                    <option value="RM 36 LB">RM 36 LB</option>
+                                    <option value="RM 36 CB">RM 36 CB</option>
+                                    <option value="RM 36 FL">RM 36 FL</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="form-label">Hücre Adedi</label>
+                                <input type="number" class="form-control" name="cellCount" min="1" value="1" required>
+                            </div>
                         </div>
-                    </div>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label class="form-label">Sipariş Tarihi</label>
+                                <input type="date" class="form-control" name="orderDate" required>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label class="form-label">Teslim Tarihi</label>
+                                <input type="date" class="form-control" name="deliveryDate" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Durum</label>
+                            <select class="form-control" name="status">
+                                <option value="planning">Planlama</option>
+                                <option value="waiting">Malzeme Bekleniyor</option>
+                                <option value="production">Üretimde</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Açıklama</label>
+                            <textarea class="form-control" name="description" rows="3"></textarea>
+                        </div>
+                    </form>
                 </div>
-                
-                <!-- Müşteri Listesi -->
-                <div class="card">
-                    <div class="card-header">
-                        <div class="card-title">Müşteriler</div>
-                        <button class="btn btn-outline" onclick="showAddCustomerModal()">
-                            <i class="fas fa-plus"></i> Müşteri Ekle
-                        </button>
-                    </div>
-                    <div class="card-body">
-                        <div class="table-container">
-                            <table class="table" id="customers-table">
-                                <thead>
-                                    <tr>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('create-order-modal')">İptal</button>
+                    <button class="btn btn-primary" form="create-order-form">Sipariş Oluştur</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Yapay Zeka Asistanı -->
+        <div class="chatbot-trigger" onclick="toggleChatbot()">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div id="chatbot-window" class="chatbot-window">
+            <div class="chatbot-header">
+                <div class="chatbot-title">
+                    <i class="fas fa-robot"></i>
+                    <span>ElektroTrack Asistanı</span>
+                </div>
+                <button class="chatbot-close" onclick="toggleChatbot()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="chatbot-body" class="chatbot-body">
+                <div class="chat-message bot">
+                    Merhaba! Ben ElektroTrack Asistanı. Size nasıl yardımcı olabilirim?
+                </div>
+            </div>
+            <div class="chatbot-footer">
+                <input id="chatbot-input" type="text" class="chatbot-input" placeholder="Mesajınızı yazın...">
+                <button class="chatbot-send" onclick="sendChatMessage()">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Demo modu bildirimi -->
+        <div id="demo-mode-notification" class="info-box warning" style="position: fixed; bottom: 10px; left: 10px; z-index: 1000; display: none;">
+            <div class="info-box-title">Demo Modu</div>
+            <div class="info-box-content">
+                <p>Uygulama şu anda demo modunda çalışıyor. Firebase kimlik doğrulaması atlanıyor.</p>
+                <button class="btn btn-sm btn-warning" onclick="document.getElementById('demo-mode-notification').style.display = 'none';">
+                    <i class="fas fa-times"></i> Kapat
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ana JS dosyası -->
+    <script src="js/app.js"></script>
+</body>
+</html>
