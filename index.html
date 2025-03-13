@@ -1,46 +1,1401 @@
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ElektroTrack - OG Hücre İmalat Takip</title>
-    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Endüstriyel Takip yazılımı">
+</div>
 
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="img/favicon.png">
-    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
-
-    <!-- PWA manifest -->
-    <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#1e40af">
-
-    <!-- CSS dosyaları -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/login.css">
-    <link rel="stylesheet" href="css/dashboard.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/responsive.css">
-
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <!-- Chart.js -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <!-- TensorFlow.js - AI ve ML işlemleri için -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
-    
-    <!-- NLP işlemleri için -->
-    <script src="https://unpkg.com/compromise"></script>
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the application
+            initApp();
+        });
+        
+        function initApp() {
+            // Show login page by default in real app
+            // For demo purposes, we'll show the main app directly
+            document.getElementById('login-page').style.display = 'none';
+            document.getElementById('app').style.display = 'flex';
+            
+            // Set up event listeners
+            setupEventListeners();
+        }
+        
+        function setupEventListeners() {
+            // Page navigation
+            document.querySelectorAll('.sidebar-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Update active sidebar link
+                    document.querySelectorAll('.sidebar-link').forEach(el => el.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show corresponding page
+                    const pageId = this.getAttribute('data-page');
+                    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+                    document.getElementById(pageId + '-page').classList.add('active');
+                    
+                    // Update header title
+                    document.querySelector('.header-title').textContent = this.querySelector('span').textContent;
+                });
+            });
+            
+            // Tab navigation
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabContainer = this.closest('.tabs');
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Update active tab
+                    tabContainer.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Show tab content
+                    const contentContainer = tabContainer.nextElementSibling;
+                    contentContainer.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+                    document.getElementById(tabId + '-tab').classList.add('active');
+                });
+            });
+            
+            // Modal handling
+            document.querySelectorAll('[data-dismiss="modal"]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const modal = this.closest('.modal');
+                    modal.style.display = 'none';
+                });
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(e) {
+                if (e.target.classList.contains('modal')) {
+                    e.target.style.display = 'none';
+                }
+            });
+            
+            // Toggle sidebar on mobile
+            document.getElementById('sidebar-toggle')?.addEventListener('click', function() {
+                document.querySelector('.sidebar').classList.toggle('open');
+            });
+            
+            // Setup chatbot
+            setupChatbot();
+            
+            // Add form submit handlers
+            setupForms();
+        }
+        
+        function setupChatbot() {
+            const chatbotTrigger = document.getElementById('chatbot-trigger');
+            const chatbotWindow = document.getElementById('chatbot-window');
+            const chatbotClose = document.getElementById('chatbot-close');
+            const chatbotInput = document.getElementById('chatbot-input');
+            const chatbotSend = document.getElementById('chatbot-send');
+            const chatbotBody = document.getElementById('chatbot-body');
+            
+            // Toggle chatbot window
+            chatbotTrigger?.addEventListener('click', function() {
+                chatbotWindow.style.display = chatbotWindow.style.display === 'flex' ? 'none' : 'flex';
+                
+                if (chatbotWindow.style.display === 'flex') {
+                    chatbotInput.focus();
+                }
+            });
+            
+            // Close chatbot
+            chatbotClose?.addEventListener('click', function() {
+                chatbotWindow.style.display = 'none';
+            });
+            
+            // Send message on button click
+            chatbotSend?.addEventListener('click', sendChatMessage);
+            
+            // Send message on Enter key
+            chatbotInput?.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendChatMessage();
+                }
+            });
+            
+            function sendChatMessage() {
+                const message = chatbotInput.value.trim();
+                
+                if (!message) return;
+                
+                // Add user message
+                addChatMessage(message, 'user');
+                
+                // Clear input
+                chatbotInput.value = '';
+                
+                // Simulate bot response after a delay
+                setTimeout(() => {
+                    let botResponse = getBotResponse(message);
+                    addChatMessage(botResponse, 'bot');
+                }, 1000);
+            }
+            
+            function addChatMessage(message, type) {
+                const messageEl = document.createElement('div');
+                messageEl.classList.add('chat-message', type);
+                messageEl.textContent = message;
+                
+                chatbotBody.appendChild(messageEl);
+                
+                // Scroll to bottom
+                chatbotBody.scrollTop = chatbotBody.scrollHeight;
+            }
+            
+            function getBotResponse(message) {
+                // Simple bot logic
+                message = message.toLowerCase();
+                
+                if (message.includes('merhaba') || message.includes('selam')) {
+                    return 'Merhaba! Size nasıl yardımcı olabilirim?';
+                } else if (message.includes('üretim') || message.includes('hücre')) {
+                    return 'Şu anda 18 aktif üretim bulunmaktadır. Detaylı bilgi için üretim sayfasını ziyaret edebilirsiniz.';
+                } else if (message.includes('sipariş') || message.includes('müşteri')) {
+                    return 'Son 30 günde 8 yeni sipariş alındı. Bu siparişleri siparişler sayfasından inceleyebilirsiniz.';
+                } else if (message.includes('tedarik') || message.includes('malzeme')) {
+                    return 'Bazı kritik malzemeler için tedarik sorunları bulunmaktadır. Özellikle Metal Clad hücreler için kesici tedarikinde gecikmeler yaşanıyor.';
+                } else if (message.includes('yardım') || message.includes('nasıl')) {
+                    return 'Size üretim takibi, sipariş yönetimi, malzeme durumu hakkında yardımcı olabilirim. Lütfen sormak istediğiniz konuyu belirtin.';
+                } else {
+                    return 'Üzgünüm, bu konuda henüz bilgim yok. Daha spesifik bir soru sormak ister misiniz?';
+                }
+            }
+        }
+        
+        function setupForms() {
+            // Login form
+            const loginForm = document.getElementById('login-form');
+            loginForm?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                if (username && password) {
+                    // In a real app, this would be an API call
+                    // For demo, just show the main app
+                    document.getElementById('login-page').style.display = 'none';
+                    document.getElementById('app').style.display = 'flex';
+                } else {
+                    alert('Lütfen kullanıcı adı ve şifre girin.');
+                }
+            });
+        }
+        
+        // Helper function to show a modal
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+        
+        // Helper function to format date
+        function formatDate(date) {
+            const d = new Date(date);
+            return d.toLocaleDateString('tr-TR');
+        }
+    </script>
+</body>
+</html>        .chart-pie {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            margin: 0 auto;
+            background: conic-gradient(
+                var(--primary) 0% 42%,
+                var(--success) 42% 73%,
+                var(--warning) 73% 94%,
+                var(--secondary) 94% 100%
+            );
+        }
+        
+        .chart-pie-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+            background-color: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .chart-pie-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+            line-height: 1;
+        }
+        
+        .chart-pie-label {
+            font-size: 0.75rem;
+            color: var(--secondary);
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 1024px) {
+            .sidebar {
+                width: 240px;
+            }
+            .main {
+                margin-left: 240px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                width: 260px;
+                transform: translateX(-100%);
+                z-index: 100;
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main {
+                margin-left: 0;
+            }
+            
+            .order-detail-header {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            
+            .order-info-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            }
+            
+            .workflow {
+                flex-direction: column;
+                gap: 1.5rem;
+                align-items: flex-start;
+                padding-left: 2rem;
+            }
+            
+            .workflow::before {
+                top: 0;
+                bottom: 0;
+                left: 24px;
+                right: auto;
+                width: 2px;
+                height: auto;
+            }
+            
+            .workflow-step {
+                flex-direction: row;
+                text-align: left;
+            }
+            
+            .workflow-icon {
+                margin-bottom: 0;
+                margin-right: 1rem;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .row {
+                flex-wrap: wrap;
+            }
+            
+            .col, .col-3, .col-4, .col-6, .col-8 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+            
+            .header-search {
+                display: none;
+            }
+            
+            .chatbot-window {
+                width: calc(100% - 2rem);
+                right: 1rem;
+                bottom: 1rem;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            .search-box, .filter-item {
+                min-width: 100%;
+            }
+            
+            .notes-filter {
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                padding-bottom: 0.5rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <!-- Giriş Sayfası -->
-    <div id="login-page" class="login-container">
+    <!-- Login Page -->
+    <div id="login-page" class="login-container" style="display: none;">
         <div class="login-card">
             <div class="login-header">
                 <div class="login-logo">
                     <div class="login-logo-icon">
                         <i class="fas fa-bolt"></i>
+                    </div>
+                    
+                    <!-- Production Timeline -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Üretim Zaman Çizelgesi</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-4">
+                                <button class="btn btn-sm btn-outline">
+                                    <i class="fas fa-chevron-left"></i> Önceki Hafta
+                                </button>
+                                <div>
+                                    <strong>11 - 17 Mart 2025</strong>
+                                </div>
+                                <button class="btn btn-sm btn-outline">
+                                    Sonraki Hafta <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Timeline visualization would go here -->
+                            <div class="bg-light p-4 rounded text-center">
+                                <i class="fas fa-calendar-alt fa-3x text-primary mb-3"></i>
+                                <p>Üretim zaman çizelgesi grafiği burada görüntülenecek.</p>
+                                <p class="text-muted">Bu alan gantt şeması veya interaktif bir takvim ile geliştirilebilir.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Other pages would be added here -->
+            </div>
+        </main>
+        
+        <!-- Chatbot Widget -->
+        <div class="chatbot-trigger" id="chatbot-trigger">
+            <i class="fas fa-comments"></i>
+        </div>
+        
+        <div class="chatbot-window" id="chatbot-window">
+            <div class="chatbot-header">
+                <div class="chatbot-title">
+                    <i class="fas fa-robot"></i> Asistan
+                </div>
+                <button class="chatbot-close" id="chatbot-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="chatbot-body" id="chatbot-body">
+                <div class="chat-message bot">
+                    Merhaba! Ben ElektroTrack asistanınızım. Size nasıl yardımcı olabilirim?
+                </div>
+            </div>
+            <div class="chatbot-footer">
+                <input type="text" class="chatbot-input" id="chatbot-input" placeholder="Mesajınızı yazın...">
+                <button class="chatbot-send" id="chatbot-send">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Modals -->
+        
+        <!-- Order Detail Modal -->
+        <div class="modal" id="order-detail-modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h3 class="modal-title">Sipariş Detayı: #OG-2025-2142</h3>
+                    <button class="modal-close" data-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="general">Genel Bilgiler</div>
+                        <div class="tab" data-tab="production">Üretim Takibi</div>
+                        <div class="tab" data-tab="materials">Malzemeler</div>
+                        <div class="tab" data-tab="documents">Belgeler</div>
+                        <div class="tab" data-tab="notes">Notlar</div>
+                    </div>
+                    
+                    <!-- Tabs content would go here -->
+                    <div id="general-tab" class="tab-content active">
+                        <div class="row">
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label class="form-label">Sipariş No</label>
+                                    <input type="text" class="form-control" value="#OG-2025-2142" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Müşteri</label>
+                                    <input type="text" class="form-control" value="Elektrik Dağıtım A.Ş." readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sipariş Tarihi</label>
+                                    <input type="text" class="form-control" value="01.03.2025" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Teslim Tarihi</label>
+                                    <input type="text" class="form-control" value="15.05.2025" readonly>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="form-group">
+                                    <label class="form-label">Hücre Tipi</label>
+                                    <input type="text" class="form-control" value="Metal Clad" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Miktar</label>
+                                    <input type="text" class="form-control" value="5 adet" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Durum</label>
+                                    <input type="text" class="form-control" value="Üretimde" readonly>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Sorumlu</label>
+                                    <input type="text" class="form-control" value="Ahmet Yılmaz" readonly>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h4 class="mt-4 mb-3">Sipariş İlerlemesi</h4>
+                        <div class="workflow">
+                            <div class="workflow-step completed">
+                                <div class="workflow-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="workflow-label">Sipariş Alındı</div>
+                            </div>
+                            <div class="workflow-step completed">
+                                <div class="workflow-icon">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <div class="workflow-label">Planlandı</div>
+                            </div>
+                            <div class="workflow-step active">
+                                <div class="workflow-icon">
+                                    <i class="fas fa-cog"></i>
+                                </div>
+                                <div class="workflow-label">Üretimde</div>
+                            </div>
+                            <div class="workflow-step">
+                                <div class="workflow-icon">
+                                    <i class="fas fa-vial"></i>
+                                </div>
+                                <div class="workflow-label">Test</div>
+                            </div>
+                            <div class="workflow-step">
+                                <div class="workflow-icon">
+                                    <i class="fas fa-truck"></i>
+                                </div>
+                                <div class="workflow-label">Teslimat</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" data-dismiss="modal">Kapat</button>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-print"></i> Yazdır
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+                
+                <!-- Production Page -->
+                <div id="production-page" class="page">
+                    <div class="page-header">
+                        <h2 class="page-title">Üretim Takibi</h2>
+                        <div>
+                            <button class="btn btn-outline mr-2">
+                                <i class="fas fa-calendar"></i> Takvim Görünümü
+                            </button>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Yeni Üretim Planı
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Production Stats -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-primary">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Aktif Üretimler</div>
+                                <div class="stat-value">18</div>
+                                <div class="stat-change stat-change-positive">
+                                    <i class="fas fa-arrow-up"></i> %5 Geçen Aya Göre
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-success">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Bu Ay Tamamlanan</div>
+                                <div class="stat-value">12</div>
+                                <div class="stat-change stat-change-positive">
+                                    <i class="fas fa-arrow-up"></i> %8 Geçen Aya Göre
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-warning">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Gecikmeli Üretimler</div>
+                                <div class="stat-value">4</div>
+                                <div class="stat-change stat-change-negative">
+                                    <i class="fas fa-arrow-up"></i> %2 Geçen Aya Göre
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Malzeme Bekleyen</div>
+                                <div class="stat-value">6</div>
+                                <div class="stat-change stat-change-negative">
+                                    <i class="fas fa-arrow-up"></i> %15 Geçen Aya Göre
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Production Table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Aktif Üretimler</h3>
+                            <div>
+                                <button class="btn btn-sm btn-outline">
+                                    <i class="fas fa-filter"></i> Filtrele
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Üretim ID</th>
+                                            <th>Sipariş / Müşteri</th>
+                                            <th>Hücre Tipi</th>
+                                            <th>Miktar</th>
+                                            <th>Başlangıç</th>
+                                            <th>Planlanan Bitiş</th>
+                                            <th>Durum</th>
+                                            <th>İlerleme</th>
+                                            <th>İşlem</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>#PR-2142-1</strong></td>
+                                            <td>
+                                                <div>#OG-2025-2142</div>
+                                                <small class="text-muted">Elektrik Dağıtım A.Ş.</small>
+                                            </td>
+                                            <td>Metal Clad</td>
+                                            <td>3/5</td>
+                                            <td>1 Nisan, 2025</td>
+                                            <td>5 Mayıs, 2025</td>
+                                            <td>
+                                                <span class="badge badge-success">Montajda</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-primary" style="width: 75%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline btn-icon">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td><strong>#PR-2140-1</strong></td>
+                                            <td>
+                                                <div>#OG-2025-2140</div>
+                                                <small class="text-muted">Güç Trafo San. A.Ş.</small>
+                                            </td>
+                                            <td>Metal Clad</td>
+                                            <td>2/2</td>
+                                            <td>10 Mart, 2025</td>
+                                            <td>25 Nisan, 2025</td>
+                                            <td>
+                                                <span class="badge badge-warning">Test Aşamasında</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-warning" style="width: 90%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline btn-icon">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td><strong>#PR-2138-1</strong></td>
+                                            <td>
+                                                <div>#OG-2025-2138</div>
+                                                <small class="text-muted">Santral Elektrik A.Ş.</small>
+                                            </td>
+                                            <td>Metal Enclosed</td>
+                                            <td>0/6</td>
+                                            <td>15 Mart, 2025</td>
+                                            <td>10 Mayıs, 2025</td>
+                                            <td>
+                                                <span class="badge badge-danger">Malzeme Bekleniyor</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-danger" style="width: 10%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline btn-icon">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        
+                                        <tr>
+                                            <td><strong>#PR-2141-1</strong></td>
+                                            <td>
+                                                <div>#OG-2025-2141</div>
+                                                <small class="text-muted">Enerji Sistemleri Ltd.</small>
+                                            </td>
+                                            <td>Metal Enclosed</td>
+                                            <td>1/3</td>
+                                            <td>5 Nisan, 2025</td>
+                                            <td>15 Mayıs, 2025</td>
+                                            <td>
+                                                <span class="badge badge-primary">Hazırlık</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-primary" style="width: 25%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline btn-icon">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                
+                <!-- Orders Page -->
+                <div id="orders-page" class="page">
+                    <div class="page-header">
+                        <h2 class="page-title">Siparişler</h2>
+                        <div>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Yeni Sipariş
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="filters">
+                        <div class="search-box">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" class="search-input" placeholder="Sipariş No, Müşteri, Hücre Tipi...">
+                        </div>
+                        
+                        <div class="filter-item">
+                            <select class="form-select">
+                                <option value="">Durum Seçin</option>
+                                <option value="plan">Planlama</option>
+                                <option value="production">Üretimde</option>
+                                <option value="test">Test</option>
+                                <option value="ready">Tamamlandı</option>
+                                <option value="delivered">Teslim Edildi</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <select class="form-select">
+                                <option value="">Hücre Tipi</option>
+                                <option value="metal-clad">Metal Clad</option>
+                                <option value="metal-enclosed">Metal Enclosed</option>
+                                <option value="secvault">SecVault</option>
+                                <option value="other">Diğer</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-item">
+                            <select class="form-select">
+                                <option value="">Sırala</option>
+                                <option value="date-asc">Tarihe Göre (Artan)</option>
+                                <option value="date-desc">Tarihe Göre (Azalan)</option>
+                                <option value="status">Duruma Göre</option>
+                                <option value="customer">Müşteriye Göre</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Orders Table -->
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Sipariş ID</th>
+                                            <th>Müşteri</th>
+                                            <th>Hücre Tipi</th>
+                                            <th>Miktar</th>
+                                            <th>Sipariş Tarihi</th>
+                                            <th>Teslim Tarihi</th>
+                                            <th>Durum</th>
+                                            <th>İlerleme</th>
+                                            <th>İşlem</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>#OG-2025-2142</strong></td>
+                                            <td>Elektrik Dağıtım A.Ş.</td>
+                                            <td>Metal Clad</td>
+                                            <td>5</td>
+                                            <td>1 Mart, 2025</td>
+                                            <td>15 Mayıs, 2025</td>
+                                            <td>
+                                                <span class="badge badge-success">Üretimde</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-primary" style="width: 75%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex">
+                                                    <button class="btn btn-sm btn-outline btn-icon">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline btn-icon ml-1">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>#OG-2025-2141</strong></td>
+                                            <td>Enerji Sistemleri Ltd.</td>
+                                            <td>Metal Enclosed</td>
+                                            <td>3</td>
+                                            <td>28 Şubat, 2025</td>
+                                            <td>22 Mayıs, 2025</td>
+                                            <td>
+                                                <span class="badge badge-primary">Planlandı</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-primary" style="width: 25%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex">
+                                                    <button class="btn btn-sm btn-outline btn-icon">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline btn-icon ml-1">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>#OG-2025-2140</strong></td>
+                                            <td>Güç Trafo San. A.Ş.</td>
+                                            <td>Metal Clad</td>
+                                            <td>2</td>
+                                            <td>20 Şubat, 2025</td>
+                                            <td>10 Mayıs, 2025</td>
+                                            <td>
+                                                <span class="badge badge-warning">Test Aşamasında</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-warning" style="width: 90%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex">
+                                                    <button class="btn btn-sm btn-outline btn-icon">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline btn-icon ml-1">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>#OG-2025-2139</strong></td>
+                                            <td>İletişim Enerji Ltd.</td>
+                                            <td>Seksiyoner</td>
+                                            <td>4</td>
+                                            <td>15 Şubat, 2025</td>
+                                            <td>5 Mayıs, 2025</td>
+                                            <td>
+                                                <span class="badge badge-success">Tamamlandı</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-success" style="width: 100%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex">
+                                                    <button class="btn btn-sm btn-outline btn-icon">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline btn-icon ml-1">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>#OG-2025-2138</strong></td>
+                                            <td>Santral Elektrik A.Ş.</td>
+                                            <td>Metal Enclosed</td>
+                                            <td>6</td>
+                                            <td>10 Şubat, 2025</td>
+                                            <td>25 Mayıs, 2025</td>
+                                            <td>
+                                                <span class="badge badge-danger">Beklemede</span>
+                                            </td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-danger" style="width: 10%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="d-flex">
+                                                    <button class="btn btn-sm btn-outline btn-icon">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline btn-icon ml-1">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Pagination -->
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <div>
+                            <span class="text-muted">Toplam 24 siparişten 1-10 arası gösteriliyor</span>
+                        </div>
+                        <div class="d-flex">
+                            <button class="btn btn-outline mr-2">
+                                <i class="fas fa-chevron-left"></i> Önceki
+                            </button>
+                            <button class="btn btn-outline">
+                                Sonraki <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <!-- Activity & Notes -->
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Son Aktiviteler</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="activity-list">
+                                        <div class="activity-item">
+                                            <div class="activity-icon" style="background-color: #dbeafe; color: var(--primary);">
+                                                <i class="fas fa-plus-circle"></i>
+                                            </div>
+                                            <div class="activity-content">
+                                                <div class="activity-title">Yeni Sipariş Oluşturuldu</div>
+                                                <p>Elektrik Dağıtım A.Ş. için 5 adet Metal Clad hücre siparişi oluşturuldu.</p>
+                                                <div class="activity-time">
+                                                    <i class="far fa-clock"></i> 2 saat önce
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="activity-item">
+                                            <div class="activity-icon" style="background-color: #d1fae5; color: var(--success);">
+                                                <i class="fas fa-check-circle"></i>
+                                            </div>
+                                            <div class="activity-content">
+                                                <div class="activity-title">Üretim Tamamlandı</div>
+                                                <p>İletişim Enerji Ltd. siparişi için üretim tamamlandı, test aşamasına geçildi.</p>
+                                                <div class="activity-time">
+                                                    <i class="far fa-clock"></i> 3 saat önce
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="activity-item">
+                                            <div class="activity-icon" style="background-color: #fee2e2; color: var(--danger);">
+                                                <i class="fas fa-exclamation-circle"></i>
+                                            </div>
+                                            <div class="activity-content">
+                                                <div class="activity-title">Malzeme Tedarik Sorunu</div>
+                                                <p>Santral Elektrik A.Ş. siparişi için kesici temini ertelendi.</p>
+                                                <div class="activity-time">
+                                                    <i class="far fa-clock"></i> 5 saat önce
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="activity-item">
+                                            <div class="activity-icon" style="background-color: #fef3c7; color: var(--warning);">
+                                                <i class="fas fa-clock"></i>
+                                            </div>
+                                            <div class="activity-content">
+                                                <div class="activity-title">Test Süresi Uzatıldı</div>
+                                                <p>Güç Trafo San. A.Ş. siparişi için test süresi 2 gün uzatıldı.</p>
+                                                <div class="activity-time">
+                                                    <i class="far fa-clock"></i> 1 gün önce
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Notlar</h3>
+                                    <button class="btn btn-sm btn-primary">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div class="note-card">
+                                        <div class="note-header">
+                                            <div>
+                                                <div class="note-title">Metal Clad Stok Kontrolü</div>
+                                                <div class="note-meta">
+                                                    <span><i class="far fa-clock"></i> 1 gün önce</span>
+                                                    <span><i class="far fa-user"></i> Ahmet Yılmaz</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="note-content">
+                                            MV Kesici stok seviyesi kritik seviyede. Tedarik isteği oluşturulmalı.
+                                        </div>
+                                        <div class="note-footer">
+                                            <div class="note-tags">
+                                                <div class="note-tag">Stok</div>
+                                                <div class="note-tag">Tedarik</div>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline">
+                                                <i class="fas fa-ellipsis-h"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="note-card warning">
+                                        <div class="note-header">
+                                            <div>
+                                                <div class="note-title">Teslim Süresi Değişikliği</div>
+                                                <div class="note-meta">
+                                                    <span><i class="far fa-clock"></i> 2 gün önce</span>
+                                                    <span><i class="far fa-user"></i> Mehmet Demir</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="note-content">
+                                            Elektrik Dağıtım A.Ş. siparişi için müşteri teslim tarihi 1 hafta öne çekildi. Üretim planı güncellenmeli.
+                                        </div>
+                                        <div class="note-footer">
+                                            <div class="note-tags">
+                                                <div class="note-tag">Teslim</div>
+                                                <div class="note-tag">Acil</div>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline">
+                                                <i class="fas fa-ellipsis-h"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <!-- Recent Orders Table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Son Siparişler</h3>
+                            <button class="btn btn-sm btn-outline">
+                                <i class="fas fa-eye"></i> Tümünü Gör
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Sipariş ID</th>
+                                            <th>Müşteri</th>
+                                            <th>Hücre Tipi</th>
+                                            <th>Durum</th>
+                                            <th>Teslim Tarihi</th>
+                                            <th>İlerleme</th>
+                                            <th>İşlem</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><strong>#OG-2025-2142</strong></td>
+                                            <td>Elektrik Dağıtım A.Ş.</td>
+                                            <td>Metal Clad</td>
+                                            <td>
+                                                <span class="badge badge-success">Üretimde</span>
+                                            </td>
+                                            <td>15 Mayıs, 2025</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-primary" style="width: 75%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline btn-icon">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>#OG-2025-2141</strong></td>
+                                            <td>Enerji Sistemleri Ltd.</td>
+                                            <td>Metal Enclosed</td>
+                                            <td>
+                                                <span class="badge badge-primary">Planlandı</span>
+                                            </td>
+                                            <td>22 Mayıs, 2025</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-primary" style="width: 25%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline btn-icon">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>#OG-2025-2140</strong></td>
+                                            <td>Güç Trafo San. A.Ş.</td>
+                                            <td>Metal Clad</td>
+                                            <td>
+                                                <span class="badge badge-warning">Test Aşamasında</span>
+                                            </td>
+                                            <td>10 Mayıs, 2025</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-warning" style="width: 90%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline btn-icon">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>#OG-2025-2139</strong></td>
+                                            <td>İletişim Enerji Ltd.</td>
+                                            <td>Seksiyoner</td>
+                                            <td>
+                                                <span class="badge badge-success">Tamamlandı</span>
+                                            </td>
+                                            <td>5 Mayıs, 2025</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-success" style="width: 100%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline btn-icon">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>#OG-2025-2138</strong></td>
+                                            <td>Santral Elektrik A.Ş.</td>
+                                            <td>Metal Enclosed</td>
+                                            <td>
+                                                <span class="badge badge-danger">Beklemede</span>
+                                            </td>
+                                            <td>25 Mayıs, 2025</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar progress-danger" style="width: 10%"></div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-outline btn-icon">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Charts Row -->
+                    <div class="row">
+                        <div class="col-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Aylık Üretim İstatistikleri</h3>
+                                    <div>
+                                        <button class="btn btn-sm btn-outline">
+                                            <i class="fas fa-download"></i> Dışa Aktar
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-container">
+                                        <div class="chart-bar">
+                                            <div class="chart-bar-item">
+                                                <div class="chart-bar-column" style="height: 70%;">
+                                                    <div class="chart-bar-column-comparison" style="height: 80%;"></div>
+                                                </div>
+                                                <div class="chart-bar-label">Ocak</div>
+                                            </div>
+                                            <div class="chart-bar-item">
+                                                <div class="chart-bar-column" style="height: 85%;">
+                                                    <div class="chart-bar-column-comparison" style="height: 70%;"></div>
+                                                </div>
+                                                <div class="chart-bar-label">Şubat</div>
+                                            </div>
+                                            <div class="chart-bar-item">
+                                                <div class="chart-bar-column" style="height: 65%;">
+                                                    <div class="chart-bar-column-comparison" style="height: 75%;"></div>
+                                                </div>
+                                                <div class="chart-bar-label">Mart</div>
+                                            </div>
+                                            <div class="chart-bar-item">
+                                                <div class="chart-bar-column" style="height: 90%;">
+                                                    <div class="chart-bar-column-comparison" style="height: 65%;"></div>
+                                                </div>
+                                                <div class="chart-bar-label">Nisan</div>
+                                            </div>
+                                            <div class="chart-bar-item">
+                                                <div class="chart-bar-column" style="height: 75%;">
+                                                    <div class="chart-bar-column-comparison" style="height: 85%;"></div>
+                                                </div>
+                                                <div class="chart-bar-label">Mayıs</div>
+                                            </div>
+                                            <div class="chart-bar-item">
+                                                <div class="chart-bar-column" style="height: 80%;">
+                                                    <div class="chart-bar-column-comparison" style="height: 90%;"></div>
+                                                </div>
+                                                <div class="chart-bar-label">Haziran</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="chart-legend">
+                                        <div class="chart-legend-item">
+                                            <div class="chart-legend-color" style="background-color: var(--primary-light);"></div>
+                                            <span>Bu Yıl</span>
+                                        </div>
+                                        <div class="chart-legend-item">
+                                            <div class="chart-legend-color" style="background-color: var(--success);"></div>
+                                            <span>Geçen Yıl</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Hücre Tipleri Dağılımı</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="chart-pie">
+                                        <div class="chart-pie-center">
+                                            <div class="chart-pie-value">125</div>
+                                            <div class="chart-pie-label">Toplam</div>
+                                        </div>
+                                    </div>
+                                    <div class="chart-legend" style="margin-top: 2rem;">
+                                        <div class="chart-legend-item">
+                                            <div class="chart-legend-color" style="background-color: var(--primary);"></div>
+                                            <span>Metal Clad (%42)</span>
+                                        </div>
+                                        <div class="chart-legend-item">
+                                            <div class="chart-legend-color" style="background-color: var(--success);"></div>
+                                            <span>Metal Enclosed (%31)</span>
+                                        </div>
+                                        <div class="chart-legend-item">
+                                            <div class="chart-legend-color" style="background-color: var(--warning);"></div>
+                                            <span>Seksiyoner (%21)</span>
+                                        </div>
+                                        <div class="chart-legend-item">
+                                            <div class="chart-legend-color" style="background-color: var(--secondary);"></div>
+                                            <span>Diğer (%6)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            <div class="sidebar-user">
+                <div class="sidebar-user-avatar">
+                    AY
+                </div>
+                <div class="sidebar-user-info">
+                    <div class="sidebar-user-name">Ahmet Yılmaz</div>
+                    <div class="sidebar-user-role">Üretim Müdürü</div>
+                </div>
+                <div class="sidebar-user-dropdown">
+                    <i class="fas fa-ellipsis-v"></i>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main">
+            <!-- Header -->
+            <header class="header">
+                <button id="sidebar-toggle" class="header-icon-button d-lg-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="header-title">Gösterge Paneli</h1>
+                
+                <div class="header-actions">
+                    <div class="header-search">
+                        <input type="text" class="header-search-input" placeholder="Arama...">
+                        <i class="fas fa-search header-search-icon"></i>
+                    </div>
+                    
+                    <button class="header-icon-button">
+                        <i class="fas fa-bell"></i>
+                        <span class="header-notifications-count">3</span>
+                    </button>
+                    
+                    <button class="header-icon-button">
+                        <i class="fas fa-user"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content">
+                <!-- Dashboard Page -->
+                <div id="dashboard-page" class="page active">
+                    <div class="page-header">
+                        <h2 class="page-title">Gösterge Paneli</h2>
+                        <div>
+                            <button class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Yeni Sipariş
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Statistics Cards -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-primary">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Toplam Sipariş</div>
+                                <div class="stat-value">125</div>
+                                <div class="stat-change stat-change-positive">
+                                    <i class="fas fa-arrow-up"></i> %12 Geçen Aya Göre
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-success">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Tamamlanan Siparişler</div>
+                                <div class="stat-value">87</div>
+                                <div class="stat-change stat-change-positive">
+                                    <i class="fas fa-arrow-up"></i> %8 Geçen Aya Göre
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-warning">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Süren Üretimler</div>
+                                <div class="stat-value">32</div>
+                                <div class="stat-change stat-change-negative">
+                                    <i class="fas fa-arrow-down"></i> %5 Geçen Aya Göre
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-icon stat-icon-danger">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="stat-content">
+                                <div class="stat-label">Kritik Hücre Sayısı</div>
+                                <div class="stat-value">8</div>
+                                <div class="stat-change stat-change-negative">
+                                    <i class="fas fa-arrow-up"></i> %15 Geçen Aya Göre
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="login-logo-text">ElektroTrack</div>
                 </div>
@@ -50,252 +1405,1864 @@
             <div class="login-body">
                 <form id="login-form">
                     <div class="login-form-group">
-                        <label class="login-label" for="username">Kullanıcı Adı / E-posta</label>
-                        <input type="text" id="username" class="login-input" placeholder="Kullanıcı adınızı veya e-postanızı girin" required>
+                        <label for="username" class="login-label">Kullanıcı Adı</label>
+                        <input type="text" id="username" class="login-input" placeholder="Kullanıcı adınızı girin" required>
                     </div>
                     <div class="login-form-group">
-                        <label class="login-label" for="password">Şifre</label>
+                        <label for="password" class="login-label">Şifre</label>
                         <input type="password" id="password" class="login-input" placeholder="Şifrenizi girin" required>
                     </div>
                     <div class="login-options">
                         <div class="login-remember">
-                            <input type="checkbox" id="remember">
-                            <label for="remember">Beni hatırla</label>
+                            <input type="checkbox" id="remember-me">
+                            <label for="remember-me">Beni hatırla</label>
                         </div>
-                        <a href="#" class="login-forgot" onclick="showForgotPassword()">Şifremi unuttum</a>
+                        <a href="#" class="login-forgot">Şifremi unuttum</a>
                     </div>
-                    <button type="submit" class="login-button">Giriş Yap</button>
+                    <button type="submit" class="login-button">
+                        <i class="fas fa-sign-in-alt"></i> Giriş Yap
+                    </button>
                 </form>
-                
                 <div class="login-footer">
-                    Hesabınız yok mu? <a href="#" onclick="showRegister()">Kayıt Ol</a>
-                </div>
-
-                <!-- Demo Giriş Butonu -->
-                <div style="text-align: center; margin-top: 15px; padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                    <button type="button" class="btn btn-outline" style="width: 100%;" onclick="demoLogin()">
-                        <i class="fas fa-user-check"></i> Demo Hesabı ile Giriş
-                    </button>
+                    <p>© 2025 ElektroTrack OG Hücre Takip Sistemi</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Kayıt Ol Formu -->
-    <div id="register-page" class="login-container" style="display: none;">
-        <div class="login-form">
-            <div class="login-header">
-                <h1 class="login-title">Kayıt Ol</h1>
-                <p class="login-subtitle">ElektroTrack'e hoş geldiniz</p>
+    <!-- Main App -->
+    <div id="app" class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="sidebar-logo">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="sidebar-title">ElektroTrack</div>
             </div>
-            
-            <form id="register-form">
-                <div class="form-group">
-                    <label class="form-label" for="register-name">Ad Soyad</label>
-                    <input type="text" class="form-control" id="register-name" placeholder="Adınızı ve soyadınızı girin" required>
-                </div>
+            <div class="sidebar-nav">
+                <div class="sidebar-heading">Genel</div>
+                <a href="#dashboard" class="sidebar-link active" data-page="dashboard">
+                    <div class="sidebar-icon"><i class="fas fa-home"></i></div>
+                    <span>Gösterge Paneli</span>
+                </a>
+                <a href="#orders" class="sidebar-link" data-page="orders">
+                    <div class="sidebar-icon"><i class="fas fa-box"></i></div>
+                    <span>Siparişler</span>
+                </a>
+                <a href="#production" class="sidebar-link" data-page="production">
+                    <div class="sidebar-icon"><i class="fas fa-industry"></i></div>
+                    <span>Üretim</span>
+                </a>
                 
-                <div class="form-group">
-                    <label class="form-label" for="register-email">E-posta</label>
-                    <input type="email" class="form-control" id="register-email" placeholder="E-posta adresinizi girin" required>
-                </div>
+                <div class="sidebar-heading">Hücre Yönetimi</div>
+                <a href="#schemas" class="sidebar-link" data-page="schemas">
+                    <div class="sidebar-icon"><i class="fas fa-project-diagram"></i></div>
+                    <span>Şemalar</span>
+                </a>
+                <a href="#components" class="sidebar-link" data-page="components">
+                    <div class="sidebar-icon"><i class="fas fa-microchip"></i></div>
+                    <span>Bileşenler</span>
+                </a>
+                <a href="#testing" class="sidebar-link" data-page="testing">
+                    <div class="sidebar-icon"><i class="fas fa-vial"></i></div>
+                    <span>Test & Kontrol</span>
+                </a>
                 
-                <div class="form-group">
-                    <label class="form-label" for="register-username">Kullanıcı Adı</label>
-                    <input type="text" class="form-control" id="register-username" placeholder="Kullanıcı adınızı girin" required>
-                </div>
+                <div class="sidebar-heading">Raporlar</div>
+                <a href="#reports" class="sidebar-link" data-page="reports">
+                    <div class="sidebar-icon"><i class="fas fa-chart-bar"></i></div>
+                    <span>Analitik</span>
+                </a>
+                <a href="#quality" class="sidebar-link" data-page="quality">
+                    <div class="sidebar-icon"><i class="fas fa-clipboard-check"></i></div>
+                    <span>Kalite Kontrol</span>
+                </a>
                 
-                <div class="form-group">
-                    <label class="form-label" for="register-department">Departman</label>
-                    <select class="form-control" id="register-department" required>
-                        <option value="">Departman Seçin</option>
-                        <option value="sales">Satış</option>
-                        <option value="production">Üretim</option>
-                        <option value="purchasing">Satın Alma</option>
-                        <option value="planning">Planlama</option>
-                        <option value="quality">Kalite</option>
-                        <option value="management">Yönetim</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-password">Şifre</label>
-                    <input type="password" class="form-control" id="register-password" placeholder="Şifre oluşturun" required>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label" for="register-password-confirm">Şifre Tekrar</label>
-                    <input type="password" class="form-control" id="register-password-confirm" placeholder="Şifreyi tekrar girin" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Kayıt Ol</button>
-            </form>
-            
-            <div class="login-footer">
-                Zaten hesabınız var mı? <a href="#" onclick="showLogin()">Giriş Yap</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Şifremi Unuttum Formu -->
-    <div id="forgot-password-page" class="login-container" style="display: none;">
-        <div class="login-form">
-            <div class="login-header">
-                <h1 class="login-title">Şifremi Unuttum</h1>
-                <p class="login-subtitle">Şifre sıfırlama bağlantısı için e-posta adresinizi girin</p>
-            </div>
-            
-            <form id="forgot-password-form">
-                <div class="form-group">
-                    <label class="form-label" for="forgot-email">E-posta</label>
-                    <input type="email" class="form-control" id="forgot-email" placeholder="E-posta adresinizi girin" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Şifre Sıfırlama Bağlantısı Gönder</button>
-            </form>
-            
-            <div class="login-footer">
-                <a href="#" onclick="showLogin()">Giriş sayfasına dön</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Ana Uygulama -->
-    <div id="main-app" style="display: none;">
-        <!-- Navbar -->
-        <div class="navbar">
-            <div class="navbar-brand" onclick="showPage('dashboard')">ElektroTrack</div>
-            <div class="navbar-menu">
-                <div class="navbar-item active" onclick="showPage('dashboard')">Kontrol Paneli</div>
-                <div class="navbar-item" onclick="showPage('sales')">Satış</div>
-                <div class="navbar-item" onclick="showPage('projects')">Projeler</div>
-                <div class="navbar-item" onclick="showPage('production')">Üretim</div>
-                <div class="navbar-item" onclick="showPage('stock')">Stok</div>
-                <div class="navbar-item" onclick="showPage('purchasing')">Satın Alma</div>
-                <div class="navbar-item" onclick="showPage('planning')">Planlama</div>
-                <div class="navbar-item" onclick="showPage('quality')">Kalite</div>
-                <div class="navbar-item" onclick="showPage('reports')">Raporlar</div>
-                <div class="navbar-item" onclick="showPage('notes')">Notlar</div>
-                <div class="navbar-item" onclick="showPage('ai')">Yapay Zeka</div>
-            </div>
-            <div class="user-menu">
-                <div class="user-avatar" onclick="toggleUserMenu()">M</div>
-                <div id="user-dropdown" class="user-dropdown">
-                    <div class="user-dropdown-item" onclick="showPage('profile')">
-                        <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
-                        <span>Profilim</span>
-                    </div>
-                    <div class="user-dropdown-item" onclick="showPage('settings')">
-                        <i class="fas fa-cog" style="margin-right: 0.5rem;"></i>
-                        <span>Ayarlar</span>
-                    </div>
-                    <div class="user-dropdown-divider"></div>
-                    <div class="user-dropdown-item" onclick="logout()">
-                        <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
-                        <span>Çıkış Yap</span>
-                    </div>
-                </div>
-            </div>
-        </div>
+                <div class="sidebar-heading">Yönetim</div>
+                <a href="#settings" class="sidebar-link" data-page="settings">
+                    <div class="sidebar-icon"><i class="fas fa-cog"></i></div>
+                    <span>Ayarlar</span>
+                </a>
+            </div><!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElektroTrack - OG Hücre İmalat Takip</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #1e40af;
+            --primary-dark: #1e3a8a;
+            --primary-light: #93c5fd;
+            --secondary: #64748b;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --info: #0ea5e9;
+            --light: #f8fafc;
+            --dark: #0f172a;
+            --white: #ffffff;
+            --border: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
         
-        <!-- Bildirim Merkezi -->
-        <div class="notification-center">
-            <button class="notification-bell" onclick="toggleNotifications()">
-                <i class="fas fa-bell"></i>
-                <span class="notification-badge">3</span>
-            </button>
-            <div id="notifications-dropdown" class="notifications-dropdown">
-                <div class="notifications-header">
-                    <h3>Bildirimler</h3>
-                    <button class="btn btn-sm btn-outline" onclick="markAllAsRead()">
-                        <i class="fas fa-check-double"></i> Tümünü Okundu İşaretle
-                    </button>
-                </div>
-                <div class="notifications-list">
-                    <div class="notification-item unread">
-                        <div class="notification-icon warning">
-                            <i class="fas fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="notification-content">
-                            <div class="notification-title">Malzeme Tedarik Uyarısı</div>
-                            <div class="notification-text">24-03-B002 siparişi için malzeme tedarikinde gecikme</div>
-                            <div class="notification-time">10 dakika önce</div>
-                        </div>
-                    </div>
-                    <div class="notification-item unread">
-                        <div class="notification-icon danger">
-                            <i class="fas fa-exclamation-circle"></i>
-                        </div>
-                        <div class="notification-content">
-                            <div class="notification-title">Test Sonucu Hata</div>
-                            <div class="notification-text">24-03-C003 siparişinde test hatası tespit edildi</div>
-                            <div class="notification-time">30 dakika önce</div>
-                        </div>
-                    </div>
-                    <div class="notification-item">
-                        <div class="notification-icon info">
-                            <i class="fas fa-info-circle"></i>
-                        </div>
-                        <div class="notification-content">
-                            <div class="notification-title">Yeni Sipariş</div>
-                            <div class="notification-text">AYEDAŞ'tan 5 adet yeni OG hücre siparişi alındı</div>
-                            <div class="notification-time">2 saat önce</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Ana içerik alanı -->
-        <div class="container">
-            <!-- Tüm sayfaların içeriği buraya eklenecek -->
-            <!-- Bu kısımda, ilk dosyadaki tüm sayfaların (dashboard, sales, notes, reports, vb.) tam içeriği bulunmalıdır -->
-            <!-- İçerik çok uzun olduğundan tamamını buraya yapıştırmadım -->
-        </div>
-
-        <!-- Ana uygulama modalları ve diğer bileşenler -->
-        <!-- Sipariş Detay Modalı, Sipariş Oluşturma Modalı, Yapay Zeka Asistanı vb. buraya eklenecek -->
-    </div>
-
-    <!-- Yapay Zeka Asistanı -->
-    <div class="chatbot-trigger" onclick="toggleChatbot()">
-        <i class="fas fa-robot"></i>
-    </div>
-    <div id="chatbot-window" class="chatbot-window">
-        <div class="chatbot-header">
-            <div class="chatbot-title">
-                <i class="fas fa-robot"></i>
-                <span>ElektroTrack Asistanı</span>
-            </div>
-            <button class="chatbot-close" onclick="toggleChatbot()">
-                <i class="fas fa-times"></i>
-            </button>
-        </div>
-        <div id="chatbot-body" class="chatbot-body">
-            <div class="chat-message bot">
-                Merhaba! Ben ElektroTrack Asistanı. Size nasıl yardımcı olabilirim?
-            </div>
-        </div>
-        <div class="chatbot-footer">
-            <input id="chatbot-input" type="text" class="chatbot-input" placeholder="Mesajınızı yazın...">
-            <button class="chatbot-send" onclick="sendChatMessage()">
-                <i class="fas fa-paper-plane"></i>
-            </button>
-        </div>
-    </div>
-
-    <!-- Demo modu bildirimi -->
-    <div id="demo-mode-notification" class="info-box warning" style="position: fixed; bottom: 10px; left: 10px; z-index: 1000; display: none;">
-        <div class="info-box-title">Demo Modu</div>
-        <div class="info-box-content">
-            <p>Uygulama şu anda demo modunda çalışıyor. Firebase kimlik doğrulaması atlanıyor.</p>
-            <button class="btn btn-sm btn-warning" onclick="document.getElementById('demo-mode-notification').style.display = 'none';">
-                <i class="fas fa-times"></i> Kapat
-            </button>
-        </div>
-    </div>
-
-    <!-- Ana JS dosyası -->
-    <script src="js/app.js"></script>
-</body>
-</html>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background-color: #f1f5f9;
+            color: var(--dark);
+            line-height: 1.5;
+        }
+        
+        /* Login Page */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+            padding: 2rem;
+        }
+        
+        .login-card {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 420px;
+            overflow: hidden;
+        }
+        
+        .login-header {
+            padding: 2rem 2rem 1.5rem;
+            text-align: center;
+        }
+        
+        .login-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .login-logo-icon {
+            width: 48px;
+            height: 48px;
+            background-color: var(--primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            margin-right: 0.75rem;
+        }
+        
+        .login-logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            color: var(--secondary);
+            font-size: 0.875rem;
+        }
+        
+        .login-body {
+            padding: 0 2rem 2rem;
+        }
+        
+        .login-form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .login-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            color: var(--dark);
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.3s;
+        }
+        
+        .login-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .login-remember {
+            display: flex;
+            align-items: center;
+        }
+        
+        .login-remember input {
+            margin-right: 0.5rem;
+        }
+        
+        .login-forgot {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .login-button:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .login-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            color: var(--secondary);
+        }
+        
+        .login-footer a {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        /* Main App Styles */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 260px;
+            background-color: white;
+            border-right: 1px solid var(--border);
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease;
+        }
+        
+        .sidebar-brand {
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .sidebar-logo {
+            width: 36px;
+            height: 36px;
+            background-color: var(--primary);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+            margin-right: 0.75rem;
+        }
+        
+        .sidebar-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: var(--dark);
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: 1.5rem 0;
+            overflow-y: auto;
+        }
+        
+        .sidebar-heading {
+            padding: 0 1.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--secondary);
+            font-weight: 600;
+        }
+        
+        .sidebar-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1.5rem;
+            color: var(--secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .sidebar-link:hover {
+            background-color: #f8fafc;
+            color: var(--primary);
+        }
+        
+        .sidebar-link.active {
+            color: var(--primary);
+            background-color: #eff6ff;
+            border-left: 3px solid var(--primary);
+            font-weight: 500;
+        }
+        
+        .sidebar-icon {
+            width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+        }
+        
+        .sidebar-user {
+            padding: 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+        }
+        
+        .sidebar-user-avatar {
+            width: 40px;
+            height: 40px;
+            background-color: var(--primary-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .sidebar-user-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .sidebar-user-name {
+            font-weight: 600;
+            color: var(--dark);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .sidebar-user-role {
+            font-size: 0.75rem;
+            color: var(--secondary);
+        }
+        
+        .sidebar-user-dropdown {
+            color: var(--secondary);
+            cursor: pointer;
+            padding: 0.5rem;
+            margin: -0.5rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s;
+        }
+        
+        .sidebar-user-dropdown:hover {
+            background-color: #f8fafc;
+            color: var(--primary);
+        }
+        
+        /* Main Content */
+        .main {
+            flex: 1;
+            margin-left: 260px;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Header */
+        .header {
+            background-color: white;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 90;
+        }
+        
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .header-search {
+            position: relative;
+            margin-right: 1rem;
+        }
+        
+        .header-search-input {
+            padding: 0.5rem 0.75rem 0.5rem 2.25rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            background-color: #f8fafc;
+            width: 240px;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .header-search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background-color: white;
+            width: 300px;
+        }
+        
+        .header-search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 0.875rem;
+        }
+        
+        .header-icon-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 0.375rem;
+            background-color: #f8fafc;
+            color: var(--dark);
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .header-icon-button:hover {
+            background-color: #f1f5f9;
+            color: var(--primary);
+        }
+        
+        .header-notifications-count {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 8px;
+            background-color: var(--danger);
+            color: white;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Content */
+        .content {
+            padding: 1.5rem;
+            flex: 1;
+        }
+        
+        /* Dashboard Statistics Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: flex-start;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.5rem;
+        }
+        
+        .stat-icon-primary {
+            background-color: #dbeafe;
+            color: var(--primary);
+        }
+        
+        .stat-icon-success {
+            background-color: #d1fae5;
+            color: var(--success);
+        }
+        
+        .stat-icon-warning {
+            background-color: #fef3c7;
+            color: var(--warning);
+        }
+        
+        .stat-icon-danger {
+            background-color: #fee2e2;
+            color: var(--danger);
+        }
+        
+        .stat-content {
+            flex: 1;
+        }
+        
+        .stat-label {
+            color: var(--secondary);
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+        
+        .stat-change {
+            display: flex;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .stat-change-positive {
+            color: var(--success);
+        }
+        
+        .stat-change-negative {
+            color: var(--danger);
+        }
+        
+        .stat-change i {
+            margin-right: 0.25rem;
+        }
+        
+        /* Cards */
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: var(--shadow);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+        
+        .card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            border-radius: 0.375rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #059669;
+        }
+        
+        .btn-outline {
+            background-color: white;
+            color: var(--secondary);
+            border: 1px solid var(--border);
+        }
+        
+        .btn-outline:hover {
+            background-color: #f8fafc;
+            color: var(--primary);
+            border-color: var(--primary-light);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+            color: white;
+        }
+        
+        .btn-warning:hover {
+            background-color: #d97706;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.75rem;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+        }
+        
+        .btn-icon.btn-sm {
+            width: 28px;
+            height: 28px;
+        }
+        
+        /* Grid layouts */
+        .row {
+            display: flex;
+            margin-left: -0.75rem;
+            margin-right: -0.75rem;
+            flex-wrap: wrap;
+        }
+        
+        .col {
+            flex: 1 0 0%;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+            min-width: 0;
+        }
+        
+        .col-auto {
+            flex: 0 0 auto;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .col-12 {
+            flex: 0 0 100%;
+            max-width: 100%;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .col-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .col-4 {
+            flex: 0 0 33.333333%;
+            max-width: 33.333333%;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .col-3 {
+            flex: 0 0 25%;
+            max-width: 25%;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .col-8 {
+            flex: 0 0 66.666667%;
+            max-width: 66.666667%;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        
+        .col-large {
+            flex: 2;
+            padding: 0.75rem;
+        }
+        
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 1rem;
+        }
+        
+        .chart-legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 0.5rem;
+            justify-content: center;
+        }
+        
+        .chart-legend-item {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+            color: var(--secondary);
+        }
+        
+        .chart-legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            margin-right: 0.5rem;
+        }
+        
+        /* Modern Tables */
+        .table-responsive {
+            overflow-x: auto;
+            margin-bottom: 1.5rem;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .table th {
+            padding: 1rem;
+            text-align: left;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.025em;
+            color: var(--secondary);
+            background-color: #f8fafc;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-light);
+            vertical-align: middle;
+        }
+        
+        .table tbody tr {
+            transition: background-color 0.2s;
+            cursor: pointer;
+        }
+        
+        .table tbody tr:hover {
+            background-color: #f8fafc;
+        }
+        
+        .table tbody tr:last-child td {
+            border-bottom: none;
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 9999px;
+        }
+        
+        .badge-primary {
+            background-color: #dbeafe;
+            color: var(--primary);
+        }
+        
+        .badge-success {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+        
+        .badge-warning {
+            background-color: #fef3c7;
+            color: #d97706;
+        }
+        
+        .badge-danger {
+            background-color: #fee2e2;
+            color: #dc2626;
+        }
+        
+        .badge-secondary {
+            background-color: #f1f5f9;
+            color: var(--secondary);
+        }
+        
+        .badge-info {
+            background-color: #e1f5fe;
+            color: #0288d1;
+        }
+        
+        /* Progress Bar */
+        .progress {
+            height: 6px;
+            background-color: #e2e8f0;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 9999px;
+        }
+        
+        .progress-primary {
+            background-color: var(--primary);
+        }
+        
+        .progress-success {
+            background-color: var(--success);
+        }
+        
+        .progress-warning {
+            background-color: var(--warning);
+        }
+        
+        .progress-danger {
+            background-color: var(--danger);
+        }
+        
+        /* Status indicators */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        
+        .status-success {
+            background-color: var(--success);
+        }
+        
+        .status-warning {
+            background-color: var(--warning);
+        }
+        
+        .status-danger {
+            background-color: var(--danger);
+        }
+        
+        .status-info {
+            background-color: var(--info);
+        }
+        
+        .status-secondary {
+            background-color: var(--secondary);
+        }
+        
+        /* Alerts */
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .alert-icon {
+            margin-right: 0.75rem;
+            font-size: 1.25rem;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .alert-primary {
+            background-color: #dbeafe;
+            border-left: 4px solid var(--primary);
+            color: var(--primary-dark);
+        }
+        
+        .alert-success {
+            background-color: #d1fae5;
+            border-left: 4px solid var(--success);
+            color: #059669;
+        }
+        
+        .alert-warning {
+            background-color: #fef3c7;
+            border-left: 4px solid var(--warning);
+            color: #d97706;
+        }
+        
+        .alert-danger {
+            background-color: #fee2e2;
+            border-left: 4px solid var(--danger);
+            color: #dc2626;
+        }
+        
+        /* Forms */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--dark);
+            font-size: 0.875rem;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.625rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-control:disabled {
+            background-color: #f8fafc;
+            cursor: not-allowed;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 0.625rem 2rem 0.625rem 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 0.5rem center;
+            background-repeat: no-repeat;
+            background-size: 1.5em 1.5em;
+            transition: all 0.2s;
+        }
+        
+        .form-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-check {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .form-check-input {
+            width: 1rem;
+            height: 1rem;
+            margin-right: 0.5rem;
+        }
+        
+        .form-check-label {
+            font-size: 0.875rem;
+        }
+        
+        /* Process Steps */
+        .process-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+            position: relative;
+            padding: 0 1rem;
+        }
+        
+        .process-steps::before {
+            content: "";
+            position: absolute;
+            top: 24px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--border);
+            z-index: 1;
+        }
+        
+        .process-step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .process-step-circle {
+            width: 48px;
+            height: 48px;
+            background-color: white;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .process-step.completed .process-step-circle {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+        
+        .process-step.active .process-step-circle {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .process-step-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--secondary);
+            text-align: center;
+        }
+        
+        .process-step.active .process-step-label {
+            color: var(--primary);
+        }
+        
+        .process-step.completed .process-step-label {
+            color: var(--success);
+        }
+        
+        /* Activity list */
+        .activity-list {
+            margin-bottom: 1.5rem;
+        }
+        
+        .activity-item {
+            display: flex;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        
+        .activity-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        
+        .activity-content {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .activity-title {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+        
+        .activity-time {
+            font-size: 0.75rem;
+            color: var(--secondary);
+        }
+        
+        .activity-actions {
+            margin-left: 1rem;
+        }
+        
+        /* Notes */
+        .note-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid var(--primary);
+            box-shadow: var(--shadow);
+        }
+        
+        .note-card.warning {
+            border-left-color: var(--warning);
+        }
+        
+        .note-card.danger {
+            border-left-color: var(--danger);
+        }
+        
+        .note-card.success {
+            border-left-color: var(--success);
+        }
+        
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+        
+        .note-title {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--dark);
+            margin-bottom: 0.25rem;
+        }
+        
+        .note-meta {
+            font-size: 0.75rem;
+            color: var(--secondary);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .note-meta span {
+            display: flex;
+            align-items: center;
+        }
+        
+        .note-meta i {
+            margin-right: 0.25rem;
+        }
+        
+        .note-content {
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+        
+        .note-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .note-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        
+        .note-tag {
+            background-color: #f1f5f9;
+            color: var(--secondary);
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+        }
+        
+        /* Chatbot */
+        .chatbot-trigger {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 28px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+        
+        .chatbot-trigger:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 12px rgba(37, 99, 235, 0.3);
+        }
+        
+        .chatbot-window {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            width: 360px;
+            height: 520px;
+            border-radius: 1rem;
+            background-color: white;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 101;
+            overflow: hidden;
+        }
+        
+        .chatbot-header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .chatbot-title {
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .chatbot-title i {
+            font-size: 1.25rem;
+        }
+        
+        .chatbot-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.25rem;
+            cursor: pointer;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+            border-radius: 0.25rem;
+        }
+        
+        .chatbot-close:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .chatbot-body {
+            flex: 1;
+            padding: 1.25rem;
+            overflow-y: auto;
+        }
+        
+        .chat-message {
+            max-width: 80%;
+            margin-bottom: 1rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+        
+        .chat-message.bot {
+            background-color: #f1f5f9;
+            border-top-left-radius: 0;
+            color: var(--dark);
+            margin-right: auto;
+        }
+        
+        .chat-message.user {
+            background-color: var(--primary);
+            color: white;
+            border-top-right-radius: 0;
+            margin-left: auto;
+        }
+        
+        .chatbot-footer {
+            padding: 0.75rem 1.25rem;
+            border-top: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .chatbot-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        
+        .chatbot-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .chatbot-send {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        .chatbot-send:hover {
+            background-color: var(--primary-dark);
+        }
+        
+        /* Order detail page */
+        .order-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+        }
+        
+        .order-detail-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--dark);
+            margin-bottom: 0.5rem;
+        }
+        
+        .order-detail-meta {
+            color: var(--secondary);
+            font-size: 0.875rem;
+        }
+        
+        .order-detail-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        /* Order info cards */
+        .order-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .order-info-card {
+            background-color: white;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .order-info-label {
+            color: var(--secondary);
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .order-info-value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        /* Workflow display */
+        .workflow {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 2rem 0;
+            padding: 0 1rem;
+        }
+        
+        .workflow::before {
+            content: "";
+            position: absolute;
+            top: 24px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: var(--border);
+            z-index: 1;
+        }
+        
+        .workflow-step {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+        }
+        
+        .workflow-icon {
+            width: 48px;
+            height: 48px;
+            background-color: white;
+            border: 2px solid var(--border);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .workflow-step.completed .workflow-icon {
+            background-color: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+        
+        .workflow-step.active .workflow-icon {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
+        }
+        
+        .workflow-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--secondary);
+            text-align: center;
+        }
+        
+        .workflow-step.active .workflow-label {
+            color: var(--primary);
+        }
+        
+        /* Info boxes */
+        .info-box {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            background-color: #f8fafc;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .info-box-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--dark);
+        }
+        
+        .info-box-content {
+            font-size: 0.875rem;
+            color: var(--secondary);
+        }
+        
+        .info-box.warning {
+            background-color: #fffbeb;
+            border-left-color: var(--warning);
+        }
+        
+        .info-box.danger {
+            background-color: #fee2e2;
+            border-left-color: var(--danger);
+        }
+        
+        .info-box.success {
+            background-color: #ecfdf5;
+            border-left-color: var(--success);
+        }
+        
+        /* Tabs */
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 1rem;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.25rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            color: var(--secondary);
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .tab:hover {
+            color: var(--primary);
+        }
+        
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        .tab-content {
+            display: none;
+            padding: 1rem 0;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Filter section */
+        .filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .search-box {
+            flex: 2;
+            position: relative;
+            min-width: 300px;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 0.625rem 0.75rem 0.625rem 2.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 0.875rem;
+        }
+        
+        /* Notes filter */
+        .notes-filter {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            padding-bottom: 0.25rem;
+        }
+        
+        .notes-filter-item {
+            padding: 0.5rem 1rem;
+            background-color: white;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .notes-filter-item:hover {
+            color: var(--primary);
+        }
+        
+        .notes-filter-item.active {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        /* Note form */
+        .note-form {
+            margin-bottom: 1.5rem;
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+        }
+        
+        .note-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            resize: vertical;
+            min-height: 100px;
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .note-textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        .note-options {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .note-visibility, .note-priority {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-dialog {
+            background-color: white;
+            margin: 2rem auto;
+            border-radius: 0.75rem;
+            max-width: 800px;
+            width: 90%;
+            box-shadow: var(--shadow-lg);
+            animation: modalOpen 0.3s ease-out;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 4rem);
+        }
+        
+        .modal-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: var(--secondary);
+            cursor: pointer;
+        }
+        
+        .modal-close:hover {
+            color: var(--danger);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+        }
+        
+        @keyframes modalOpen {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Page specific styles */
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        /* Charts specific styling */
+        .chart-bar {
+            height: 240px;
+            display: flex;
+            align-items: flex-end;
+            padding: 0 0.5rem;
+            gap: 1rem;
+        }
+        
+        .chart-bar-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .chart-bar-column {
+            width: 100%;
+            background-color: var(--primary-light);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+        }
+        
+        .chart-bar-column-comparison {
+            width: 60%;
+            background-color: var(--success);
+            border-radius: 4px 4px 0 0;
+            position: absolute;
+            bottom: 0;
+            left: 20%;
+            height: 0;
+        }
+        
+        .chart-bar-label {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+            color: var(--secondary);
+        }
+        
+        /* Pie chart placeholder */
+        .chart-pie {
+            position: relative;
+            width: 160px;
+            height: 160px;
+            border-radius: 50%;
+            margin: 0 auto;
+            background: conic-gradient(
+                var(--primary) 0% 42%,
+                var(--success) 42% 73%,
+                var(--warning) 73% 94%,
+                var(--secondary) 94% 100%
+            );
+        }
