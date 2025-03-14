@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElektroTrack - Malzeme Listeleri</title>
+    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Malzeme Listeleri">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+
+    <!-- CSS dosyaları -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-brand" onclick="showPage('dashboard')">ElektroTrack</div>
+        <div class="navbar-menu">
+            <div class="navbar-item" onclick="showPage('dashboard')">Kontrol Paneli</div>
+            <div class="navbar-item" onclick="showPage('sales')">Satış</div>
+            <div class="navbar-item" onclick="showPage('projects')">Projeler</div>
+            <div class="navbar-item" onclick="showPage('production')">Üretim</div>
+            <div class="navbar-item active" onclick="showPage('stock')">Stok</div>
+            <div class="navbar-item" onclick="showPage('purchasing')">Satın Alma</div>
+            <div class="navbar-item" onclick="showPage('quality')">Kalite</div>
+            <div class="navbar-item" onclick="showPage('reports')">Raporlar</div>
+            <div class="navbar-item" onclick="showPage('notes')">Notlar</div>
+            <div class="navbar-item" onclick="showPage('ai')">Yapay Zeka</div>
+        </div>
+        <div class="user-menu">
+            <div class="user-avatar" onclick="toggleUserMenu()">M</div>
+            <div id="user-dropdown" class="user-dropdown">
+                <div class="user-dropdown-item" onclick="showPage('profile')">
+                    <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
+                    <span>Profilim</span>
+                </div>
+                <div class="user-dropdown-item" onclick="showPage('settings')">
+                    <i class="fas fa-cog" style="margin-right: 0.5rem;"></i>
+                    <span>Ayarlar</span>
+                </div>
+                <div class="user-dropdown-divider"></div>
+                <div class="user-dropdown-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
+                    <span>Çıkış Yap</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ana içerik alanı -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Malzeme Listeleri</h1>
+            <div>
+                <button class="btn btn-outline" onclick="refreshMaterialLists()">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Yenile</span>
+                </button>
+                <button class="btn btn-primary" onclick="showAddMaterialListModal()">
+                    <i class="fas fa-plus"></i>
+                    <span>Yeni Malzeme Listesi</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Arama ve filtreler -->
+        <div class="filters">
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" placeholder="Malzeme listesi ara (hücre tipi, kod, açıklama)..." onkeyup="filterMaterialLists()">
+            </div>
+            <div class="filter-item">
+                <select class="form-control" onchange="filterMaterialLists()">
+                    <option value="">Tüm Listeler</option>
+                    <option value="primer">Primer Listeler</option>
+                    <option value="sekonder">Sekonder Listeler</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <select class="form-control" onchange="filterMaterialLists()">
+                    <option value="">Tüm Hücre Tipleri</option>
+                    <option value="RM 36 LB">RM 36 LB</option>
+                    <option value="RM 36 CB">RM 36 CB</option>
+                    <option value="RM 36 FL">RM 36 FL</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Malzeme Listeleri Tablosu -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">Malzeme Listeleri</div>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table class="table" id="material-lists-table">
+                        <thead>
+                            <tr>
+                                <th>Liste Kodu</th>
+                                <th>Liste Tipi</th>
+                                <th>Hücre Tipi</th>
+                                <th>Teknik Özellikler</th>
+                                <th>Malzeme Sayısı</th>
+                                <th>Son Güncelleme</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="text-center">Yükleniyor...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Malzeme Listesi Detay Modal -->
+        <div id="material-list-detail-modal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h2 class="modal-title">Malzeme Listesi: <span id="material-list-id"></span></h2>
+                    <button class="modal-close" onclick="closeModal('material-list-detail-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="tabs">
+                        <div class="tab active" data-tab="list-info">Liste Bilgileri</div>
+                        <div class="tab" data-tab="materials">Malzemeler</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="list-info-content">
+                        <form id="list-general">
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label class="form-label">Liste Kodu</label>
+                                        <input type="text" class="form-control" name="listCode" readonly>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label class="form-label">Liste Tipi</label>
+                                        <select class="form-control" name="listType">
+                                            <option value="primer">Primer</option>
+                                            <option value="sekonder">Sekonder</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label class="form-label">Hücre Tipi</label>
+                                        <input type="text" class="form-control" name="cellType">
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="form-group">
+                                        <label class="form-label">Teknik Özellikler</label>
+                                        <input type="text" class="form-control" name="technicalDetails">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Açıklama</label>
+                                <textarea class="form-control" name="description" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <div class="tab-content" id="materials-content">
+                        <!-- Malzeme Tablosu -->
+                        <div class="form-group mb-4">
+                            <button type="button" class="btn btn-success btn-sm" onclick="addMaterial()">
+                                <i class="fas fa-plus"></i> Yeni Malzeme Ekle
+                            </button>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="importMaterials()">
+                                <i class="fas fa-file-import"></i> Excel'den İçe Aktar
+                            </button>
+                        </div>
+                        
+                        <div class="table-container">
+                            <table class="table" id="materials-table">
+                                <thead>
+                                    <tr>
+                                        <th>Malzeme Kodu</th>
+                                        <th>Canias Kodu</th>
+                                        <th>Malzeme Adı</th>
+                                        <th>Miktar</th>
+                                        <th>Birim</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="6" class="text-center">Yükleniyor...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('material-list-detail-modal')">İptal</button>
+                    <button class="btn btn-primary" onclick="saveMaterialList()">Kaydet</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Malzeme Ekleme Modal -->
+        <div id="add-material-modal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h2 class="modal-title">Malzeme Ekle</h2>
+                    <button class="modal-close" onclick="closeModal('add-material-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="material-form">
+                        <div class="form-group">
+                            <label class="form-label">Malzeme Kodu</label>
+                            <input type="text" class="form-control" name="materialCode" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Canias Kodu</label>
+                            <input type="text" class="form-control" name="caniasCode" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Malzeme Adı</label>
+                            <input type="text" class="form-control" name="materialName" required>
+                        </div>
+                        <div class="row">
+                            <div class="col">
+                                <div class="form-group">
+                                    <label class="form-label">Miktar</label>
+                                    <input type="number" class="form-control" name="quantity" min="1" value="1" required>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="form-group">
+                                    <label class="form-label">Birim</label>
+                                    <select class="form-control" name="unit">
+                                        <option value="Adet">Adet</option>
+                                        <option value="Metre">Metre</option>
+                                        <option value="Kg">Kg</option>
+                                        <option value="Litre">Litre</option>
+                                        <option value="Takım">Takım</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Açıklama</label>
+                            <textarea class="form-control" name="description" rows="2"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('add-material-modal')">İptal</button>
+                    <button class="btn btn-primary" onclick="saveMaterial()">Ekle</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Dosyaları -->
+    <script src="js/main.js"></script>
+    <script src="js/material-lists.js"></script>
+</body>
+</html>
