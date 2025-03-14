@@ -58,7 +58,7 @@
     <!-- Ana içerik alanı -->
     <div class="container">
         <div class="page-header">
-            <h1 class="page-title">Malzeme Listeleri</h1>
+            <h1 class="page-title">Gelişmiş Malzeme Listeleri</h1>
             <div>
                 <button class="btn btn-outline" onclick="refreshMaterialLists()">
                     <i class="fas fa-sync-alt"></i>
@@ -75,50 +75,108 @@
         <div class="filters">
             <div class="search-box">
                 <i class="fas fa-search search-icon"></i>
-                <input type="text" class="search-input" placeholder="Malzeme listesi ara (hücre tipi, kod, açıklama)..." onkeyup="filterMaterialLists()">
+                <input type="text" class="search-input" placeholder="Malzeme ara (kod, açıklama)..." id="material-search-input">
             </div>
             <div class="filter-item">
-                <select class="form-control" onchange="filterMaterialLists()">
+                <select class="form-control" id="list-type-filter">
                     <option value="">Tüm Listeler</option>
                     <option value="primer">Primer Listeler</option>
                     <option value="sekonder">Sekonder Listeler</option>
                 </select>
             </div>
             <div class="filter-item">
-                <select class="form-control" onchange="filterMaterialLists()">
+                <select class="form-control" id="cell-type-filter">
                     <option value="">Tüm Hücre Tipleri</option>
                     <option value="RM 36 LB">RM 36 LB</option>
                     <option value="RM 36 CB">RM 36 CB</option>
                     <option value="RM 36 FL">RM 36 FL</option>
                 </select>
             </div>
+            <div class="filter-item">
+                <select class="form-control" id="category-filter">
+                    <option value="">Tüm Kategoriler</option>
+                    <option value="Elektrik">Elektrik</option>
+                    <option value="Mekanik">Mekanik</option>
+                    <option value="İzolasyon">İzolasyon</option>
+                </select>
+            </div>
         </div>
 
-        <!-- Malzeme Listeleri Tablosu -->
+        <!-- Tabs -->
         <div class="card">
             <div class="card-header">
-                <div class="card-title">Malzeme Listeleri</div>
+                <div class="tabs">
+                    <div class="tab active" data-tab="lists">Malzeme Listeleri</div>
+                    <div class="tab" data-tab="stock-check">Stok Kontrol</div>
+                    <div class="tab" data-tab="missing-materials">Eksik Malzemeler</div>
+                </div>
             </div>
             <div class="card-body">
-                <div class="table-container">
-                    <table class="table" id="material-lists-table">
-                        <thead>
-                            <tr>
-                                <th>Liste Kodu</th>
-                                <th>Liste Tipi</th>
-                                <th>Hücre Tipi</th>
-                                <th>Teknik Özellikler</th>
-                                <th>Malzeme Sayısı</th>
-                                <th>Son Güncelleme</th>
-                                <th>İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td colspan="7" class="text-center">Yükleniyor...</td>
-                            </tr>
-                        </tbody>
-                    </table>
+                <!-- Malzeme Listeleri Tab -->
+                <div class="tab-content active" id="lists-content">
+                    <div class="table-container">
+                        <table class="table" id="material-lists-table">
+                            <thead>
+                                <tr>
+                                    <th>Liste Kodu</th>
+                                    <th>Liste Tipi</th>
+                                    <th>Hücre Tipi</th>
+                                    <th>Teknik Özellikler</th>
+                                    <th>Malzeme Sayısı</th>
+                                    <th>Son Güncelleme</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="7" class="text-center">Yükleniyor...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Stok Kontrol Tab -->
+                <div class="tab-content" id="stock-check-content">
+                    <div class="form-group">
+                        <label class="form-label">Sipariş Seçin veya Hücre Tipi Girin</label>
+                        <div class="row">
+                            <div class="col">
+                                <select class="form-control" id="order-select">
+                                    <option value="">Yeni Kontrol</option>
+                                    <option value="24-03-A001">AYEDAŞ - 24-03-A001</option>
+                                    <option value="24-03-B002">BAŞKENT EDAŞ - 24-03-B002</option>
+                                </select>
+                            </div>
+                            <div class="col">
+                                <input type="text" class="form-control" id="cell-type-input" placeholder="Hücre Tipi (RM 36 LB)">
+                            </div>
+                            <div class="col-auto">
+                                <button class="btn btn-primary" onclick="checkStockDemo()">
+                                    <i class="fas fa-search"></i> Stok Kontrol
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="stock-results-container" class="mt-4">
+                        <!-- Stok sonuçları buraya gelecek -->
+                    </div>
+                </div>
+
+                <!-- Eksik Malzemeler Tab -->
+                <div class="tab-content" id="missing-materials-content">
+                    <div class="info-box warning mb-4">
+                        <div class="info-box-title">Eksik Malzemeler</div>
+                        <div class="info-box-content">
+                            <p>Bu sayfada, stok kontrolleri sonucu eksik olduğu tespit edilen malzemeleri görüntüleyebilir ve satın alma talepleri oluşturabilirsiniz.</p>
+                        </div>
+                    </div>
+                    
+                    <div id="missing-materials-container">
+                        <!-- Eksik malzemeler buraya gelecek -->
+                        <p class="text-center">Henüz stok kontrolü yapılmadı. Stok Kontrol sekmesinden kontrol yapabilirsiniz.</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -185,6 +243,9 @@
                             <button type="button" class="btn btn-primary btn-sm" onclick="importMaterials()">
                                 <i class="fas fa-file-import"></i> Excel'den İçe Aktar
                             </button>
+                            <button type="button" class="btn btn-outline btn-sm" onclick="exportMaterials()">
+                                <i class="fas fa-file-export"></i> Excel'e Aktar
+                            </button>
                         </div>
                         
                         <div class="table-container">
@@ -196,12 +257,13 @@
                                         <th>Malzeme Adı</th>
                                         <th>Miktar</th>
                                         <th>Birim</th>
+                                        <th>Kategori</th>
                                         <th>İşlemler</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr>
-                                        <td colspan="6" class="text-center">Yükleniyor...</td>
+                                        <td colspan="7" class="text-center">Yükleniyor...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -257,8 +319,23 @@
                             </div>
                         </div>
                         <div class="form-group">
+                            <label class="form-label">Kategori</label>
+                            <select class="form-control" name="category">
+                                <option value="Elektrik">Elektrik</option>
+                                <option value="Mekanik">Mekanik</option>
+                                <option value="İzolasyon">İzolasyon</option>
+                                <option value="Diğer">Diğer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label class="form-label">Açıklama</label>
                             <textarea class="form-control" name="description" rows="2"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <div class="checkbox">
+                                <input type="checkbox" id="material-required" name="isRequired" checked>
+                                <label for="material-required">Zorunlu Malzeme</label>
+                            </div>
                         </div>
                     </form>
                 </div>
@@ -268,10 +345,228 @@
                 </div>
             </div>
         </div>
+
+        <!-- Satın Alma Talebi Modal -->
+        <div id="purchase-request-modal" class="modal">
+            <div class="modal-dialog">
+                <div class="modal-header">
+                    <h2 class="modal-title">Satın Alma Talebi Oluştur</h2>
+                    <button class="modal-close" onclick="closeModal('purchase-request-modal')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="info-box warning mb-4">
+                        <div class="info-box-title">Eksik Malzemeler</div>
+                        <div class="info-box-content">
+                            <p>Aşağıdaki malzemeler için satın alma talebi oluşturulacaktır.</p>
+                        </div>
+                    </div>
+                    
+                    <div id="purchase-materials-container">
+                        <!-- Satın alınacak malzemeler buraya gelecek -->
+                    </div>
+                    
+                    <div class="form-group mt-4">
+                        <label class="form-label">Ek Notlar</label>
+                        <textarea class="form-control" id="purchase-notes" rows="2" placeholder="Satın alma için ek notlar..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="closeModal('purchase-request-modal')">İptal</button>
+                    <button class="btn btn-primary" onclick="createPurchaseRequest()">Talebi Oluştur</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- JavaScript Dosyaları -->
     <script src="js/main.js"></script>
     <script src="js/material-lists.js"></script>
+    <script src="js/material-management.js"></script>
+
+    <!-- Demo için JS -->
+    <script>
+        // Tab değiştirme
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabId = this.getAttribute('data-tab');
+                
+                // Aynı grup içindeki tüm tabları pasif yap
+                const tabGroup = this.closest('.tabs');
+                tabGroup.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                
+                // Seçili tabı aktif yap
+                this.classList.add('active');
+                
+                // Tüm içerikleri gizle
+                const container = tabGroup.closest('.card') || tabGroup.closest('.modal-body');
+                container.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Seçili içeriği göster
+                const selectedContent = container.querySelector(`#${tabId}-content`);
+                if (selectedContent) {
+                    selectedContent.classList.add('active');
+                }
+            });
+        });
+
+        // Demo için stok kontrolü
+        function checkStockDemo() {
+            const orderId = document.getElementById('order-select').value || 'demo-order';
+            const cellType = document.getElementById('cell-type-input').value || 'RM 36 LB';
+            
+            // Container'ı temizle ve loading göster
+            const container = document.getElementById('stock-results-container');
+            container.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-pulse fa-2x"></i><p class="mt-2">Stok kontrolü yapılıyor...</p></div>';
+            
+            // Demo bir sipariş oluştur
+            const demoOrder = {
+                orderNo: orderId,
+                cells: [
+                    {
+                        productTypeCode: cellType,
+                        technicalValues: `${cellType} tipi 36kV 630A 16kA Yük Ayırıcılı Hücre`,
+                        quantity: 2,
+                        serialNumber: "SN-001"
+                    }
+                ],
+                customerInfo: {
+                    name: "Demo Müşteri"
+                }
+            };
+            
+            // Stok kontrolünü çağır
+            window.materialManagement.generateMaterialListForOrder(demoOrder)
+                .then(materialList => window.materialManagement.checkOrderMaterialStock(orderId, materialList))
+                .then(stockReport => {
+                    // Sonuçları göster
+                    const resultHtml = `
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <div class="card-title">Stok Durumu</div>
+                            </div>
+                            <div class="card-body">
+                                <div class="info-box ${stockReport.stockSufficient ? 'success' : 'warning'}">
+                                    <div class="info-box-title">${stockReport.stockSufficient ? 'Stok Yeterli' : 'Eksik Malzemeler Var'}</div>
+                                    <div class="info-box-content">
+                                        <p>${stockReport.stockSufficient ? 
+                                            'Tüm malzemeler stokta mevcut.' : 
+                                            `${stockReport.missingMaterials.length} adet malzeme stokta eksik.`}
+                                        </p>
+                                        ${!stockReport.stockSufficient ? 
+                                            `<button class="btn btn-warning btn-sm mt-2" onclick="showPurchaseRequestModal('${orderId}')">
+                                                <i class="fas fa-shopping-cart"></i> Satın Alma Talebi Oluştur
+                                             </button>` : ''}
+                                    </div>
+                                </div>
+                                
+                                <h4 class="mt-4 mb-2">Malzeme Listesi</h4>
+                                <div id="stock-materials-table"></div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    container.innerHTML = resultHtml;
+                    
+                    // Malzeme tablosunu oluştur
+                    window.materialManagement.renderMaterialTable(stockReport.materials, 'stock-materials-table');
+                    
+                    // Eksik malzemeleri göster
+                    if (!stockReport.stockSufficient) {
+                        const missingContainer = document.getElementById('missing-materials-container');
+                        missingContainer.innerHTML = `
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-title">${orderId} Siparişi Eksik Malzemeleri</div>
+                                </div>
+                                <div class="card-body">
+                                    <div id="missing-materials-table"></div>
+                                    
+                                    <div class="mt-4">
+                                        <button class="btn btn-warning" onclick="showPurchaseRequestModal('${orderId}')">
+                                            <i class="fas fa-shopping-cart"></i> Satın Alma Talebi Oluştur
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Eksik malzeme tablosunu oluştur
+                        window.materialManagement.renderMaterialTable(stockReport.missingMaterials, 'missing-materials-table');
+                    }
+                    
+                    // Eksik malzemeleri globalde sakla (demo için)
+                    window.currentStockReport = stockReport;
+                })
+                .catch(error => {
+                    console.error("Stok kontrolü hatası:", error);
+                    container.innerHTML = `
+                        <div class="info-box danger">
+                            <div class="info-box-title">Hata</div>
+                            <div class="info-box-content">
+                                <p>Stok kontrolü yapılırken bir hata oluştu: ${error.message}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+        }
+
+        // Satın alma talebi modalını göster
+        function showPurchaseRequestModal(orderId) {
+            // Eksik malzemeleri al
+            const stockReport = window.currentStockReport;
+            if (!stockReport || !stockReport.missingMaterials) {
+                alert("Eksik malzeme bilgisi bulunamadı. Lütfen önce stok kontrolü yapın.");
+                return;
+            }
+            
+            // Container'a malzemeleri yerleştir
+            const container = document.getElementById('purchase-materials-container');
+            window.materialManagement.renderMaterialTable(stockReport.missingMaterials, container);
+            
+            // Modalı göster
+            document.getElementById('purchase-request-modal').style.display = 'block';
+        }
+
+        // Satın alma talebi oluştur
+        function createPurchaseRequest() {
+            // Stok raporu kontrol
+            const stockReport = window.currentStockReport;
+            if (!stockReport) {
+                alert("Eksik malzeme bilgisi bulunamadı.");
+                return;
+            }
+            
+            // Loading göster
+            const modalBody = document.querySelector('#purchase-request-modal .modal-body');
+            modalBody.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-pulse fa-2x"></i><p class="mt-2">Satın alma talebi oluşturuluyor...</p></div>';
+            
+            // Satın alma talebi oluştur
+            window.materialManagement.createPurchaseRequestForMissingMaterials(stockReport)
+                .then(result => {
+                    // Modalı kapat
+                    closeModal('purchase-request-modal');
+                    
+                    // Başarı mesajı göster
+                    alert(`Satın alma talebi başarıyla oluşturuldu. Talep ID: ${result.requestId}`);
+                    
+                    // Sayfayı yenile
+                    location.reload();
+                })
+                .catch(error => {
+                    console.error("Satın alma talebi oluşturma hatası:", error);
+                    modalBody.innerHTML = `
+                        <div class="info-box danger">
+                            <div class="info-box-title">Hata</div>
+                            <div class="info-box-content">
+                                <p>Satın alma talebi oluşturulurken bir hata oluştu: ${error.message}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+        }
+    </script>
 </body>
 </html>
+                
