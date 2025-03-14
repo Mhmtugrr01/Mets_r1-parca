@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElektroTrack - Sipariş Bilgi Formu</title>
+    <meta name="description" content="Orta Gerilim Hücre İmalat Takip Sistemi - Sipariş Formu">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="img/favicon.png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+
+    <!-- CSS dosyaları -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/responsive.css">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    <div class="navbar">
+        <div class="navbar-brand" onclick="showPage('dashboard')">ElektroTrack</div>
+        <div class="navbar-menu">
+            <div class="navbar-item" onclick="showPage('dashboard')">Kontrol Paneli</div>
+            <div class="navbar-item active" onclick="showPage('sales')">Satış</div>
+            <div class="navbar-item" onclick="showPage('projects')">Projeler</div>
+            <div class="navbar-item" onclick="showPage('production')">Üretim</div>
+            <div class="navbar-item" onclick="showPage('stock')">Stok</div>
+            <div class="navbar-item" onclick="showPage('purchasing')">Satın Alma</div>
+            <div class="navbar-item" onclick="showPage('quality')">Kalite</div>
+            <div class="navbar-item" onclick="showPage('reports')">Raporlar</div>
+            <div class="navbar-item" onclick="showPage('notes')">Notlar</div>
+            <div class="navbar-item" onclick="showPage('ai')">Yapay Zeka</div>
+        </div>
+        <div class="user-menu">
+            <div class="user-avatar" onclick="toggleUserMenu()">M</div>
+            <div id="user-dropdown" class="user-dropdown">
+                <div class="user-dropdown-item" onclick="showPage('profile')">
+                    <i class="fas fa-user" style="margin-right: 0.5rem;"></i>
+                    <span>Profilim</span>
+                </div>
+                <div class="user-dropdown-item" onclick="showPage('settings')">
+                    <i class="fas fa-cog" style="margin-right: 0.5rem;"></i>
+                    <span>Ayarlar</span>
+                </div>
+                <div class="user-dropdown-divider"></div>
+                <div class="user-dropdown-item" onclick="logout()">
+                    <i class="fas fa-sign-out-alt" style="margin-right: 0.5rem;"></i>
+                    <span>Çıkış Yap</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ana içerik alanı -->
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">Sipariş Bilgi Formu - Hücre ve Beton Köşk</h1>
+            <div>
+                <button class="btn btn-outline" onclick="window.location.href='index.html'">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Geri</span>
+                </button>
+                <button class="btn btn-primary" onclick="saveAsDraft()">
+                    <i class="fas fa-save"></i>
+                    <span>Taslak Olarak Kaydet</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Sipariş formu -->
+        <form id="orderForm" class="space-y-6">
+            <!-- Üst bilgiler -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Sipariş Bilgileri</div>
+                </div>
+                <div class="card-body">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Sipariş No</label>
+                            <input type="text" name="orderNo" class="form-control" placeholder="Sipariş No">
+                        </div>
+                        <div>
+                            <label class="form-label">Sipariş Tarihi</label>
+                            <input type="date" name="orderDate" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Müşteri bilgileri -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Müşteri Adı</label>
+                            <input type="text" name="customerName" class="form-control" placeholder="Müşteri Adı">
+                        </div>
+                        <div>
+                            <label class="form-label">Doküman No</label>
+                            <input type="text" name="documentNo" class="form-control" placeholder="Doküman No">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Proje Adı</label>
+                            <input type="text" name="projectName" class="form-control" placeholder="Proje Adı">
+                        </div>
+                        <div>
+                            <label class="form-label">Sözleşme No</label>
+                            <input type="text" name="contractNo" class="form-control" placeholder="Sözleşme No">
+                        </div>
+                    </div>
+
+                    <!-- Teslimat bilgileri -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Teslim Şekli (Incoterm)</label>
+                            <input type="text" name="deliveryType" class="form-control" value="Nakliye Dahil, İndirme Hariç" placeholder="Teslim Şekli">
+                        </div>
+                        <div>
+                            <label class="form-label">Ödeme Şekli</label>
+                            <input type="text" name="paymentMethod" class="form-control" value="Fatura + 56 gün" placeholder="Ödeme Şekli">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label">Canias Proje No</label>
+                            <input type="text" name="caniasProjectNo" class="form-control" placeholder="Canias Proje No">
+                        </div>
+                        <div>
+                            <label class="form-label">Canias Belge No</label>
+                            <input type="text" name="caniasDocumentNo" class="form-control" placeholder="Canias Belge No">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hücre bilgileri tablosu -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Hücre Bilgileri</div>
+                </div>
+                <div class="card-body">
+                    <div id="cellsContainer" class="space-y-8">
+                        <!-- Hücre template buraya JS ile eklenecek -->
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="button" class="btn btn-success" onclick="addCell()">
+                            <i class="fas fa-plus"></i>
+                            Yeni Hücre Ekle
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Proje bilgileri -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Proje Bilgileri</div>
+                </div>
+                <div class="card-body">
+                    <div id="projectsContainer" class="space-y-6">
+                        <!-- Proje template buraya JS ile eklenecek -->
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <button type="button" class="btn btn-primary" onclick="addProject()">
+                            <i class="fas fa-plus"></i>
+                            Yeni Proje Ekle
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ek bilgiler -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">Ek Bilgiler</div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label class="form-label">Referans Dokümanlar</label>
+                        <textarea name="referenceDocuments" class="form-control" rows="3" placeholder="Referans dokümanlar"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Etiket ve Dil Bilgileri</label>
+                            <input type="text" name="labelInfo" class="form-control" placeholder="Etiket ve Dil Bilgileri">
+                        </div>
+                        <div class="flex items-center mt-6">
+                            <div class="mr-6">
+                                <input type="checkbox" id="specialDesign" name="specialDesign">
+                                <label for="specialDesign" class="ml-2">Özel Tasarım Gerekli Mi?</label>
+                            </div>
+                            
+                            <div>
+                                <input type="checkbox" id="lockingRequired" name="lockingRequired">
+                                <label for="lockingRequired" class="ml-2">Kilitleme Çalışması Gerekli Mi?</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Yorumlar</label>
+                        <textarea name="comments" class="form-control" rows="3" placeholder="Ek notlar ve yorumlar"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gönder/Kaydet Butonları -->
+            <div class="flex justify-end space-x-4">
+                <button type="button" class="btn btn-outline" onclick="window.location.href='index.html'">
+                    İptal
+                </button>
+                <button type="button" class="btn btn-warning" onclick="saveAsDraft()">
+                    Taslak Olarak Kaydet
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    Siparişi Kaydet
+                </button>
+            </div>
+        </form>
+
+        <!-- Template elemanları (gizli) -->
+        <div id="cellTemplate" style="display: none;">
+            <div class="cell-item p-4 border rounded bg-gray-50">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold">Hücre #<span class="cellIndex"></span></h3>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeCell(this)">
+                        <i class="fas fa-times"></i> Hücreyi Sil
+                    </button>
+                </div>
+
+                <!-- Temel bilgiler -->
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="form-label">Tesis/Merkez Adı</label>
+                        <input type="text" name="cells[0][facilityName]" class="form-control" placeholder="Tesis/Merkez Adı">
+                    </div>
+                    <div>
+                        <label class="form-label">Kabul Tarihi</label>
+                        <input type="date" name="cells[0][acceptanceDate]" class="form-control">
+                    </div>
+                    <div>
+                        <label class="form-label">Teslim Tarihi</label>
+                        <input type="date" name="cells[0][deliveryDate]" class="form-control">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="form-label">Miktar</label>
+                        <input type="number" name="cells[0][quantity]" class="form-control" min="1" value="1">
+                    </div>
+                    <div>
+                        <label class="form-label">Ürün Tipi ve Kodu</label>
+                        <input type="text" name="cells[0][productTypeCode]" class="form-control" placeholder="Örn: RM 36 LB 105121%">
+                    </div>
+                    <div>
+                        <label class="form-label">Teknik Değer ve Ürün Tanımı</label>
+                        <input type="text" name="cells[0][technicalValues]" class="form-control" placeholder="Örn: 36kV 630A 16kA Yük Ayırıcılı Giriş Hücresi">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4 mb-4">
+                    <div>
+                        <label class="form-label">Seri Numara</label>
+                        <input type="text" name="cells[0][serialNumber]" class="form-control" placeholder="Seri Numara">
+                    </div>
+                    <div>
+                        <label class="form-label">Hücre Sıra Kodu</label>
+                        <input type="text" name="cells[0][cellRowCode]" class="form-control" placeholder="Hücre Sıra Kodu">
+                    </div>
+                    <div class="flex items-center mt-6">
+                        <input type="checkbox" name="cells[0][isSeconde]" id="sekonde-0">
+                        <label for="sekonde-0" class="ml-2">Sekonde</label>
+                        
+                        <div class="ml-4">
+                            <label class="mr-2">
+                                Proje No:
+                            </label>
+                            <input type="text" name="cells[0][projectNumber]" class="form-control p-1 w-24" placeholder="Proje No">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Teknik detaylar -->
+                <div class="bg-white p-4 border rounded">
+                    <h4 class="font-semibold mb-4">Teknik Detaylar</h4>
+                    
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Akım Trafosu</label>
+                            <input type="text" name="cells[0][currentTransformer]" class="form-control" placeholder="Akım Trafosu">
+                        </div>
+                        <div>
+                            <label class="form-label">Gerilim Trafosu</label>
+                            <input type="text" name="cells[0][voltageTransformer]" class="form-control" placeholder="Gerilim Trafosu">
+                        </div>
+                        <div>
+                            <label class="form-label">Kesici Motor</label>
+                            <input type="text" name="cells[0][breakerMotor]" class="form-control" placeholder="Örn: 24 VDC" value="24 VDC">
+                        </div>
+                        <div>
+                            <label class="form-label">Kesici Bobin</label>
+                            <input type="text" name="cells[0][breakerCoil]" class="form-control" placeholder="Örn: 24 VDC" value="24 VDC">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Ayırıcı Motor</label>
+                            <input type="text" name="cells[0][disconnectorMotor]" class="form-control" placeholder="Ayırıcı Motor">
+                        </div>
+                        <div>
+                            <label class="form-label">Ayırıcı Bobin</label>
+                            <input type="text" name="cells[0][disconnectorCoil]" class="form-control" placeholder="Ayırıcı Bobin">
+                        </div>
+                        <div>
+                            <label class="form-label">Röle Modeli</label>
+                            <input type="text" name="cells[0][relayModel]" class="form-control" placeholder="Röle Modeli">
+                        </div>
+                        <div>
+                            <label class="form-label">Röle Canias Kodu</label>
+                            <input type="text" name="cells[0][relayCode]" class="form-control" placeholder="Röle Canias Kodu">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Enerji Analizörü</label>
+                            <input type="text" name="cells[0][energyAnalyzer]" class="form-control" placeholder="Enerji Analizörü">
+                        </div>
+                        <div>
+                            <label class="form-label">Analizör Canias Kodu</label>
+                            <input type="text" name="cells[0][analyzerCode]" class="form-control" placeholder="Analizör Canias Kodu">
+                        </div>
+                        <div>
+                            <label class="form-label">AGD Modeli</label>
+                            <input type="text" name="cells[0][agdModel]" class="form-control" placeholder="AGD Modeli">
+                        </div>
+                        <div>
+                            <label class="form-label">AGD Canias Kodu</label>
+                            <input type="text" name="cells[0][agdCode]" class="form-control" placeholder="AGD Canias Kodu">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">UKD</label>
+                            <input type="text" name="cells[0][ukd]" class="form-control" placeholder="UKD">
+                        </div>
+                        <div>
+                            <label class="form-label">Sayaç Modeli</label>
+                            <input type="text" name="cells[0][counterModel]" class="form-control" placeholder="Sayaç Modeli">
+                        </div>
+                        <div>
+                            <label class="form-label">Sayaç Canias Kodu</label>
+                            <input type="text" name="cells[0][counterCode]" class="form-control" placeholder="Sayaç Canias Kodu">
+                        </div>
+                        <div>
+                            <label class="form-label">Kesici YG Sigorta</label>
+                            <input type="text" name="cells[0][breakerFuse]" class="form-control" placeholder="Marka, Tip">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Gerilim Gösterge Tipi</label>
+                            <input type="text" name="cells[0][voltageIndicator]" class="form-control" placeholder="Gerilim Gösterge Tipi">
+                        </div>
+                        <div>
+                            <label class="form-label">DC Besleme Grubu</label>
+                            <input type="text" name="cells[0][dcSupply]" class="form-control" placeholder="DC Besleme Grubu">
+                        </div>
+                        <div>
+                            <label class="form-label">Kablo Başlığı</label>
+                            <input type="text" name="cells[0][cableTermination]" class="form-control" placeholder="Kablo Başlığı Modeli">
+                        </div>
+                        <div>
+                            <label class="form-label">Kablo Başlığı Canias Kodu</label>
+                            <input type="text" name="cells[0][cableCode]" class="form-control" placeholder="Canias Kodu">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="form-label">Diziliş Bara</label>
+                            <input type="text" name="cells[0][arrangementBars]" class="form-control" placeholder="Diziliş Bara">
+                        </div>
+                        <div>
+                            <label class="form-label">Bara Canias Kodu</label>
+                            <input type="text" name="cells[0][barsCode]" class="form-control" placeholder="Bara Canias Kodu">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="form-label">Kapama Detayı</label>
+                            <input type="text" name="cells[0][closingDetail]" class="form-control" placeholder="Kapama Detayı">
+                        </div>
+                        <div>
+                            <label class="form-label">Birleştirme Parçası</label>
+                            <input type="text" name="cells[0][connectorPart]" class="form-control" placeholder="Birleştirme Parçası">
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="form-label">Diğer Özellikler</label>
+                        <textarea name="cells[0][otherFeatures]" class="form-control" placeholder="*Motorlu *Kablo başlıkları Euromold marka. *UKD 10 m. gibi özellikler" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="projectTemplate" style="display: none;">
+            <div class="project-item p-4 border rounded bg-gray-50">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-semibold">PROJE-<span class="projectIndex"></span></h3>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="removeProject(this)">
+                        <i class="fas fa-times"></i> Projeyi Sil
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="form-label">Proje Adı</label>
+                        <input type="text" name="projects[0][name]" class="form-control" placeholder="Proje Adı" value="PROJE-1">
+                    </div>
+                    <div>
+                        <label class="form-label">Hücre Dizilimi</label>
+                        <input type="text" name="projects[0][cellArrangement]" class="form-control" placeholder="Örn: LB-CB-FL">
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 border rounded mb-4">
+                    <h4 class="font-semibold mb-2">Baralar</h4>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-2">
+                        <div>
+                            <h5 class="font-medium mb-2">Tip 1</h5>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="form-label text-xs">Adet</label>
+                                    <input type="number" name="projects[0][bars][type1][count]" class="form-control p-1" min="0" value="3">
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs">Boyut</label>
+                                    <input type="text" name="projects[0][bars][type1][size]" class="form-control p-1" placeholder="Örn: 582mm" value="582mm">
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs">Canias Kodu</label>
+                                    <input type="text" name="projects[0][bars][type1][caniasCode]" class="form-control p-1" placeholder="Canias Kodu" value="109367%">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h5 class="font-medium mb-2">Tip 2</h5>
+                            <div class="grid grid-cols-3 gap-2">
+                                <div>
+                                    <label class="form-label text-xs">Adet</label>
+                                    <input type="number" name="projects[0][bars][type2][count]" class="form-control p-1" min="0" value="3">
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs">Boyut</label>
+                                    <input type="text" name="projects[0][bars][type2][size]" class="form-control p-1" placeholder="Örn: 432mm" value="432mm">
+                                </div>
+                                <div>
+                                    <label class="form-label text-xs">Canias Kodu</label>
+                                    <input type="text" name="projects[0][bars][type2][caniasCode]" class="form-control p-1" placeholder="Canias Kodu" value="109363%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label">Kapama Detayları</label>
+                    <textarea name="projects[0][closingDetails]" class="form-control" placeholder="Örn: H1: Sol tarafı kapatılacak. H3: Sağ tarafı kapatılacak." rows="2">H1: Sol tarafı kapatılacak.
+H3: Sağ tarafı kapatılacak.</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Dosyaları -->
+    <script src="js/main.js"></script>
+    <script src="js/order-form.js"></script>
+</body>
+</html>
