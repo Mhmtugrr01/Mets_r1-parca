@@ -1,4 +1,1468 @@
 /**
+ * Üretim verilerini zaman çerçevesine göre filtrele
+ * @param {Array} production - Üretim listesi
+ * @param {string} timeframe - Zaman çerçevesi
+ * @returns {Array} Filtrelenmiş üretim verileri
+ */
+function filterProductionByTimeframe(production, timeframe) {
+    const now = new Date();
+    
+    switch (timeframe) {
+        case 'day':
+            return production.filter(p => {
+                if (!p.startDate && !p.endDate) return false;
+                
+                const startDate = p.startDate ? new Date(p.startDate?.toDate ? p.startDate.toDate() : p.startDate) : null;
+                const endDate = p.endDate ? new Date(p.endDate?.toDate ? p.endDate.toDate() : p.endDate) : null;
+                
+                return (startDate && startDate.toDateString() === now.toDateString()) || 
+                       (endDate && endDate.toDateString() === now.toDateString()) ||
+                       (startDate && endDate && startDate <= now && endDate >= now);
+            });
+            
+        case 'week':
+            const oneWeekLater = new Date(now);
+            oneWeekLater.setDate(now.getDate() + 7);
+            
+            return production.filter(p => {
+                if (!p.startDate && !p.endDate) return false;
+                
+                const startDate = p.startDate ? new Date(p.startDate?.toDate ? p.startDate.toDate() : p.startDate) : null;
+                const endDate = p.endDate ? new Date(p.endDate?.toDate ? p.endDate.toDate() : p.endDate) : null;
+                
+                return (startDate && startDate >= now && startDate <= oneWeekLater) || 
+                       (endDate && endDate >= now && endDate <= oneWeekLater) ||
+                       (startDate && endDate && startDate <= now && endDate >= oneWeekLater);
+            });
+            
+        case 'month':
+            const oneMonthLater = new Date(now);
+            oneMonthLater.setMonth(now.getMonth() + 1);
+            
+            return production.filter(p => {
+                if (!p.startDate && !p.endDate) return false;
+                
+                const startDate = p.startDate ? new Date(p.startDate?.toDate ? p.startDate.toDate() : p.startDate) : null;
+                const endDate = p.endDate ? new Date(p.endDate?.toDate ? p.endDate.toDate() : p.endDate) : null;
+                
+                return (startDate && startDate >= now && startDate <= oneMonthLater) || 
+                       (endDate && endDate >= now && endDate <= oneMonthLater) ||
+                       (startDate && endDate && startDate <= now && endDate >= oneMonthLater);
+            });
+            
+        default:
+            return production;
+    }
+}
+
+/**
+ * Demo sipariş verileri
+ * @returns {Array} Demo sipariş verileri
+ */
+function getDemoOrders() {
+    // Tarihler
+    const today = new Date();
+    const past15Days = new Date(today);
+    past15Days.setDate(today.getDate() - 15);
+    
+    const past30Days = new Date(today);
+    past30Days.setDate(today.getDate() - 30);
+    
+    const future15Days = new Date(today);
+    future15Days.setDate(today.getDate() + 15);
+    
+    const future30Days = new Date(today);
+    future30Days.setDate(today.getDate() + 30);
+    
+    return [
+        {
+            id: 'order-1',
+            orderNo: '24-03-A001',
+            customer: 'AYEDAŞ',
+            cellType: 'RM 36 LB',
+            cellCount: 3,
+            missingMaterials: 0,
+            orderDate: past30Days,
+            deliveryDate: future15Days,
+            status: 'production',
+            hasWarning: true
+        },
+        {
+            id: 'order-2',
+            orderNo: '24-03-B002',
+            customer: 'BAŞKENT EDAŞ',
+            cellType: 'RM 36 FL',
+            cellCount: 5,
+            missingMaterials: 2,
+            orderDate: past30Days,
+            deliveryDate: past15Days, // Gecikmiş teslimat
+            status: 'waiting',
+            hasMaterialIssue: true
+        },
+        {
+            id: 'order-3',
+            orderNo: '24-03-C003',
+            customer: 'ENERJİSA',
+            cellType: 'RM 36 CB',
+            cellCount: 4,
+            missingMaterials: 0,
+            orderDate: past30Days,
+            deliveryDate: future30Days,
+            status: 'ready'
+        },
+        {
+            id: 'order-4',
+            orderNo: '24-04-D004',
+            customer: 'TOROSLAR EDAŞ',
+            cellType: 'RM 36 LB',
+            cellCount: 8,
+            missingMaterials: 0,
+            orderDate: past15Days,
+            deliveryDate: future30Days,
+            status: 'planning'
+        },
+        {
+            id: 'order-5',
+            orderNo: '24-04-E005',
+            customer: 'AYEDAŞ',
+            cellType: 'RM 36 CB',
+            cellCount: 6,
+            missingMaterials: 0,
+            orderDate: past15Days,
+            deliveryDate: future30Days,
+            status: 'planning'
+        }
+    ];
+}
+
+/**
+ * Demo malzeme verileri
+ * @returns {Array} Demo malzeme verileri
+ */
+function getDemoMaterials() {
+    // Tarihler
+    const today = new Date();
+    const future7Days = new Date(today);
+    future7Days.setDate(today.getDate() + 7);
+    
+    const future14Days = new Date(today);
+    future14Days.setDate(today.getDate() + 14);
+    
+    const future2Days = new Date(today);
+    future2Days.setDate(today.getDate() + 2);
+    
+    const past2Days = new Date(today);
+    past2Days.setDate(today.getDate() - 2);
+    
+    return [
+        {
+            id: 'material-1',
+            name: 'Koruma Rölesi',
+            code: 'Siemens 7SR1003-1JA20-2DA0+ZY20',
+            stock: 5,
+            minStock: 2,
+            supplier: 'Siemens',
+            inStock: true
+        },
+        {
+            id: 'material-2',
+            name: 'Kesici',
+            code: 'ESİTAŞ KAP-80/190-115',
+            stock: 3,
+            minStock: 1,
+            supplier: 'Esitaş',
+            inStock: true
+        },
+        {
+            id: 'material-3',
+            name: 'Kablo Başlıkları',
+            code: 'M480TB/G-027-95.300UN5',
+            stock: 0,
+            minStock: 5,
+            supplier: 'Euromold',
+            inStock: false,
+            orderNo: '24-03-B002',
+            orderId: 'order-2',
+            expectedSupplyDate: future7Days,
+            orderNeedDate: past2Days // Kritik gecikme: Tedarik tarihi ihtiyaç tarihinden sonra
+        },
+        {
+            id: 'material-4',
+            name: 'Gerilim Gösterge',
+            code: 'OVI+S (10nf)',
+            stock: 0,
+            minStock: 3,
+            supplier: 'Elektra',
+            inStock: false,
+            orderNo: '24-03-B002',
+            orderId: 'order-2',
+            expectedSupplyDate: future2Days,
+            orderNeedDate: future7Days
+        },
+        {
+            id: 'material-5',
+            name: 'Ayırıcı Motor',
+            code: 'M: 24 VDC B: 24 VDC',
+            stock: 10,
+            minStock: 4,
+            supplier: 'Siemens',
+            inStock: true
+        }
+    ];
+}
+
+/**
+ * Demo üretim verileri
+ * @returns {Array} Demo üretim verileri
+ */
+function getDemoProduction() {
+    // Tarihler
+    const today = new Date();
+    const past7Days = new Date(today);
+    past7Days.setDate(today.getDate() - 7);
+    
+    const past14Days = new Date(today);
+    past14Days.setDate(today.getDate() - 14);
+    
+    const future7Days = new Date(today);
+    future7Days.setDate(today.getDate() + 7);
+    
+    const future14Days = new Date(today);
+    future14Days.setDate(today.getDate() + 14);
+    
+    const future21Days = new Date(today);
+    future21Days.setDate(today.getDate() + 21);
+    
+    return [
+        {
+            id: 'production-1',
+            orderNo: '24-03-A001',
+            orderId: 'order-1',
+            startDate: past7Days,
+            endDate: future7Days,
+            status: 'active',
+            progress: 60,
+            isDelayed: false,
+            stages: [
+                {
+                    name: 'Malzeme Hazırlık',
+                    status: 'completed',
+                    startDate: past7Days,
+                    endDate: past7Days
+                },
+                {
+                    name: 'Kablo Montajı',
+                    status: 'completed',
+                    startDate: past7Days,
+                    endDate: today
+                },
+                {
+                    name: 'Panel Montajı',
+                    status: 'active',
+                    startDate: today,
+                    endDate: future7Days
+                },
+                {
+                    name: 'Test',
+                    status: 'waiting',
+                    startDate: future7Days,
+                    endDate: future7Days
+                }
+            ]
+        },
+        {
+            id: 'production-2',
+            orderNo: '24-03-B002',
+            orderId: 'order-2',
+            startDate: past14Days,
+            endDate: past7Days, // Bitiş tarihi geçmiş
+            status: 'active',
+            progress: 45,
+            isDelayed: true, // Gecikmeli üretim
+            delayReason: 'Malzeme tedarik gecikmesi',
+            stages: [
+                {
+                    name: 'Malzeme Hazırlık',
+                    status: 'delayed',
+                    startDate: past14Days,
+                    endDate: past7Days
+                },
+                {
+                    name: 'Kablo Montajı',
+                    status: 'active',
+                    startDate: past7Days,
+                    endDate: today
+                },
+                {
+                    name: 'Panel Montajı',
+                    status: 'waiting',
+                    startDate: null,
+                    endDate: null
+                },
+                {
+                    name: 'Test',
+                    status: 'waiting',
+                    startDate: null,
+                    endDate: null
+                }
+            ]
+        },
+        {
+            id: 'production-3',
+            orderNo: '24-03-C003',
+            orderId: 'order-3',
+            startDate: future7Days,
+            endDate: future21Days,
+            status: 'waiting',
+            progress: 0,
+            isDelayed: false
+        }
+    ];
+}
+
+/**
+ * Demo müşteri verileri
+ * @returns {Array} Demo müşteri verileri
+ */
+function getDemoCustomers() {
+    return [
+        {
+            id: 'customer-1',
+            name: 'AYEDAŞ',
+            contact: 'Ahmet Yılmaz',
+            email: 'ahmet@ayedas.com.tr',
+            phone: '0212 555 11 22'
+        },
+        {
+            id: 'customer-2',
+            name: 'ENERJİSA',
+            contact: 'Mehmet Kaya',
+            email: 'mehmet@enerjisa.com.tr',
+            phone: '0216 333 44 55'
+        },
+        {
+            id: 'customer-3',
+            name: 'BAŞKENT EDAŞ',
+            contact: 'Ayşe Demir',
+            email: 'ayse@baskentedas.com.tr',
+            phone: '0312 444 77 88'
+        },
+        {
+            id: 'customer-4',
+            name: 'TOROSLAR EDAŞ',
+            contact: 'Fatma Şahin',
+            email: 'fatma@toroslar.com.tr',
+            phone: '0322 666 99 00'
+        }
+    ];
+}
+
+// Ana işlevleri dışa aktar
+window.initAIAssistant = initAIAssistant;
+window.toggleAIAssistant = toggleAIAssistant;
+window.sendAIQuery = sendAIQuery;
+window.refreshAssistantDataCache = refreshAssistantDataCache;
+
+// Sayfa yüklendiğinde asistanı başlat
+document.addEventListener('DOMContentLoaded', function() {
+    // Asistanı başlat
+    if (typeof initAIAssistant === 'function') {
+        setTimeout(() => {
+            initAIAssistant();
+        }, 1000);
+    }
+});
+
+// Orijinal chatbot fonksiyonunu geçersiz kıl
+window.sendChatMessage = sendAIQuery;    response += `<ol style="margin-left: 20px; padding-left: 0;">
+        <li style="margin-bottom: 10px;">
+            <strong>Mevcut Durum Analizi:</strong> Tüm süreçlerin detaylı bir analizini yapın ve temel sorun alanlarını belirleyin.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>Önceliklendirme:</strong> İyileştirme önerilerini etki ve uygulama kolaylığına göre önceliklendirin.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>Uygulama Planı:</strong> Her bir öneri için detaylı bir uygulama planı oluşturun.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>Pilot Uygulama:</strong> Önerileri küçük ölçekte test edin ve sonuçları ölçün.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>Tam Ölçekli Uygulama:</strong> Başarılı pilot uygulamaları tüm sisteme yayın.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>İzleme ve İyileştirme:</strong> Performansı sürekli izleyin ve gerektiğinde iyileştirmeler yapın.
+        </li>
+    </ol>`;
+    
+    return response;
+}
+
+/**
+ * Genel sorgu yanıtı oluştur
+ * @param {string} query - Kullanıcı sorgusu
+ * @param {Object} queryInfo - Sorgu analiz bilgisi
+ * @returns {Promise<string>} Oluşturulan yanıt
+ */
+async function generateGeneralResponse(query, queryInfo) {
+    // Yapay zeka asistanı tanıtımı
+    if (query.toLowerCase().includes('ne yapabilir') || 
+        query.toLowerCase().includes('nasıl yardımcı olabilir') ||
+        query.toLowerCase().includes('özellikler')) {
+        return generateCapabilitiesResponse();
+    }
+    
+    // Yardım sorgusu
+    if (query.toLowerCase().includes('yardım') || query.toLowerCase().includes('help')) {
+        return generateHelpResponse();
+    }
+    
+    // Selamlama sorguları
+    if (query.toLowerCase().includes('merhaba') || 
+        query.toLowerCase().includes('selam') ||
+        query.toLowerCase().includes('hello')) {
+        return generateGreetingResponse();
+    }
+    
+    // Genel bilgi yanıtı
+    return generateInfoResponse(query);
+}
+
+/**
+ * Asistan yetenekleri yanıtı oluştur
+ * @returns {string} Oluşturulan yanıt
+ */
+function generateCapabilitiesResponse() {
+    let response = `<strong>Yapay Zeka Asistanı Yetenekleri</strong><br><br>`;
+    
+    response += `Size şu konularda yardımcı olabilirim:<br><br>`;
+    
+    response += `<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <div style="font-weight: 500; margin-bottom: 8px; font-size: 16px; color: #1e40af;"><i class="fas fa-clipboard-list"></i> Sipariş Bilgileri</div>
+            <ul style="margin: 0; padding-left: 20px; color: #64748b;">
+                <li>Sipariş durum takibi</li>
+                <li>Gecikme bilgileri</li>
+                <li>Sipariş içeriği ve detayları</li>
+                <li>Müşteri siparişleri</li>
+            </ul>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981;">
+            <div style="font-weight: 500; margin-bottom: 8px; font-size: 16px; color: #047857;"><i class="fas fa-boxes"></i> Malzeme Takibi</div>
+            <ul style="margin: 0; padding-left: 20px; color: #64748b;">
+                <li>Stok durumu</li>
+                <li>Eksik malzemeler</li>
+                <li>Tedarik bilgileri</li>
+                <li>Malzeme ihtiyaçları</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #eff6ff; border-radius: 8px; border-left: 4px solid #2563eb;">
+            <div style="font-weight: 500; margin-bottom: 8px; font-size: 16px; color: #1d4ed8;"><i class="fas fa-industry"></i> Üretim Takibi</div>
+            <ul style="margin: 0; padding-left: 20px; color: #64748b;">
+                <li>Üretim planları</li>
+                <li>Üretim aşamaları</li>
+                <li>İlerleme durumu</li>
+                <li>Gecikme bilgileri</li>
+            </ul>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #fff7ed; border-radius: 8px; border-left: 4px solid #f59e0b;">
+            <div style="font-weight: 500; margin-bottom: 8px; font-size: 16px; color: #b45309;"><i class="fas fa-chart-pie"></i> Raporlama</div>
+            <ul style="margin: 0; padding-left: 20px; color: #64748b;">
+                <li>Genel durum raporları</li>
+                <li>Performans analizleri</li>
+                <li>Özet istatistikler</li>
+                <li>Dönemsel raporlar</li>
+            </ul>
+        </div>
+    </div>`;
+    
+    response += `<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #fdf2f8; border-radius: 8px; border-left: 4px solid #ec4899;">
+            <div style="font-weight: 500; margin-bottom: 8px; font-size: 16px; color: #be185d;"><i class="fas fa-lightbulb"></i> Optimizasyon Önerileri</div>
+            <ul style="margin: 0; padding-left: 20px; color: #64748b;">
+                <li>Üretim optimizasyonu</li>
+                <li>Malzeme tedarik iyileştirmeleri</li>
+                <li>Süreç iyileştirme önerileri</li>
+                <li>Verimlilik artırma tavsiyeleri</li>
+            </ul>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f1f5f9; border-radius: 8px; border-left: 4px solid #64748b;">
+            <div style="font-weight: 500; margin-bottom: 8px; font-size: 16px; color: #475569;"><i class="fas fa-question-circle"></i> Genel Yardım</div>
+            <ul style="margin: 0; padding-left: 20px; color: #64748b;">
+                <li>Sistem kullanım yardımı</li>
+                <li>Sorun giderme desteği</li>
+                <li>Navigasyon yardımı</li>
+                <li>İşlevsel rehberlik</li>
+            </ul>
+        </div>
+    </div>`;
+    
+    response += `<br>Sorularınızı doğal dilde sorabilirsiniz. Örneğin:<br><br>`;
+    
+    response += `<ul style="margin: 0; padding-left: 20px;">
+        <li>"24-03-B002 siparişinin durumu nedir?"</li>
+        <li>"Eksik malzemeleri listele"</li>
+        <li>"Bu ay teslim edilecek siparişler hangileri?"</li>
+        <li>"AYEDAŞ müşterisinin siparişlerini göster"</li>
+        <li>"Üretim optimizasyon önerileri neler?"</li>
+        <li>"Malzeme tedarik sürecini nasıl iyileştirebiliriz?"</li>
+    </ul>`;
+    
+    return response;
+}
+
+/**
+ * Yardım yanıtı oluştur
+ * @returns {string} Oluşturulan yanıt
+ */
+function generateHelpResponse() {
+    let response = `<strong>Yardım ve Kullanım Rehberi</strong><br><br>`;
+    
+    response += `<div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <p>ElektroTrack Asistanı ile aşağıdaki konularda bilgi alabilir ve yardım isteyebilirsiniz:</p>
+    </div>`;
+    
+    response += `<div style="margin-bottom: 15px;">
+        <strong style="color: #1e40af;">1. Sipariş Sorguları:</strong>
+        <ul style="margin-top: 5px; padding-left: 20px;">
+            <li>"24-03-A001 siparişinin durumu nedir?"</li>
+            <li>"Geciken siparişleri göster"</li>
+            <li>"AYEDAŞ müşterisinin siparişleri"</li>
+            <li>"Bu ay teslim edilecek siparişler"</li>
+        </ul>
+    </div>`;
+    
+    response += `<div style="margin-bottom: 15px;">
+        <strong style="color: #1e40af;">2. Malzeme Sorguları:</strong>
+        <ul style="margin-top: 5px; padding-left: 20px;">
+            <li>"Eksik malzemeleri listele"</li>
+            <li>"24-03-B002 siparişinin malzeme durumu"</li>
+            <li>"Stok durumu nedir?"</li>
+            <li>"Kritik seviyedeki malzemeler"</li>
+        </ul>
+    </div>`;
+    
+    response += `<div style="margin-bottom: 15px;">
+        <strong style="color: #1e40af;">3. Üretim Sorguları:</strong>
+        <ul style="margin-top: 5px; padding-left: 20px;">
+            <li>"Üretim planını göster"</li>
+            <li>"Aktif üretimler neler?"</li>
+            <li>"24-03-C003 siparişinin üretim durumu"</li>
+            <li>"Bu haftaki üretim planı"</li>
+        </ul>
+    </div>`;
+    
+    response += `<div style="margin-bottom: 15px;">
+        <strong style="color: #1e40af;">4. Rapor Sorguları:</strong>
+        <ul style="margin-top: 5px; padding-left: 20px;">
+            <li>"Aylık sipariş raporu"</li>
+            <li>"Müşteri raporu"</li>
+            <li>"Üretim performans raporu"</li>
+            <li>"Genel durum raporu"</li>
+        </ul>
+    </div>`;
+    
+    response += `<div style="margin-bottom: 15px;">
+        <strong style="color: #1e40af;">5. Optimizasyon Sorguları:</strong>
+        <ul style="margin-top: 5px; padding-left: 20px;">
+            <li>"Üretim optimizasyonu önerileri"</li>
+            <li>"Malzeme tedarik süreci iyileştirmeleri"</li>
+            <li>"Sistem optimizasyonu"</li>
+            <li>"Verimlilik artırma önerileri"</li>
+        </ul>
+    </div>`;
+    
+    response += `<br>Asistana sorularınızı doğal dilde sorabilirsiniz. Sistem sürekli öğrenmekte ve yanıtlarını geliştirmektedir.`;
+    
+    return response;
+}
+
+/**
+ * Selamlama yanıtı oluştur
+ * @returns {string} Oluşturulan yanıt
+ */
+function generateGreetingResponse() {
+    // Kullanıcı adını al
+    const userName = window.currentUser?.displayName || window.currentUser?.name || '';
+    
+    // Günün saatine göre selamlama
+    const hour = new Date().getHours();
+    let greeting = 'Merhaba';
+    
+    if (hour >= 5 && hour < 12) {
+        greeting = 'Günaydın';
+    } else if (hour >= 12 && hour < 18) {
+        greeting = 'İyi günler';
+    } else if (hour >= 18 && hour < 22) {
+        greeting = 'İyi akşamlar';
+    } else {
+        greeting = 'İyi geceler';
+    }
+    
+    // Yanıt oluştur
+    let response = `<strong>${greeting}${userName ? ' ' + userName : ''}!</strong><br><br>`;
+    
+    response += `ElektroTrack Akıllı Asistanına hoş geldiniz. Size nasıl yardımcı olabilirim?<br><br>`;
+    
+    // Hızlı erişim bağlantıları
+    response += `<div style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">
+        <button onclick="document.getElementById('chatbot-input').value='Aktif siparişleri göster'; sendAIQuery();" style="background-color: #1e40af; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 12px;">
+            Aktif Siparişler
+        </button>
+        <button onclick="document.getElementById('chatbot-input').value='Eksik malzemeleri listele'; sendAIQuery();" style="background-color: #10b981; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 12px;">
+            Eksik Malzemeler
+        </button>
+        <button onclick="document.getElementById('chatbot-input').value='Üretim planını göster'; sendAIQuery();" style="background-color: #f59e0b; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 12px;">
+            Üretim Planı
+        </button>
+        <button onclick="document.getElementById('chatbot-input').value='Geciken siparişler'; sendAIQuery();" style="background-color: #ef4444; color: white; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; font-size: 12px;">
+            Geciken Siparişler
+        </button>
+    </div>`;
+    
+    // Sistem durumu
+    const orders = aiAssistantState.dataCache.orders || [];
+    const materials = aiAssistantState.dataCache.materials || [];
+    
+    const activeOrders = orders.filter(o => o.status !== 'completed');
+    const delayedOrders = orders.filter(o => isOrderDelayed(o));
+    const missingMaterials = materials.filter(m => !m.inStock);
+    
+    if (activeOrders.length > 0 || delayedOrders.length > 0 || missingMaterials.length > 0) {
+        response += `<br><div style="background-color: #f8fafc; padding: 12px; border-radius: 8px; margin-top: 10px; font-size: 14px;">
+            <strong>Güncel Durum:</strong><br>`;
+        
+        if (activeOrders.length > 0) {
+            response += `- ${activeOrders.length} aktif sipariş bulunuyor.<br>`;
+        }
+        
+        if (delayedOrders.length > 0) {
+            response += `- <span style="color: #ef4444;">${delayedOrders.length} sipariş gecikmede.</span><br>`;
+        }
+        
+        if (missingMaterials.length > 0) {
+            response += `- ${missingMaterials.length} malzeme eksik durumda.<br>`;
+        }
+        
+        response += `</div>`;
+    }
+    
+    return response;
+}
+
+/**
+ * Genel bilgi yanıtı oluştur
+ * @param {string} query - Kullanıcı sorgusu
+ * @returns {string} Oluşturulan yanıt
+ */
+function generateInfoResponse(query) {
+    // Yapay zeka ile ilgili sorgu
+    if (query.toLowerCase().includes('yapay zeka') || 
+        query.toLowerCase().includes('ai') || 
+        query.toLowerCase().includes('artificial intelligence')) {
+        return `<p>ElektroTrack, yapay zeka destekli bir orta gerilim hücre imalat takip sistemidir. Makine öğrenimi algoritmaları, doğal dil işleme ve veri analizi yetenekleri ile sipariş takibi, üretim planlaması, malzeme tedariki ve performans analizini optimize etmek için tasarlanmıştır.</p>
+        <p>Yapay zeka özelliklerim şunları içerir:</p>
+        <ul>
+            <li>Doğal dilde sorgu anlama ve yanıtlama</li>
+            <li>Üretim süreçlerinde optimizasyon önerileri</li>
+            <li>Malzeme tedarik süreçlerinin analizi</li>
+            <li>Gecikme risklerinin önceden tespiti</li>
+            <li>Raporlama ve analitik görselleştirme</li>
+        </ul>
+        <p>Nasıl yardımcı olabilirim?</p>`;
+    }
+    
+    // Sistem ile ilgili sorgu
+    if (query.toLowerCase().includes('sistem') || 
+        query.toLowerCase().includes('yazılım') || 
+        query.toLowerCase().includes('uygulama')) {
+        return `<p>ElektroTrack, orta gerilim hücre imalatı için geliştirilmiş modern bir endüstriyel takip sistemidir. Web tabanlı arayüzü, gerçek zamanlı veri işleme yetenekleri ve yapay zeka desteği ile üretim süreçlerini optimize etmenize yardımcı olur.</p>
+        <p>Sistem özellikleri:</p>
+        <ul>
+            <li>Sipariş yönetimi ve takibi</li>
+            <li>Malzeme ve stok kontrolü</li>
+            <li>Üretim planlama ve izleme</li>
+            <li>Tedarik zinciri yönetimi</li>
+            <li>Yapay zeka destekli optimizasyon</li>
+            <li>Kapsamlı raporlama ve analiz</li>
+        </ul>
+        <p>Belirli bir özellik hakkında daha fazla bilgi almak ister misiniz?</p>`;
+    }
+    
+    // Bilinmeyen sorgu
+    return `<p>Üzgünüm, sorunuzu tam olarak anlayamadım. Aşağıdaki konularda size yardımcı olabilirim:</p>
+    <ul>
+        <li>Sipariş durumu ve detayları</li>
+        <li>Malzeme ve stok bilgileri</li>
+        <li>Üretim planları ve takibi</li>
+        <li>Raporlar ve analizler</li>
+        <li>Optimizasyon önerileri</li>
+    </ul>
+    <p>Lütfen sorunuzu daha açık bir şekilde ifade eder misiniz? Ya da "yardım" yazarak kullanım rehberini görüntüleyebilirsiniz.</p>`;
+}
+
+/**
+ * Öneri çiplerini sorguya göre güncelle
+ * @param {string} query - Kullanıcı sorgusu
+ */
+function updateSuggestionsBasedOnQuery(query) {
+    // Sorgu türüne göre önerileri güncelle
+    
+    // Sipariş sorgusu
+    if (query.toLowerCase().includes('sipariş') || query.match(/\d{2}-\d{2}-[A-Za-z]\d{3}/)) {
+        updateSuggestions([
+            'Aktif siparişler',
+            'Geciken siparişler',
+            'Bu ay teslim edilecekler',
+            'AYEDAŞ siparişleri',
+            'Sipariş raporu'
+        ]);
+        return;
+    }
+    
+    // Malzeme sorgusu
+    if (query.toLowerCase().includes('malzeme') || query.toLowerCase().includes('stok') || query.toLowerCase().includes('tedarik')) {
+        updateSuggestions([
+            'Eksik malzemeler',
+            'Kritik stok durumu',
+            'Malzeme raporu',
+            'Tedarik önerileri',
+            'Stok durumu'
+        ]);
+        return;
+    }
+    
+    // Üretim sorgusu
+    if (query.toLowerCase().includes('üretim') || query.toLowerCase().includes('imalat') || query.toLowerCase().includes('plan')) {
+        updateSuggestions([
+            'Aktif üretimler',
+            'Üretim planı',
+            'Üretim optimizasyonu',
+            'Üretim raporu',
+            'Üretim performansı'
+        ]);
+        return;
+    }
+    
+    // Rapor sorgusu
+    if (query.toLowerCase().includes('rapor') || query.toLowerCase().includes('analiz')) {
+        updateSuggestions([
+            'Aylık rapor',
+            'Sipariş raporu',
+            'Malzeme raporu',
+            'Müşteri raporu',
+            'Performans raporu'
+        ]);
+        return;
+    }
+    
+    // Optimizasyon sorgusu
+    if (query.toLowerCase().includes('optimizasyon') || query.toLowerCase().includes('öneri') || query.toLowerCase().includes('iyileştirme')) {
+        updateSuggestions([
+            'Üretim optimizasyonu',
+            'Malzeme tedarik önerileri',
+            'Sistem iyileştirmeleri',
+            'Performans artırma',
+            'Darboğaz analizi'
+        ]);
+        return;
+    }
+    
+    // Varsayılan öneriler
+    updateSuggestions([
+        'Aktif siparişler',
+        'Eksik malzemeler',
+        'Üretim planı',
+        'Geciken siparişler',
+        'Aylık rapor'
+    ]);
+}
+
+/**
+ * Performans rengini al
+ * @param {number} value - Performans değeri (0-100)
+ * @returns {string} Renk kodu
+ */
+function getPerformanceColor(value) {
+    if (value >= 90) return '#10b981'; // Yeşil
+    if (value >= 75) return '#3b82f6'; // Mavi
+    if (value >= 50) return '#f59e0b'; // Turuncu
+    return '#ef4444'; // Kırmızı
+}
+
+/**
+ * Tarihi formatla
+ * @param {Date|string|Object} date - Tarih objesi, string veya Firestore Timestamp
+ * @returns {string} - Formatlanmış tarih (GG.AA.YYYY)
+ */
+function formatDate(date) {
+    if (!date) return '';
+    
+    if (typeof date === 'string') {
+        // ISO formatında ise
+        if (date.includes('T')) {
+            date = new Date(date);
+        } else if (date.includes('.')) {
+            // TR formatında (12.05.2024) ise
+            const parts = date.split('.');
+            if (parts.length === 3) {
+                date = new Date(parts[2], parts[1] - 1, parts[0]);
+            } else {
+                return date; // Anlaşılamayan format
+            }
+        } else if (date.includes('/')) {
+            // US formatında (05/12/2024) ise
+            const parts = date.split('/');
+            if (parts.length === 3) {
+                date = new Date(parts[2], parts[0] - 1, parts[1]);
+            } else {
+                return date; // Anlaşılamayan format
+            }
+        } else {
+            return date; // Anlaşılamayan format
+        }
+    } else if (date && typeof date === 'object' && date.toDate && typeof date.toDate === 'function') {
+        // Firebase Timestamp ise
+        try {
+            date = date.toDate();
+        } catch (e) {
+            console.error("Tarih dönüştürme hatası:", e);
+            return '';
+        }
+    } else if (!(date instanceof Date)) {
+        return ''; // Geçersiz format
+    }
+    
+    return date.toLocaleDateString('tr-TR');
+}
+
+/**
+ * Kısa tarih formatla (gün ay)
+ * @param {Date} date - Tarih objesi
+ * @returns {string} - Formatlanmış kısa tarih (5 May)
+ */
+function formatShortDate(date) {
+    if (!date) return '';
+    
+    if (!(date instanceof Date)) {
+        if (typeof date === 'string') {
+            date = new Date(date);
+        } else {
+            return '';
+        }
+    }
+    
+    // Aylar
+    const months = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+    
+    return `${date.getDate()} ${months[date.getMonth()]}`;
+}
+
+/**
+ * Zaman çerçevesi metni al
+ * @param {string} timeframe - Zaman çerçevesi
+ * @returns {string} Zaman çerçevesi metni
+ */
+function getTimeframeText(timeframe) {
+    switch (timeframe) {
+        case 'day':
+            return 'Günlük';
+        case 'week':
+            return 'Haftalık';
+        case 'month':
+            return 'Aylık';
+        case 'quarter':
+            return '3 Aylık';
+        case 'half-year':
+            return '6 Aylık';
+        case 'year':
+            return 'Yıllık';
+        default:
+            return 'Genel';
+    }
+}
+
+/**
+ * Sipariş gecikme durumunu kontrol et
+ * @param {Object} order - Sipariş verisi
+ * @returns {boolean} Gecikme durumu
+ */
+function isOrderDelayed(order) {
+    if (!order.deliveryDate) return false;
+    
+    const today = new Date();
+    const deliveryDate = new Date(order.deliveryDate?.toDate ? order.deliveryDate.toDate() : order.deliveryDate);
+    
+    return order.status !== 'completed' && deliveryDate < today;
+}
+
+/**
+ * Siparişleri zaman çerçevesine göre filtrele
+ * @param {Array} orders - Sipariş listesi
+ * @param {string} timeframe - Zaman çerçevesi
+ * @returns {Array} Filtrelenmiş siparişler
+ */
+function filterOrdersByTimeframe(orders, timeframe) {
+    const now = new Date();
+    
+    switch (timeframe) {
+        case 'day':
+            return orders.filter(o => {
+                if (!o.orderDate) return false;
+                
+                const orderDate = new Date(o.orderDate?.toDate ? o.orderDate.toDate() : o.orderDate);
+                return orderDate.toDateString() === now.toDateString();
+            });
+            
+        case 'week':
+            const oneWeekAgo = new Date(now);
+            oneWeekAgo.setDate(now.getDate() - 7);
+            
+            return orders.filter(o => {
+                if (!o.orderDate) return false;
+                
+                const orderDate = new Date(o.orderDate?.toDate ? o.orderDate.toDate() : o.orderDate);
+                return orderDate >= oneWeekAgo;
+            });
+            
+        case 'month':
+            const oneMonthAgo = new Date(now);
+            oneMonthAgo.setMonth(now.getMonth() - 1);
+            
+            return orders.filter(o => {
+                if (!o.orderDate) return false;
+                
+                const orderDate = new Date(o.orderDate?.toDate ? o.orderDate.toDate() : o.orderDate);
+                return orderDate >= oneMonthAgo;
+            });
+            
+        case 'quarter':
+            const threeMonthsAgo = new Date(now);
+            threeMonthsAgo.setMonth(now.getMonth() - 3);
+            
+            return orders.filter(o => {
+                if (!o.orderDate) return false;
+                
+                const orderDate = new Date(o.orderDate?.toDate ? o.orderDate.toDate() : o.orderDate);
+                return orderDate >= threeMonthsAgo;
+            });
+            
+        case 'half-year':
+            const sixMonthsAgo = new Date(now);
+            sixMonthsAgo.setMonth(now.getMonth() - 6);
+            
+            return orders.filter(o => {
+                if (!o.orderDate) return false;
+                
+                const orderDate = new Date(o.orderDate?.toDate ? o.orderDate.toDate() : o.orderDate);
+                return orderDate >= sixMonthsAgo;
+            });
+            
+        case 'year':
+            const oneYearAgo = new Date(now);
+            oneYearAgo.setFullYear(now.getFullYear() - 1);
+            
+            return orders.filter(o => {
+                if (!o.orderDate) return false;
+                
+                const orderDate = new Date(o.orderDate?.toDate ? o.orderDate.toDate() : o.orderDate);
+                return orderDate >= oneYearAgo;
+            });
+            
+        default:
+            return orders;
+    }
+}    // Aktif siparişleri filtrele
+    const activeOrders = orders.filter(o => o.status !== 'completed');
+    
+    // Aktif üretimleri filtrele
+    const activeProduction = production.filter(p => p.status === 'active');
+    
+    // Gecikmiş üretimler
+    const delayedProduction = activeProduction.filter(p => p.isDelayed);
+    
+    // Üretim verimliliğini hesapla
+    const onTimeProduction = production.filter(p => p.status === 'completed' && !p.isDelayed);
+    const completedProduction = production.filter(p => p.status === 'completed');
+    const onTimeRate = completedProduction.length > 0 ? Math.round((onTimeProduction.length / completedProduction.length) * 100) : 0;
+    
+    // Üretim darboğazlarını tespit et
+    const delays = {};
+    
+    activeProduction.forEach(prod => {
+        if (prod.isDelayed && prod.delayReason) {
+            delays[prod.delayReason] = (delays[prod.delayReason] || 0) + 1;
+        }
+    });
+    
+    // Yanıt oluştur
+    let response = `<strong>Üretim Optimizasyon Önerileri</strong><br><br>`;
+    
+    // Üretim performansı
+    response += `<div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="margin-bottom: 10px; font-weight: 500;">Mevcut Üretim Performansı:</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Zamanında Üretim</div>
+                <div style="font-size: 24px; font-weight: bold; color: ${getPerformanceColor(onTimeRate)};">${onTimeRate}%</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Aktif Üretim</div>
+                <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${activeProduction.length}</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Geciken Üretim</div>
+                <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${delayedProduction.length}</div>
+            </div>
+        </div>
+    </div>`;
+    
+    // Öneri listesi
+    response += `<strong>Öneriler:</strong><br><br>`;
+    
+    // Optimizasyon önerileri
+    const recommendations = [];
+    
+    // Performansa göre öneriler
+    if (onTimeRate < 70) {
+        recommendations.push({
+            title: "Üretim Çizelgesinin Yeniden Düzenlenmesi",
+            description: "Üretim zamanında tamamlama oranınız %70'in altında. Çizelgeleme stratejinizi gözden geçirin ve kapasite planlamanızı optimize edin.",
+            priority: "Yüksek"
+        });
+    }
+    
+    // Gecikme nedenlerine göre öneriler
+    if (Object.keys(delays).length > 0) {
+        // En çok tekrarlanan gecikme sebebi
+        const topDelayReason = Object.entries(delays).sort((a, b) => b[1] - a[1])[0];
+        
+        if (topDelayReason[0].toLowerCase().includes('malzeme')) {
+            recommendations.push({
+                title: "Malzeme Tedarik Sürecinin İyileştirilmesi",
+                description: `En sık karşılaşılan gecikme nedeni: "${topDelayReason[0]}". Malzeme tedarik sürecinizi gözden geçirin ve kritik malzemeler için alternatif tedarikçiler belirleyin.`,
+                priority: "Yüksek"
+            });
+        } else if (topDelayReason[0].toLowerCase().includes('personel') || topDelayReason[0].toLowerCase().includes('iş gücü')) {
+            recommendations.push({
+                title: "İş Gücü Kapasitesinin Artırılması",
+                description: `En sık karşılaşılan gecikme nedeni: "${topDelayReason[0]}". Üretim bölümündeki personel sayısını veya çalışma saatlerini gözden geçirin.`,
+                priority: "Orta"
+            });
+        } else {
+            recommendations.push({
+                title: "Gecikme Nedenlerinin Detaylı Analizi",
+                description: `En sık karşılaşılan gecikme nedeni: "${topDelayReason[0]}". Bu sorunu çözmek için kök neden analizi yapın.`,
+                priority: "Orta"
+            });
+        }
+    }
+    
+    // Darboğaz analizi
+    recommendations.push({
+        title: "Üretim Darboğazlarının Tespiti",
+        description: "Üretim sürecinizdeki darboğazları belirlemek için her aşamanın tamamlanma süresini analiz edin ve en yavaş adımları optimize edin.",
+        priority: "Orta"
+    });
+    
+    // İş önceliklendirme
+    if (delayedProduction.length > 0) {
+        recommendations.push({
+            title: "İş Önceliklendirme Sisteminin Gözden Geçirilmesi",
+            description: "Geciken siparişlere öncelik verecek şekilde üretim planınızı revize edin ve kritik siparişler için acil durum planları oluşturun.",
+            priority: "Yüksek"
+        });
+    }
+    
+    // Bakım planlaması
+    recommendations.push({
+        title: "Önleyici Bakım Programının Güçlendirilmesi",
+        description: "Beklenmeyen makine arızalarını önlemek için düzenli ve planlı bakım programı oluşturun. Bu, üretim kesintilerini azaltacaktır.",
+        priority: "Düşük"
+    });
+    
+    // Kalite kontrol süreci
+    recommendations.push({
+        title: "Kalite Kontrol Sürecinin İyileştirilmesi",
+        description: "Hatalı ürünlerin yeniden işlenmesi için harcanan zamanı azaltmak için üretim sürecinin erken aşamalarında kalite kontrolünü güçlendirin.",
+        priority: "Orta"
+    });
+    
+    // Önerileri göster
+    recommendations.forEach((recommendation, index) => {
+        // Öncelik renkleri
+        let priorityColor = '#6b7280';
+        
+        if (recommendation.priority === 'Yüksek') {
+            priorityColor = '#ef4444';
+        } else if (recommendation.priority === 'Orta') {
+            priorityColor = '#f59e0b';
+        }
+        
+        response += `<div style="margin-bottom: 15px; padding: 15px; border-radius: 8px; background-color: #f8fafc; border-left: 4px solid ${priorityColor};">
+            <div style="margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-weight: 500; font-size: 16px;">${index + 1}. ${recommendation.title}</div>
+                <div style="font-size: 12px; padding: 2px 8px; border-radius: 12px; background-color: ${priorityColor}20; color: ${priorityColor};">
+                    ${recommendation.priority} Öncelik
+                </div>
+            </div>
+            <div style="color: #64748b;">${recommendation.description}</div>
+        </div>`;
+    });
+    
+    // Beklenen iyileştirmeler
+    response += `<br><strong>Beklenen İyileştirmeler:</strong><br><br>`;
+    
+    response += `<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">+${Math.min(30, 100 - onTimeRate)}%</div>
+            <div style="font-size: 14px; color: #64748b;">Zamanında Teslimat Artışı</div>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981;">
+            <div style="font-size: 24px; font-weight: bold; color: #10b981;">-20%</div>
+            <div style="font-size: 14px; color: #64748b;">Üretim Süresi Azalması</div>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #fef2f2; border-radius: 8px; border-left: 4px solid #ef4444;">
+            <div style="font-size: 24px; font-weight: bold; color: #ef4444;">-${delayedProduction.length > 0 ? 80 : 50}%</div>
+            <div style="font-size: 14px; color: #64748b;">Gecikme Oranı Azalması</div>
+        </div>
+    </div>`;
+    
+    return response;
+}
+
+/**
+ * Malzeme optimizasyonu yanıtı oluştur
+ * @param {Array} orders - Sipariş verileri
+ * @param {Array} materials - Malzeme verileri
+ * @returns {string} Oluşturulan yanıt
+ */
+function generateMaterialOptimizationResponse(orders, materials) {
+    // Malzeme durumu
+    const totalMaterials = materials.length;
+    const inStockMaterials = materials.filter(m => m.inStock).length;
+    const missingMaterials = materials.filter(m => !m.inStock).length;
+    
+    // Stok oranı
+    const stockRate = Math.round((inStockMaterials / totalMaterials) * 100) || 0;
+    
+    // Kritik malzemeler
+    const criticalMaterials = materials.filter(m => m.stock < m.minStock);
+    
+    // Malzeme eksikliği nedeniyle bekleyen siparişler
+    const waitingOrders = orders.filter(o => o.status === 'waiting');
+    
+    // Yanıt oluştur
+    let response = `<strong>Malzeme ve Tedarik Optimizasyon Önerileri</strong><br><br>`;
+    
+    // Malzeme performansı
+    response += `<div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="margin-bottom: 10px; font-weight: 500;">Mevcut Malzeme Durumu:</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Stok Oranı</div>
+                <div style="font-size: 24px; font-weight: bold; color: ${getPerformanceColor(stockRate)};">${stockRate}%</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Eksik Malzeme</div>
+                <div style="font-size: 24px; font-weight: bold; color: ${missingMaterials > 0 ? '#ef4444' : '#10b981'};">${missingMaterials}</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Kritik Seviye</div>
+                <div style="font-size: 24px; font-weight: bold; color: ${criticalMaterials.length > 0 ? '#f59e0b' : '#10b981'};">${criticalMaterials.length}</div>
+            </div>
+        </div>
+    </div>`;
+    
+    // Öneri listesi
+    response += `<strong>Öneriler:</strong><br><br>`;
+    
+    // Optimizasyon önerileri
+    const recommendations = [];
+    
+    // Malzeme ve stok durumuna göre öneriler
+    if (missingMaterials > 0) {
+        recommendations.push({
+            title: "Tedarik Süreçlerinin Optimize Edilmesi",
+            description: `${missingMaterials} adet eksik malzeme mevcut. Tedarik süreçlerini hızlandırmak için tedarikçilerle iletişimi güçlendirin ve alternatif tedarikçiler belirleyin.`,
+            priority: "Yüksek"
+        });
+    }
+    
+    if (stockRate < 80) {
+        recommendations.push({
+            title: "Stok Seviyelerinin Artırılması",
+            description: "Stok oranınız %80'in altında. Sık kullanılan ve tedarik süresi uzun olan malzemeler için güvenlik stok seviyelerini artırın.",
+            priority: "Orta"
+        });
+    }
+    
+    if (criticalMaterials.length > 0) {
+        recommendations.push({
+            title: "Kritik Malzemelerin Acil Tedariki",
+            description: `${criticalMaterials.length} adet malzeme kritik seviyenin altında. Bu malzemelerin acil tedariki için önlem alın.`,
+            priority: "Yüksek"
+        });
+    }
+    
+    if (waitingOrders.length > 0) {
+        recommendations.push({
+            title: "Malzeme Bekleyen Siparişlerin Önceliklendirilmesi",
+            description: `${waitingOrders.length} adet sipariş malzeme eksikliği nedeniyle beklemede. Gecikmeyi önlemek için bu siparişler için gerekli malzemelere öncelik verin.`,
+            priority: "Yüksek"
+        });
+    }
+    
+    // Genel öneriler
+    recommendations.push({
+        title: "Tedarikçi Performans Değerlendirmesi",
+        description: "Tedarikçilerin teslimat süreleri ve kalitesini düzenli olarak değerlendirin. Performansı düşük tedarikçiler için alternatifler bulun.",
+        priority: "Orta"
+    });
+    
+    recommendations.push({
+        title: "ABC Analizi ile Stok Yönetimi",
+        description: "Malzemeleri önem derecesine göre A, B ve C kategorilerine ayırarak stok yönetimini optimize edin. A kategorisindeki kritik malzemelere daha sıkı kontrol uygulayın.",
+        priority: "Orta"
+    });
+    
+    recommendations.push({
+        title: "Otomatik Sipariş Sistemi",
+        description: "Malzeme stok seviyesi belirli bir eşiğin altına düştüğünde otomatik sipariş oluşturacak bir sistem kurun.",
+        priority: "Düşük"
+    });
+    
+    recommendations.push({
+        title: "Talep Tahmini İyileştirme",
+        description: "Geçmiş veri analizine dayalı daha doğru talep tahminleri yaparak stok seviyelerini optimize edin.",
+        priority: "Orta"
+    });
+    
+    // Önerileri göster
+    recommendations.forEach((recommendation, index) => {
+        // Öncelik renkleri
+        let priorityColor = '#6b7280';
+        
+        if (recommendation.priority === 'Yüksek') {
+            priorityColor = '#ef4444';
+        } else if (recommendation.priority === 'Orta') {
+            priorityColor = '#f59e0b';
+        }
+        
+        response += `<div style="margin-bottom: 15px; padding: 15px; border-radius: 8px; background-color: #f8fafc; border-left: 4px solid ${priorityColor};">
+            <div style="margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-weight: 500; font-size: 16px;">${index + 1}. ${recommendation.title}</div>
+                <div style="font-size: 12px; padding: 2px 8px; border-radius: 12px; background-color: ${priorityColor}20; color: ${priorityColor};">
+                    ${recommendation.priority} Öncelik
+                </div>
+            </div>
+            <div style="color: #64748b;">${recommendation.description}</div>
+        </div>`;
+    });
+    
+    // Beklenen iyileştirmeler
+    response += `<br><strong>Beklenen İyileştirmeler:</strong><br><br>`;
+    
+    response += `<div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f9ff; border-radius: 8px; border-left: 4px solid #3b82f6;">
+            <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">+${Math.min(30, 100 - stockRate)}%</div>
+            <div style="font-size: 14px; color: #64748b;">Malzeme Stok Oranı Artışı</div>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0fdf4; border-radius: 8px; border-left: 4px solid #10b981;">
+            <div style="font-size: 24px; font-weight: bold; color: #10b981;">-35%</div>
+            <div style="font-size: 14px; color: #64748b;">Tedarik Süresi Azalması</div>
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #fef2f2; border-radius: 8px; border-left: 4px solid #ef4444;">
+            <div style="font-size: 24px; font-weight: bold; color: #ef4444;">-75%</div>
+            <div style="font-size: 14px; color: #64748b;">Malzeme Kaynaklı Gecikme</div>
+        </div>
+    </div>`;
+    
+    return response;
+}
+
+/**
+ * Genel optimizasyon yanıtı oluştur
+ * @param {Array} orders - Sipariş verileri
+ * @param {Array} materials - Malzeme verileri
+ * @param {Array} production - Üretim verileri
+ * @returns {string} Oluşturulan yanıt
+ */
+function generateGeneralOptimizationResponse(orders, materials, production) {
+    // Yanıt oluştur
+    let response = `<strong>Genel Sistem Optimizasyon Önerileri</strong><br><br>`;
+    
+    // Mevcut Durum Özeti
+    const activeOrders = orders.filter(o => o.status !== 'completed');
+    const delayedOrders = orders.filter(o => isOrderDelayed(o));
+    const missingMaterials = materials.filter(m => !m.inStock);
+    const activeProduction = production.filter(p => p.status === 'active');
+    const delayedProduction = activeProduction.filter(p => p.isDelayed);
+    
+    // Özet tablo
+    response += `<div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <div style="margin-bottom: 10px; font-weight: 500;">Mevcut Durum Özeti:</div>
+        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Aktif Sipariş</div>
+                <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${activeOrders.length}</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Geciken Sipariş</div>
+                <div style="font-size: 24px; font-weight: bold; color: #ef4444;">${delayedOrders.length}</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Eksik Malzeme</div>
+                <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${missingMaterials.length}</div>
+            </div>
+            <div style="flex: 1; min-width: 120px;">
+                <div style="font-size: 14px; color: #64748b;">Aktif Üretim</div>
+                <div style="font-size: 24px; font-weight: bold; color: #10b981;">${activeProduction.length}</div>
+            </div>
+        </div>
+    </div>`;
+    
+    // Öneri listesi başlığı
+    response += `<strong>Sistem Optimizasyon Önerileri:</strong><br><br>`;
+    
+    // Optimizasyon önerileri
+    const recommendations = [];
+    
+    // Öncelikli sorunlar
+    if (delayedOrders.length > 0) {
+        recommendations.push({
+            title: "Gecikme Analizi ve Müdahale",
+            description: `${delayedOrders.length} adet sipariş gecikmede. Gecikme nedenlerini analiz edin ve acil müdahale planı oluşturun.`,
+            priority: "Yüksek",
+            category: "Sipariş Yönetimi"
+        });
+    }
+    
+    if (missingMaterials.length > 0) {
+        recommendations.push({
+            title: "Malzeme Tedarik Sürecinin İyileştirilmesi",
+            description: `${missingMaterials.length} adet eksik malzeme mevcut. Tedarik süreçlerini optimize edin ve kritik malzemeler için alternatif tedarikçiler belirleyin.`,
+            priority: "Yüksek",
+            category: "Tedarik Zinciri"
+        });
+    }
+    
+    if (delayedProduction.length > 0) {
+        recommendations.push({
+            title: "Üretim Darboğazlarının Giderilmesi",
+            description: `${delayedProduction.length} adet üretim gecikmede. Üretim sürecindeki darboğazları belirleyin ve giderin.`,
+            priority: "Yüksek",
+            category: "Üretim"
+        });
+    }
+    
+    // Genel sistem önerileri
+    recommendations.push({
+        title: "Entegre Planlama Sistemi",
+        description: "Satış, planlama, üretim ve satın alma birimlerini tek bir entegre sistem üzerinden koordine edin. Bu, birimler arası iletişimi güçlendirecek ve süreci şeffaflaştıracaktır.",
+        priority: "Orta",
+        category: "Sistem Entegrasyonu"
+    });
+    
+    recommendations.push({
+        title: "Yapay Zeka Destekli Tahmin Modeli",
+        description: "Üretim süreleri ve malzeme ihtiyaçları için makine öğrenimi tabanlı tahmin modelleri geliştirin. Bu, daha doğru planlama yapmanızı sağlayacaktır.",
+        priority: "Orta",
+        category: "Yapay Zeka"
+    });
+    
+    recommendations.push({
+        title: "Otomatik Uyarı Sistemi",
+        description: "Olası gecikmeleri önceden tespit edebilen ve ilgili birimleri otomatik olarak uyaran bir sistem kurun. Bu, proaktif müdahaleyi mümkün kılacaktır.",
+        priority: "Orta",
+        category: "Erken Uyarı"
+    });
+    
+    recommendations.push({
+        title: "Performans Gösterge Paneli",
+        description: "Tüm departmanlar için KPI'ları (Anahtar Performans Göstergeleri) içeren gerçek zamanlı bir gösterge paneli oluşturun. Bu, performans takibini kolaylaştıracaktır.",
+        priority: "Düşük",
+        category: "Raporlama"
+    });
+    
+    recommendations.push({
+        title: "İş Akışı Otomasyonu",
+        description: "Tekrarlayan manuel süreçleri otomatikleştirin. Bu, hatayı azaltırken verimliliği artıracaktır.",
+        priority: "Orta",
+        category: "Otomasyon"
+    });
+    
+    recommendations.push({
+        title: "Çapraz Eğitim Programı",
+        description: "Personele farklı alanlarda eğitim vererek iş gücü esnekliğini artırın. Bu, darboğaz oluştuğunda personelin farklı görevlere kaydırılmasını sağlayacaktır.",
+        priority: "Düşük",
+        category: "İnsan Kaynakları"
+    });
+    
+    // Önerileri kategorilere ayır
+    const categorizedRecommendations = {};
+    
+    recommendations.forEach(recommendation => {
+        if (!categorizedRecommendations[recommendation.category]) {
+            categorizedRecommendations[recommendation.category] = [];
+        }
+        
+        categorizedRecommendations[recommendation.category].push(recommendation);
+    });
+    
+    // Kategori bazında önerileri göster
+    Object.entries(categorizedRecommendations).forEach(([category, recs]) => {
+        response += `<div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 10px; font-weight: 500; color: #1e40af;">${category} Önerileri:</div>`;
+        
+        recs.forEach((recommendation, index) => {
+            // Öncelik renkleri
+            let priorityColor = '#6b7280';
+            
+            if (recommendation.priority === 'Yüksek') {
+                priorityColor = '#ef4444';
+            } else if (recommendation.priority === 'Orta') {
+                priorityColor = '#f59e0b';
+            }
+            
+            response += `<div style="margin-bottom: 15px; padding: 15px; border-radius: 8px; background-color: #f8fafc; border-left: 4px solid ${priorityColor};">
+                <div style="margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-weight: 500; font-size: 16px;">${recommendation.title}</div>
+                    <div style="font-size: 12px; padding: 2px 8px; border-radius: 12px; background-color: ${priorityColor}20; color: ${priorityColor};">
+                        ${recommendation.priority} Öncelik
+                    </div>
+                </div>
+                <div style="color: #64748b;">${recommendation.description}</div>
+            </div>`;
+        });
+        
+        response += `</div>`;
+    });
+    
+    // Uygulama adımları
+    response += `<br><strong>Uygulama Adımları:</strong><br><br>`;
+    
+    response += `<ol style="margin-left: 20px; padding-left: 0;">
+        <li style="margin-bottom: 10px;">
+            <strong>Mevcut Durum Analizi:</strong> Tüm süreçlerin detaylı bir analizini yapın ve temel sorun alanlarını belirleyin.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>Önceliklendirme:</strong> İyileştirme önerilerini etki ve uygulama kolaylığına göre önceliklendirin.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>Uygulama Planı:</strong> Her bir öneri için detaylı bir uygulama planı oluşturun.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>Pilot Uygulama:</strong> Önerileri küçük ölçekte test edin ve sonuçları ölçün.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>Tam Ölçekli Uygulama:</strong> Başarılı pilot uygulamaları tüm sisteme yayın.
+        </li>
+        <li style="margin-bottom: 10px;">
+            <strong>İzleme ve İyileştirme:</strong> Performansı sürekli izleyin ve gerektiğinde iyileştirmeler/**
  * Performans raporu oluştur
  * @param {Array} orders - Sipariş verileri
  * @param {Array} production - Üretim verileri
